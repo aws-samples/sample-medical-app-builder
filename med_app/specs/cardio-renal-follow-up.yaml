@@ -1,0 +1,113 @@
+# Showcase — charts and writes on one composed page (APP-12): three trends against reference lines, the readings
+# beside them, a nurse's blood-pressure entry form, and a physician's "mark resolved" / "stop" on the problem and
+# medication lists — each write validated, versioned and attributed on the record. Two roles, each seeing its own
+# sections; the shared sections are requested once for both.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_cardio_renal
+  version: 1.0.0
+  name: Cardio-renal follow-up
+  description: Blood pressure, kidney function and weight over three years with reference lines; the nurse records readings, the physician updates problems and prescriptions.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  window: now-3y
+  sections:
+    - kind: trend
+      id: bp
+      span: 8
+      title: Blood pressure, last three years
+      codes:
+        - { system: loinc, code: "85354-9", display: Blood pressure panel }
+      series:
+        - { label: Systolic, component_code: "8480-6" }
+        - { label: Diastolic, component_code: "8462-4" }
+      thresholds:
+        - { value: 140, label: "140 mmHg" }
+        - { value: 90, label: "90 mmHg" }
+      unit: mmHg
+      height_px: 300
+    - kind: readings
+      id: bp_readings
+      span: 4
+      title: Blood pressure readings
+      codes:
+        - { system: loinc, code: "85354-9", display: Blood pressure panel }
+      rows: 10
+    - kind: record_observation
+      id: bp_entry
+      roles: [ward_nurse]
+      title: Record a blood pressure
+      code: { system: loinc, code: "85354-9", display: Blood pressure panel }
+      components:
+        - { code: { system: loinc, code: "8480-6", display: Systolic blood pressure }, label: Systolic, range: { min: 50, max: 300 } }
+        - { code: { system: loinc, code: "8462-4", display: Diastolic blood pressure }, label: Diastolic, range: { min: 30, max: 200 } }
+      unit: mmHg
+      category: vital-signs
+      action_label: Record reading
+      success_message: The reading is now part of the patient record.
+    - kind: trend
+      id: egfr
+      span: 6
+      title: Kidney function (eGFR)
+      codes:
+        - { system: loinc, code: "62238-1", display: eGFR (CKD-EPI) }
+        - { system: loinc, code: "33914-3", display: eGFR }
+      series:
+        - { label: eGFR (CKD-EPI), code: "62238-1" }
+        - { label: eGFR, code: "33914-3" }
+      thresholds:
+        - { value: 60, label: "60" }
+        - { value: 45, label: "45" }
+      unit: mL/min/1.73m²
+      height_px: 280
+    - kind: trend
+      id: weight
+      span: 6
+      title: Body weight
+      codes:
+        - { system: loinc, code: "29463-7", display: Body weight }
+      series:
+        - { label: Weight, code: "29463-7" }
+      unit: kg
+      height_px: 260
+    - kind: readings
+      id: heart_rate
+      span: 12
+      title: Heart rate
+      codes:
+        - { system: loinc, code: "8867-4", display: Heart rate }
+      rows: 10
+    - kind: problems
+      roles: [physician]
+      status: active
+      title: Active problems
+      resolve: true
+      resolve_label: Mark resolved
+    - kind: medication
+      roles: [physician]
+      status: active
+      title: Active medication
+      stop: true
+      stop_label: Stop
+
+roles:
+  - id: physician
+    display_name: Treating physician
+    phi_fields_visible: [name, dob, gender, mrn]
+    capabilities: [view, update_status]
+  - id: ward_nurse
+    display_name: Ward nurse
+    phi_fields_visible: [name, dob, mrn]
+    capabilities: [view, record_observation]
+default_role: physician
+
+governance:
+  clinical_context: cardio_renal_follow_up
+  intended_users: [cardiologist, nephrologist, nurse]
+  intended_purpose: Display of blood pressure, kidney function and weight over time against reference values; recording of blood pressure readings by the ward nurse; marking problems resolved and stopping prescriptions by the physician. Every change is validated, versioned and attributed; nothing is computed or interpreted.
+  mdr_classification: none

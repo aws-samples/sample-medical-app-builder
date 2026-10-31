@@ -1,0 +1,76 @@
+# AppSpec — the therapy-plan page composed from the library: the three `record` sections name published shapes instead of
+# declaring their fields (`shape: measurable_goal`, `shape: progress_note`, `shape: consent_per_purpose` — one consent decision per purpose, read back as a list). The compiler embeds the shapes' rules, pinned
+# by checksum, so the manifest reads the same as the inline version — reviewed once, reused here.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_therapy_plan_library
+  version: 0.1.0
+  name: Therapy plan (library shapes)
+  description: Goals, progress notes and consent decisions from the record-shape library, read back beside their forms.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  sections:
+    - kind: list
+      id: goals
+      span: 8
+      resource: Goal
+      title: Goals
+      columns:
+        - { label: Goal, path: description }
+        - { label: Measure, path: "target[0].measure" }
+        - { label: Target, path: "target[0].detailQuantity" }
+        - { label: Due, path: "target[0].dueDate" }
+        - { label: Status, path: lifecycleStatus, status: true }
+      rows: 10
+    - kind: record
+      id: new_goal
+      span: 4
+      shape: measurable_goal
+      action_label: Save goal
+      success_message: The goal is on the patient record.
+    - kind: notes
+      span: 8
+      title: Progress notes
+      rows: 8
+    - kind: record
+      id: new_note
+      span: 4
+      shape: progress_note
+      action_label: Save note
+      success_message: The note is on the patient record.
+    - kind: list
+      id: consents
+      span: 8
+      resource: Consent
+      title: Consent decisions
+      columns:
+        - { label: Purpose, path: scope }
+        - { label: Decision, path: provision.type, status: true }
+        - { label: Given on, path: dateTime }
+        - { label: Status, path: status, status: true }
+      rows: 10
+      empty_text: No consent decision recorded.
+    - kind: record
+      id: new_consent
+      span: 4
+      shape: consent_per_purpose
+      action_label: Record decision
+      success_message: The consent decision is on the patient record.
+
+roles:
+  - id: physiotherapist
+    display_name: Physiotherapist
+    phi_fields_visible: [name, dob]
+    capabilities: [view, record_entry]
+default_role: physiotherapist
+
+governance:
+  clinical_context: physiotherapy
+  intended_users: [physiotherapist]
+  intended_purpose: Therapy goals, progress notes and the patient's consent decisions per purpose from the shape library, written to the record with provenance and read back. Nothing is computed, scored or recommended.
+  mdr_classification: none

@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="850" viewBox="0 0 1800 850">
+<defs><marker id="arrow-0F7B5F" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F7B5F"/></marker><marker id="arrow-5B6770" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5B6770"/></marker></defs>
+<rect width="1800" height="850" fill="white"/>
+<text x="30" y="40" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#1F2933">MedApp — app_creator (the drafting agent)</text>
+<text x="30" y="62" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" fill="#5B6770">A clinician's sentences become a typed AppSpec through tools; the platform's compiler turns the spec into the app. The model never writes code, a layout or a data scope.</text>
+<rect x="30" y="110" width="260" height="300" rx="10" ry="10" fill="#EEF6F3" stroke="#BFDCD1" stroke-width="1.2"/>
+<text x="44" y="132" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#1F2933">Panel — drafting page</text>
+<rect x="50" y="150" width="220" height="110" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="160.0" y="191.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Conversation + editors</text>
+<text x="160.0" y="203.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">the author writes; the assistant asks</text>
+<text x="160.0" y="216.54999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">only about what is still open</text>
+<text x="160.0" y="229.14999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">the panel polls the turn's progress</text>
+<rect x="50" y="290" width="220" height="90" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="160.0" y="321.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Save and lifecycle</text>
+<text x="160.0" y="333.95000000000005" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">Save to registry · Submit for review</text>
+<text x="160.0" y="346.55000000000007" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">approve · publish (an approver,</text>
+<text x="160.0" y="359.1500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">never the author)</text>
+<rect x="330" y="110" width="340" height="300" rx="10" ry="10" fill="#FFFFFF" stroke="#E3D5B8" stroke-width="1.2"/>
+<text x="344" y="132" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">ApiStack — API Gateway + JWT authorizer</text>
+<rect x="350" y="150" width="270" height="110" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="485.0" y="191.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Drafts API (Lambda)</text>
+<text x="485.0" y="203.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">POST /drafts · POST turns (202, async)</text>
+<text x="485.0" y="216.54999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">PATCH typed edits — same rules as the tools</text>
+<text x="485.0" y="229.14999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">GET /groups · DELETE · author-only</text>
+<rect x="350" y="290" width="270" height="90" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="485.0" y="321.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Registry write + lifecycle (Lambda)</text>
+<text x="485.0" y="333.95000000000005" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">saves app or version: spec + manifest</text>
+<text x="485.0" y="346.55000000000007" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">transitions with the four-eyes rule</text>
+<text x="485.0" y="359.1500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">KMS-signed approval · role groups at publish</text>
+<rect x="330" y="440" width="340" height="140" rx="10" ry="10" fill="#FFFFFF" stroke="#E3D5B8" stroke-width="1.2"/>
+<text x="344" y="462" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">Tables</text>
+<text x="344" y="475" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.5" fill="#5B6770">RegistryStack · AuthoringStack</text>
+<path d="M345,492 a75.0,7 0 0 1 150,0 v66 a75.0,7 0 0 1 -150,0 z" fill="#E8F1EE" stroke="#0F7B5F" stroke-width="1.2"/>
+<path d="M345,492 a75.0,7 0 0 0 150,0" fill="none" stroke="#0F7B5F" stroke-width="1.2"/>
+<text x="420.0" y="515.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">App registry</text>
+<text x="420.0" y="528.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">DynamoDB</text>
+<text x="420.0" y="541.0500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">versions keep their spec</text>
+<text x="420.0" y="553.6500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">→ iterate from it later</text>
+<path d="M505,492 a75.0,7 0 0 1 150,0 v66 a75.0,7 0 0 1 -150,0 z" fill="#E8F1EE" stroke="#0F7B5F" stroke-width="1.2"/>
+<path d="M505,492 a75.0,7 0 0 0 150,0" fill="none" stroke="#0F7B5F" stroke-width="1.2"/>
+<text x="580.0" y="515.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Drafts table</text>
+<text x="580.0" y="528.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">DynamoDB · TTL 30 days</text>
+<text x="580.0" y="541.0500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">session, spec, turn status</text>
+<text x="580.0" y="553.6500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">private to the author</text>
+<rect x="700" y="110" width="620" height="480" rx="10" ry="10" fill="#FFF9F0" stroke="#F0DDB8" stroke-width="1.2"/>
+<text x="714" y="132" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#1F2933">Drafting agent — Lambda, asynchronous turn worker (AuthoringStack)</text>
+<rect x="720" y="150" width="580" height="60" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1010.0" y="178.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Drafter.turn(session, text)</text>
+<text x="1010.0" y="191.54999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">one exchange, runtime-agnostic: the Lambda, AgentCore or the terminal harness call exactly this</text>
+<rect x="720" y="240" width="280" height="90" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="860.0" y="271.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">System prompt</text>
+<text x="860.0" y="283.95000000000005" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">generated from the catalog — it cannot</text>
+<text x="860.0" y="296.55000000000007" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">describe an app the renderer cannot build</text>
+<text x="860.0" y="309.1500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">author's language decided per turn (EN / DE)</text>
+<rect x="1020" y="240" width="280" height="90" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1160.0" y="271.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Strands Agent on Bedrock</text>
+<text x="1160.0" y="283.95000000000005" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">conversation kept in the session</text>
+<text x="1160.0" y="296.55000000000007" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">each tool call is reported as progress</text>
+<text x="1160.0" y="309.1500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">replies in the author's language</text>
+<rect x="720" y="360" width="280" height="110" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="860.0" y="395.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Draft</text>
+<text x="860.0" y="407.65000000000003" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">partial AppSpec + events + refusals</text>
+<text x="860.0" y="420.25000000000006" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">validated against the published JSON Schema</text>
+<text x="860.0" y="432.8500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">missing field = still open</text>
+<text x="860.0" y="445.4500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">wrong value = rejected, nothing changes</text>
+<rect x="1020" y="360" width="280" height="110" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1160.0" y="395.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Tools — the model's only way to change anything</text>
+<text x="1160.0" y="407.65000000000003" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">choose_archetype · set_app · set_knobs</text>
+<text x="1160.0" y="420.25000000000006" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">add / update / remove_role · set_default_role · set_governance</text>
+<text x="1160.0" y="432.8500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">get_draft · check_readiness · compile_preview</text>
+<text x="1160.0" y="445.4500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">lookup_codes · list_record_shapes · list_groups · record_refusal</text>
+<rect x="720" y="500" width="580" height="70" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1010.0" y="527.65" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Catalog</text>
+<text x="1010.0" y="540.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">application-catalog.yaml + app-spec.schema.json: buildable archetypes and their knobs, refusals with reasons,</text>
+<text x="1010.0" y="552.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">terminology hints, questionnaires on the record — the same files the frontend publishes</text>
+<rect x="1370" y="110" width="400" height="320" rx="10" ry="10" fill="#F4F6F8" stroke="#D9E1E7" stroke-width="1.2"/>
+<text x="1384" y="132" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#1F2933">Services</text>
+<rect x="1390" y="150" width="360" height="60" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1570.0" y="178.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Amazon Bedrock</text>
+<text x="1570.0" y="191.54999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">Claude · model id from cdk.json</text>
+<rect x="1390" y="240" width="360" height="70" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1570.0" y="267.65" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Manifest service (Node Lambda)</text>
+<text x="1570.0" y="280.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">readiness · compile · validate —</text>
+<text x="1570.0" y="292.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">the panel's own compiler, nothing reimplemented</text>
+<rect x="1390" y="340" width="360" height="60" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1570.0" y="368.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Cognito user pool</text>
+<text x="1570.0" y="381.55" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">bindable hospital groups — never platform or app groups</text>
+<rect x="30" y="640" width="1740" height="140" rx="10" ry="10" fill="#F5F1FA" stroke="#D9CCEA" stroke-width="1.2"/>
+<text x="44" y="662" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#1F2933">Developer loop — the same Drafter, no deployment needed</text>
+<rect x="50" y="680" width="400" height="80" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="250.0" y="712.65" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Terminal harness</text>
+<text x="250.0" y="725.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">chat against Bedrock from a laptop</text>
+<text x="250.0" y="737.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">/spec · /open · /compile · /save</text>
+<rect x="480" y="680" width="520" height="80" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="740.0" y="712.65" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Evaluation corpus</text>
+<text x="740.0" y="725.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">48 scripted conversations (EN / DE, refusals, pasted patient data, composed pages, the physio test set)</text>
+<text x="740.0" y="737.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">with expectations on the resulting draft — run against the real model</text>
+<rect x="1030" y="680" width="340" height="80" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1200.0" y="712.65" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">ScriptedModel</text>
+<text x="1200.0" y="725.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">a Strands model that answers from a script:</text>
+<text x="1200.0" y="737.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">the whole loop in unit tests, without Bedrock</text>
+<rect x="1400" y="680" width="350" height="80" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1575.0" y="712.65" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">CLI manifest service</text>
+<text x="1575.0" y="725.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">runs the compiler in the med_app checkout</text>
+<text x="1575.0" y="737.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">(~0.1 s) — the local twin of the Lambda</text>
+<path d="M270,205 L350,205" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M270,335 L350,335" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M620,190 L690,190 L690,180 L720,180" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M620,230 L690,230 L690,415 L720,415" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M620,250 L650,250 L650,465 L580,465 L580,485" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M420,380 L420,485" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M760,590 L760,604 L580,604 L580,565" fill="none" stroke="#5B6770" stroke-width="1.3" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<path d="M860,210 L860,240" fill="none" stroke="#5B6770" stroke-width="1.3" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<path d="M1160,210 L1160,240" fill="none" stroke="#5B6770" stroke-width="1.3" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<path d="M1160,330 L1160,360" fill="none" stroke="#5B6770" stroke-width="1.3" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<path d="M1020,415 L1000,415" fill="none" stroke="#5B6770" stroke-width="1.3" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<path d="M1100,470 L1100,500" fill="none" stroke="#5B6770" stroke-width="1.3" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<path d="M860,470 L860,500" fill="none" stroke="#5B6770" stroke-width="1.3" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<path d="M1300,285 L1332,285 L1332,180 L1390,180" fill="none" stroke="#5B6770" stroke-width="1.3" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<path d="M1300,385 L1340,385 L1340,275 L1390,275" fill="none" stroke="#5B6770" stroke-width="1.3" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<path d="M1300,445 L1348,445 L1348,370 L1390,370" fill="none" stroke="#5B6770" stroke-width="1.3" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<rect x="274.306" y="189.8" width="71.388" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="310" y="199" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">turns · edits</text>
+<rect x="262.116" y="319.8" width="95.768" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="310" y="329" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">save · transitions</text>
+<rect x="612.116" y="150.8" width="95.768" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="660" y="160" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">turn: async invoke</text>
+<rect x="622.612" y="320.8" width="134.776" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="690" y="330" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">PATCH: the same operations</text>
+<rect x="582.612" y="420.8" width="134.776" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="650" y="430" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">create · poll · save edits</text>
+<rect x="374.554" y="430.8" width="90.892" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="420" y="440" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">versions · events</text>
+<rect x="612.364" y="608.8" width="115.27199999999999" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="670" y="618" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#5B6770">turn progress · result</text>
+<rect x="871.868" y="220.8" width="76.264" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="910" y="230" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#5B6770">built per turn</text>
+<rect x="1166.62" y="340.8" width="56.760000000000005" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1195" y="350" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#5B6770">tool calls</text>
+<rect x="966.992" y="420.8" width="86.01599999999999" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1010" y="430" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#5B6770">typed operations</text>
+<rect x="1107.736" y="481.8" width="144.528" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1180" y="491" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#5B6770">knob docs · refusals · codes</text>
+<rect x="778.356" y="481.8" width="193.28799999999998" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="875" y="491" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#5B6770">JSON Schema, one variant per archetype</text>
+<rect x="1343.81" y="166.8" width="32.38" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1360" y="176" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#5B6770">model</text>
+<rect x="1289.678" y="312.8" width="100.64399999999999" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1340" y="322" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#5B6770">readiness · compile</text>
+<rect x="1317.182" y="455.8" width="61.635999999999996" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1348" y="465" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#5B6770">list_groups</text>
+<line x1="30" y1="816" x2="64" y2="816" stroke="#0F7B5F" stroke-width="1.6"/>
+<text x="72" y="820" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" fill="#5B6770">authoring flow — panel → API → agent → tables</text>
+<line x1="30" y1="834" x2="64" y2="834" stroke="#5B6770" stroke-width="1.6"/>
+<text x="72" y="838" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" fill="#5B6770">inside the agent, and its services</text>
+<text x="700" y="820" text-anchor="start" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" font-weight="400" fill="#5B6770">Guard-rails are in code, not prose: buildable archetypes come from the schema, codes and groups from lookups, the language from a detector — anything the model must get right every time is decided outside the model.</text>
+</svg>

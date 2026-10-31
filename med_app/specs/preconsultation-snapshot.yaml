@@ -1,0 +1,28 @@
+# AppSpec — pre-consultation snapshot (APP-07): counts and compact lists over the last 90 days.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_preconsult_snapshot
+  version: 0.1.0
+  name: Pre-consultation snapshot
+  description: "What happened since the last visit: active problems, current medication and recent readings on one screen."
+
+archetype: APP-07
+knobs:
+  vitals_codes:
+    - { system: loinc, code: "85354-9", display: Blood pressure panel }
+    - { system: loinc, code: "29463-7", display: Body weight }
+    - { system: loinc, code: "4548-4", display: Hemoglobin A1c }
+  window: now-90d
+
+roles:
+  - id: clinician
+    display_name: Treating clinician
+    phi_fields_visible: [name, dob, gender, mrn]
+default_role: clinician
+
+governance:
+  clinical_context: outpatient_consultation
+  intended_users: [general_practitioner, internist]
+  intended_purpose: One-screen display of recorded problems, medication and readings before a consultation. Counts are list lengths; no computation or interpretation.

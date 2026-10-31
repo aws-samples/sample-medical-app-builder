@@ -1,0 +1,305 @@
+# Golden output of the compiler for specs/composed-ward-documentation.yaml (lifecycle as compiled: a draft; the registry manages it from there).
+# Regenerate deliberately when the compiler changes: npm run appspec -- compile specs/composed-ward-documentation.yaml --created-at 2026-09-15T09:00:00Z
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_ward_documentation
+  version: 0.1.0
+  name: Ward documentation
+  description: Add diagnoses to the problem list, record allergies and document procedures — on the record, with provenance.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: ward_physician
+      display_name: Ward physician
+      cognito_group: app-app_ward_documentation-ward_physician
+      data_scope_ref: scope_ward_physician
+      ui_capabilities:
+        - view
+        - record_entry
+  default_role: ward_physician
+data_scopes:
+  scope_ward_physician:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Condition
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+      - resource: Provenance
+        operations:
+          - create
+      - resource: AllergyIntolerance
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+      - resource: Procedure
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_problems
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: problems
+  - id: p_add_problem
+    kind: write.fhir.condition.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      codes:
+        - http://fhir.de/CodeSystem/bfarm/icd-10-gm|I10.90
+        - http://fhir.de/CodeSystem/bfarm/icd-10-gm|E11.90
+        - http://fhir.de/CodeSystem/bfarm/icd-10-gm|E87.6
+        - http://fhir.de/CodeSystem/bfarm/icd-10-gm|D63.0
+      verification:
+        - confirmed
+        - provisional
+      category: problem-list-item
+      severity: true
+      condition: $ui.add_problem_entry
+    output_binding: add_problem_recorded
+  - id: p_allergies
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: AllergyIntolerance
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: allergies
+  - id: p_add_allergy
+    kind: write.fhir.allergy_intolerance.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      codes:
+        - http://www.whocc.no/atc|C09AA05
+        - http://www.whocc.no/atc|C08CA01
+        - http://www.whocc.no/atc|A10BA02
+        - http://www.whocc.no/atc|N02CC01
+      types:
+        - allergy
+        - intolerance
+      categories:
+        - medication
+      verification:
+        - confirmed
+        - unconfirmed
+      criticality: true
+      reaction: true
+      allergy: $ui.add_allergy_entry
+    output_binding: add_allergy_recorded
+  - id: p_procedures
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Procedure
+      params:
+        patient: $context.patient_id
+    output_binding: procedures
+  - id: p_add_procedure
+    kind: write.fhir.procedure.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      codes:
+        - http://fhir.de/CodeSystem/bfarm/ops|1-632.0
+        - http://fhir.de/CodeSystem/bfarm/ops|8-831.0
+        - http://fhir.de/CodeSystem/bfarm/ops|8-800.c0
+      statuses:
+        - completed
+        - not-done
+      max_backdate_days: 14
+      body_site: true
+      outcome: false
+      procedure: $ui.add_procedure_entry
+    output_binding: add_procedure_recorded
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: ProblemList
+            props:
+              conditions: $bindings.problems
+              title: Problem list
+          - component: ProblemEntryForm
+            props:
+              action: record_add_problem
+              state_key: add_problem_entry
+              title: Add a diagnosis
+              submit_label: Add to problem list
+              codes:
+                - system: http://fhir.de/CodeSystem/bfarm/icd-10-gm
+                  code: I10.90
+                  display: Essential hypertension, unspecified
+                - system: http://fhir.de/CodeSystem/bfarm/icd-10-gm
+                  code: E11.90
+                  display: Type 2 diabetes mellitus, without complications
+                - system: http://fhir.de/CodeSystem/bfarm/icd-10-gm
+                  code: E87.6
+                  display: Hypokalaemia
+                - system: http://fhir.de/CodeSystem/bfarm/icd-10-gm
+                  code: D63.0
+                  display: Anaemia in neoplastic disease
+              verification:
+                - confirmed
+                - provisional
+              severity: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: AllergyList
+            props:
+              allergies: $bindings.allergies
+          - component: AllergyEntryForm
+            props:
+              action: record_add_allergy
+              state_key: add_allergy_entry
+              title: Record an allergy or intolerance
+              submit_label: Record allergy
+              codes:
+                - system: http://www.whocc.no/atc
+                  code: C09AA05
+                  display: Ramipril
+                - system: http://www.whocc.no/atc
+                  code: C08CA01
+                  display: Amlodipine
+                - system: http://www.whocc.no/atc
+                  code: A10BA02
+                  display: Metformin
+                - system: http://www.whocc.no/atc
+                  code: N02CC01
+                  display: Sumatriptan
+              types:
+                - allergy
+                - intolerance
+              categories:
+                - medication
+              verification:
+                - confirmed
+                - unconfirmed
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: ResourceList
+            props:
+              resources: $bindings.procedures
+              title: Procedures
+              columns:
+                - label: Date
+                  path: performedDateTime
+                - label: Procedure
+                  path: code
+                - label: Body site
+                  path: bodySite[0]
+                - label: Outcome
+                  path: outcome
+                - label: Status
+                  path: status
+                  status: true
+              max_rows: 20
+              empty_text: No procedures recorded.
+          - component: ProcedureEntryForm
+            props:
+              action: record_add_procedure
+              state_key: add_procedure_entry
+              title: Document a procedure
+              submit_label: Record procedure
+              codes:
+                - system: http://fhir.de/CodeSystem/bfarm/ops
+                  code: 1-632.0
+                  display: Gastroscopy
+                - system: http://fhir.de/CodeSystem/bfarm/ops
+                  code: 8-831.0
+                  display: Central venous catheter
+                - system: http://fhir.de/CodeSystem/bfarm/ops
+                  code: 8-800.c0
+                  display: Red cell transfusion
+              statuses:
+                - completed
+                - not-done
+              max_backdate_days: 14
+              body_site: true
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+actions:
+  - id: record_add_problem
+    label: Add to problem list
+    primitive: p_add_problem
+    on_success: reload
+    success_message: Added to the problem list.
+  - id: record_add_allergy
+    label: Record allergy
+    primitive: p_add_allergy
+    on_success: reload
+    success_message: Recorded on the allergy list.
+  - id: record_add_procedure
+    label: Record procedure
+    primitive: p_add_procedure
+    on_success: reload
+    success_message: Added to the procedures.
+audit:
+  clinical_context: ward_round
+  intended_users:
+    - physician
+  intended_purpose: Documentation by the ward physician on the patient in context — a diagnosis for the problem list, an allergy, a procedure performed — each from a fixed list of codes, validated, attributed and versioned. Nothing is computed or interpreted.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - allergies
+    - procedures

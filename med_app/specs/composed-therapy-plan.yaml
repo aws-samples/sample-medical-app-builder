@@ -1,0 +1,96 @@
+# AppSpec — composed page (APP-12) with declared-shape records: the physiotherapist sets a measurable goal (a FHIR Goal
+# with a target parameter, value, unit and due date) and writes a progress note (a DocumentReference carrying the text),
+# each from a form whose fields the author declared and the reviewer signed — the record gets exactly those fields plus
+# the platform's stamps. The lists beside the forms read the same resources back.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_therapy_plan
+  version: 0.1.0
+  name: Therapy plan
+  description: Measurable goals and progress notes for one patient — set, written and read back on the record.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  sections:
+    - kind: list
+      id: goals
+      span: 8
+      resource: Goal
+      title: Goals
+      columns:
+        - { label: Goal, path: description }
+        - { label: Measure, path: "target[0].measure" }
+        - { label: Target, path: "target[0].detailQuantity" }
+        - { label: Due, path: "target[0].dueDate" }
+        - { label: Status, path: lifecycleStatus, status: true }
+      rows: 10
+    - kind: record
+      id: new_goal
+      span: 4
+      resource: Goal
+      title: Set a goal
+      fields:
+        - { id: goal, label: Goal, type: text, path: description, required: true, max_length: 200 }
+        - id: measure
+          label: Measured by
+          type: code
+          path: "target[0].measure"
+          required: true
+          codes:
+            - { system: "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", code: tug, display: Timed up-and-go }
+            - { system: "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", code: knee_flexion, display: Knee flexion (ROM) }
+            - { system: "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", code: walking_distance, display: Walking distance }
+        - { id: target, label: Target value, type: number, path: "target[0].detailQuantity", unit: s, range: { min: 0, max: 600 } }
+        - { id: due, label: Due, type: date, path: "target[0].dueDate", future_days: 365 }
+        - id: priority
+          label: Priority
+          type: choice
+          path: priority
+          system: http://terminology.hl7.org/CodeSystem/goal-priority
+          options:
+            - { code: high-priority, display: High }
+            - { code: medium-priority, display: Medium }
+            - { code: low-priority, display: Low }
+        - { id: note, label: Remark, type: long_text, path: "note[0].text" }
+      action_label: Save goal
+      success_message: The goal is on the patient record.
+    - kind: notes
+      span: 8
+      title: Progress notes
+      type: "11506-3"
+      rows: 8
+    - kind: record
+      id: new_note
+      span: 4
+      resource: DocumentReference
+      title: Progress note
+      fields:
+        - id: type
+          label: Kind of note
+          type: code
+          path: type
+          required: true
+          codes:
+            - { system: loinc, code: "11506-3", display: Progress note }
+            - { system: loinc, code: "34117-2", display: History and physical note }
+        - { id: title, label: Title, type: text, path: description, required: true, max_length: 120 }
+        - { id: text, label: Note, type: long_text, path: "content[0].attachment", required: true, max_length: 5000 }
+      action_label: Save note
+      success_message: The note is on the patient record.
+
+roles:
+  - id: physiotherapist
+    display_name: Physiotherapist
+    phi_fields_visible: [name, dob]
+    capabilities: [view, record_entry]
+default_role: physiotherapist
+
+governance:
+  clinical_context: physiotherapy
+  intended_users: [physiotherapist]
+  intended_purpose: Measurable therapy goals and progress notes for the patient in context, written to the record with provenance and read back from it. Nothing is computed, scored or recommended.
+  mdr_classification: none

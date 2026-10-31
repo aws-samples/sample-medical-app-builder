@@ -1,0 +1,41 @@
+# AppSpec — condition-defined cohort (APP-09) for a connected hospital record: every patient with essential
+# hypertension coded in ICD-10-GM (I10.00 benign, I10.90 unspecified — the two forms on the record), each with the
+# latest blood pressure panel, flagged at 140 systolic.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_hypertension_register
+  version: 0.1.0
+  name: Hypertension register
+  description: Patients with essential hypertension (ICD-10-GM I10.00, I10.90) and their most recent blood pressure.
+
+archetype: APP-09
+knobs:
+  condition:
+    codes:
+      - { system: icd10gm, code: "I10.00", display: Benigne essentielle Hypertonie }
+      - { system: icd10gm, code: "I10.90", display: "Essentielle Hypertonie, nicht näher bezeichnet" }
+    clinical_status: active
+    label: essential hypertension
+  value:
+    codes: [{ system: loinc, code: "85354-9", display: Blood pressure panel }]
+    component_code: "8480-6"
+    name: systolic
+    unit: mmHg
+    threshold: 140
+    label: Latest blood pressure
+  cards:
+    threshold_hint: Most recent blood pressure panel per patient
+
+roles:
+  - id: hypertension_clinic
+    display_name: Hypertension clinic
+    phi_fields_visible: [name, dob]
+    capabilities: [view]
+default_role: hypertension_clinic
+
+governance:
+  clinical_context: population_health
+  intended_users: [hypertension_nurse, cardiologist]
+  intended_purpose: Listing of patients with a coded hypertension diagnosis with their latest recorded blood pressure. No risk scoring.

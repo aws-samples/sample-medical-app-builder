@@ -1,0 +1,47 @@
+# The seed set of Klinikum Musterstadt — what `scripts/seed-registry.py` writes into this hospital's registry and
+# what the panel's mock registry shows while VITE_HOSPITAL_ID is hsp-musterstadt. One file per hospital under med_app/showcase/.
+#
+#   apps          spec name (specs/<spec>.yaml) → the clinical note of its example sign-off; `npm run showcase` compiles each
+#                 into manifests/<hospital_id>/<spec>.yaml, published, with the hospital id below in its metadata
+#   collections   how the launcher groups them; ids derive from the names (`col_<slug>`), as the registry does, and the
+#                 approvers curate them afterwards in the panel
+hospital_id: hsp-musterstadt
+
+apps:
+  - spec: patient-360
+    note: Display only; nothing computed, scored or interpreted. Approved for chart review.
+  - spec: cardio-renal-follow-up
+    note: Display of recorded values against reference lines; readings recorded and statuses changed with validation, versioning and provenance. Approved for the cardio-renal clinic.
+  - spec: tumour-board
+    note: Display of recorded diagnoses, procedures, reports, laboratory values, imaging and letters; no staging or interpretation. Approved for tumour-board case discussion.
+  - spec: imaging-review-3d
+    note: Listing and display of existing imaging studies with reconstructions; no measurement or interpretation. Approved for imaging review.
+  - spec: hypertension-register
+    note: Listing of patients by a coded diagnosis with their latest blood pressure; no risk scoring. Approved for the hypertension clinic.
+  - spec: ckd-imaging-register
+    note: Listing of patients by a coded diagnosis and imaging on record, with their latest eGFR; studies named, not displayed; no staging or risk scoring. Approved for the nephrology clinic.
+  - spec: hypertension-follow-up
+    note: Structured documentation with validation and provenance; no scores or recommendations. Approved for the hypertension clinic.
+  - spec: follow-up-due
+    note: Listing of who is due the follow-up assessment, derived from the recorded answers; nothing scheduled or reminded. Approved for the hypertension clinic.
+  - spec: diabetes-follow-up
+    note: Display of recorded values against a guideline line filled from the catalog template; no scoring or recommendations. Approved for the diabetes clinic.
+  - spec: falls-risk-assessment
+    note: Structured documentation on a form designed with the ward and reviewed here, and the course of its numeric answers; written with validation and provenance; no score is computed. Approved for the geriatric wards.
+  - spec: ward-documentation
+    note: Coded entries — diagnoses, allergies, procedures — from fixed lists, and the patient's tasks; each write validated, versioned and attributed. Approved for the wards.
+  - spec: ward-open-tasks
+    note: The open tasks across the ward's patients, started and completed from the row with attribution; nothing scheduled or reminded. Approved for the wards.
+  - spec: wound-documentation
+    note: Photo documentation by kind, body site and remark; images stored by the platform, the record keeps the Media; nothing measured or interpreted. Approved for wound care.
+
+collections:
+  - name: Ward — everyday chores
+    description: What the ward opens every day — documentation with its forms, the open tasks across patients, wound photos, the falls-risk screen and the patient overview.
+    apps: [app_ward_documentation, app_ward_worklist, app_wound_photos, app_falls_risk, app_patient_360]
+  - name: Chronic disease clinics
+    description: The hypertension and diabetes clinics — the register, who is due a follow-up, the follow-up visit, the cardio-renal page and the diabetes dashboard.
+    apps: [app_hypertension_register, app_htn_assessment_due, app_hypertension_follow_up, app_cardio_renal, app_diabetes_follow_up]
+  - name: Case review and imaging
+    description: The tumour board page, the imaging review with 3-D reconstructions it links to, and the CKD register narrowed by renal imaging.
+    apps: [app_tumour_board, app_imaging_3d, app_ckd_imaging_register]

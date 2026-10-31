@@ -1,0 +1,122 @@
+# Golden output of the compiler for specs/ward-worklist.yaml (lifecycle as compiled: a draft; the registry manages it from there).
+# Regenerate deliberately when the compiler changes: npm run appspec -- compile specs/ward-worklist.yaml --created-at 2026-09-15T09:00:00Z
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_ward_worklist
+  version: 0.1.0
+  name: Ward worklist
+  description: The open tasks of the ward across patients, overdue first; take one on, complete it, open the patient.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: ward_team
+      display_name: Ward team
+      cognito_group: app-app_ward_worklist-ward_team
+      data_scope_ref: scope_ward_team
+      ui_capabilities:
+        - view
+        - update_status
+  default_role: ward_team
+data_scopes:
+  scope_ward_team:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Task
+        operations:
+          - search
+          - update
+      - resource: Provenance
+        operations:
+          - create
+    patient_scope: cohort
+    phi_fields_visible:
+      - name
+      - dob
+      - mrn
+primitives:
+  - id: p_worklist
+    kind: data.task.worklist
+    catalog_version: 1.0.0
+    config:
+      codes:
+        - urn:medapp:task|falls_screen
+        - urn:medapp:task|discharge_letter
+        - urn:medapp:task|follow_up_call
+      statuses:
+        - requested
+        - in-progress
+    output_binding: worklist
+  - id: p_task_status
+    kind: write.fhir.task.update_status
+    catalog_version: 1.0.0
+    config:
+      allowed:
+        - in-progress
+        - completed
+        - cancelled
+      change: $ui.worklist_status
+    output_binding: task_updated
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: Grid
+        props:
+          columns: 3
+        children:
+          - component: StatCard
+            props:
+              label: Open tasks
+              value: $bindings.worklist.count
+              hint: requested or in-progress · Falls risk screen, Discharge letter, Follow-up call
+              tone: accent
+          - component: StatCard
+            props:
+              label: Overdue
+              value: $bindings.worklist.overdue_count
+              hint: Due date before today
+              tone: alert
+          - component: StatCard
+            props:
+              label: Data scope
+              value: cohort
+              hint: Name, date of birth and MRN visible; no contact details
+      - component: Worklist
+        props:
+          rows: $bindings.worklist.rows
+          title: Open tasks on the ward
+          status_action: update_task
+          state_key: worklist_status
+          cancel: true
+          open_in: app_ward_documentation
+context_inputs: []
+actions:
+  - id: update_task
+    label: Update task
+    primitive: p_task_status
+    on_success: reload
+    success_message: The task was updated.
+audit:
+  clinical_context: ward_round
+  intended_users:
+    - nurse
+    - physician
+  intended_purpose: The ward's open tasks across its patients, so nothing due is missed; starting and completing a task is recorded with who did it and when. Nothing is scheduled, reminded or interpreted.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - tasks

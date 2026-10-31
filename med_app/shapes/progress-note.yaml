@@ -1,0 +1,21 @@
+# Record shape — a progress note: a classified clinical note kept as a DocumentReference with the text as a text/plain
+# attachment, listed with the patient's other letters and notes.
+apiVersion: medapp.eu/v1
+kind: RecordShape
+shape:
+  id: progress_note
+  name: Progress note
+  description: A short clinical note — progress, nursing, physiotherapy — classified by LOINC document type, kept with the patient's letters and notes.
+  resource: DocumentReference
+  fields:
+    - id: type
+      label: Kind of note
+      type: code
+      path: type
+      required: true
+      codes:
+        - { system: loinc, code: "11506-3", display: Progress note }
+        - { system: loinc, code: "34746-8", display: Nurse note }
+        - { system: loinc, code: "28653-4", display: Physical therapy note }
+    - { id: title, label: Title, type: text, path: description, required: true, max_length: 120 }
+    - { id: text, label: Note, type: long_text, path: "content[0].attachment", required: true, max_length: 5000 }

@@ -1,0 +1,263 @@
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_ward_entry
+  version: 0.1.0
+  name: Ward entry
+  description: Record a blood pressure reading, mark problems resolved and stop prescriptions — on the record, with provenance.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: ward_nurse
+      display_name: Ward nurse
+      cognito_group: app-app_ward_entry-ward_nurse
+      data_scope_ref: scope_ward_nurse
+      ui_capabilities:
+        - view
+        - record_observation
+        - update_status
+  default_role: ward_nurse
+data_scopes:
+  scope_ward_nurse:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Observation
+        operations:
+          - create
+          - search
+        codes:
+          - http://loinc.org|85354-9
+          - http://loinc.org|8480-6
+          - http://loinc.org|8462-4
+        filter: subject={context.patient_id}
+      - resource: Provenance
+        operations:
+          - create
+      - resource: Condition
+        operations:
+          - search
+          - update
+        filter: subject={context.patient_id}
+      - resource: MedicationRequest
+        operations:
+          - search
+          - update
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_bp_entry
+    kind: write.fhir.observation.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      codes:
+        - http://loinc.org|85354-9
+      components:
+        - http://loinc.org|8480-6
+        - http://loinc.org|8462-4
+      unit: mmHg
+      category: vital-signs
+      ranges:
+        http://loinc.org|8480-6:
+          min: 50
+          max: 300
+        http://loinc.org|8462-4:
+          min: 30
+          max: 200
+      rules:
+        - component: http://loinc.org|8480-6
+          above: http://loinc.org|8462-4
+          message: Systolic must be above diastolic
+      max_backdate_days: 7
+      observation: $ui.bp_entry_entry
+    output_binding: bp_entry_recorded
+  - id: p_bp
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|85354-9
+      since: $context.window_start
+      count: 500
+    output_binding: bp
+  - id: p_problems
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: problems
+  - id: p_problems_resolve
+    kind: write.fhir.condition.update_status
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      allowed:
+        - resolved
+        - inactive
+      change: $ui.problems_resolve
+    output_binding: problems_resolved
+  - id: p_medication
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: MedicationRequest
+      params:
+        patient: $context.patient_id
+        status: active
+    output_binding: medication
+  - id: p_medication_stop
+    kind: write.fhir.medication_request.update_status
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      allowed:
+        - stopped
+        - completed
+        - on-hold
+      change: $ui.medication_stop
+    output_binding: medication_stopped
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 4
+            - 8
+        children:
+          - component: ObservationEntryForm
+            props:
+              action: record_bp_entry
+              state_key: bp_entry_entry
+              title: Record a blood pressure
+              submit_label: Record reading
+              code:
+                system: http://loinc.org
+                code: 85354-9
+                display: Blood pressure panel
+              components:
+                - code:
+                    system: http://loinc.org
+                    code: 8480-6
+                    display: Systolic blood pressure
+                  label: Systolic
+                  range:
+                    min: 50
+                    max: 300
+                - code:
+                    system: http://loinc.org
+                    code: 8462-4
+                    display: Diastolic blood pressure
+                  label: Diastolic
+                  range:
+                    min: 30
+                    max: 200
+              unit: mmHg
+              rules:
+                - component: http://loinc.org|8480-6
+                  above: http://loinc.org|8462-4
+                  message: Systolic must be above diastolic
+              max_backdate_days: 7
+          - component: ObservationTimeline
+            props:
+              title: Systolic / Diastolic, last year
+              observations: $bindings.bp
+              unit: mmHg
+              height_px: 280
+              series:
+                - label: Systolic
+                  component_code: 8480-6
+                - label: Diastolic
+                  component_code: 8462-4
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: ProblemList
+            props:
+              conditions: $bindings.problems
+              title: Active problems
+              resolve_action: resolve_problems
+              state_key: problems_resolve
+              resolve_label: Mark resolved
+          - component: MedicationList
+            props:
+              medications: $bindings.medication
+              title: Active medication
+              stop_action: stop_medication
+              state_key: medication_stop
+              stop_label: Stop
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+  - name: window_start
+    type: iso8601
+    required: false
+    source:
+      - panel_selection
+    default: now-1y
+actions:
+  - id: record_bp_entry
+    label: Record reading
+    primitive: p_bp_entry
+    on_success: reload
+    success_message: The reading is now part of the patient record.
+  - id: resolve_problems
+    label: Mark resolved
+    primitive: p_problems_resolve
+    on_success: reload
+    success_message: The problem is now marked as resolved.
+  - id: stop_medication
+    label: Stop
+    primitive: p_medication_stop
+    on_success: reload
+    success_message: The prescription is now marked as stopped.
+audit:
+  clinical_context: ward_round
+  intended_users:
+    - nurse
+  intended_purpose: Recording of blood pressure readings and status changes of problems and prescriptions by the ward nurse, on the patient in context. Each change is validated against the form's rules, versioned and attributed; nothing is computed or interpreted.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements
+    - medication

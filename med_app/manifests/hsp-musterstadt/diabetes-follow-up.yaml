@@ -1,0 +1,180 @@
+# Seed app of hsp-musterstadt — compiled from specs/diabetes-follow-up.yaml by scripts/build-showcase.mjs (npm run showcase); do not edit by hand.
+# The lifecycle block is an example sign-off: the registry seed publishes the app with it.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_diabetes_follow_up
+  version: 1.0.0
+  name: Diabetes follow-up
+  description: HbA1c over the last two years against the guideline goal, the
+    current antidiabetic therapy by class, and the related conditions — filled
+    from the diabetes template.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: "2026-10-01T14:00:00Z"
+lifecycle:
+  state: published
+  signoff:
+    approver_sub: example-approver-sub
+    approved_at: "2026-10-01T15:00:00Z"
+    signature: "example: KMS-signed manifest_hash goes here"
+    clinical_notes: Display of recorded values against a guideline line filled from
+      the catalog template; no scoring or recommendations. Approved for the
+      diabetes clinic.
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: diabetes_clinic
+      display_name: Diabetes clinic
+      cognito_group: app-app_diabetes_follow_up-diabetes_clinic
+      data_scope_ref: scope_diabetes_clinic
+      ui_capabilities:
+        - view
+  default_role: diabetes_clinic
+data_scopes:
+  scope_diabetes_clinic:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|4548-4
+          - http://loinc.org|29463-7
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+      - resource: MedicationRequest
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Condition
+        operations:
+          - search
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_series
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|4548-4
+        - http://loinc.org|29463-7
+      since: $context.window_start
+      count: 500
+    output_binding: series
+  - id: p_medications
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: MedicationRequest
+      params:
+        patient: $context.patient_id
+        status: active
+        code: http://www.whocc.no/atc|A10B,http://www.whocc.no/atc|A10A
+    output_binding: medications
+  - id: p_conditions
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+        code: http://snomed.info/sct|44054006,http://fhir.de/CodeSystem/bfarm/icd-10-gm|E11
+    output_binding: conditions
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: ObservationTimeline
+            props:
+              title: HbA1c, last two years
+              observations: $bindings.series
+              unit: "%"
+              height_px: 380
+              series:
+                - label: HbA1c
+                  code: 4548-4
+              thresholds:
+                - value: 7
+                  label: HbA1c ≥ 7 %
+              caption: "Reference lines: ADA Standards of Care in Diabetes: HbA1c goal < 7 %
+                for most non-pregnant adults."
+          - component: VitalsTable
+            props:
+              title: Latest readings
+              observations: $bindings.series
+              max_rows: 8
+              compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: MedicationList
+            props:
+              medications: $bindings.medications
+              title: Current therapy
+          - component: ProblemList
+            props:
+              conditions: $bindings.conditions
+              title: Related conditions
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+  - name: window_start
+    type: iso8601
+    required: false
+    source:
+      - panel_selection
+    default: now-2y
+actions: []
+audit:
+  clinical_context: diabetes_follow_up
+  intended_users:
+    - diabetologist
+    - general_practitioner
+    - diabetes_nurse
+  intended_purpose: Display of HbA1c readings against the guideline goal, the
+    current antidiabetic therapy and the related problems for the follow-up
+    consultation. The goal line is visual only; no scoring, no treatment
+    recommendation.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements
+    - medication

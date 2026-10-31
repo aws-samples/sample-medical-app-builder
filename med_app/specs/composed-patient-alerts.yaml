@@ -1,0 +1,50 @@
+# AppSpec — a composed page writing a kind the platform has not admitted, through the library: `patient_alert` is a Flag,
+# an administrator-defined shape whose stamps (status, patient, author, since when) the shape declares itself. The app
+# refers to it by id like any other shape; inline fields are for admitted kinds only. The alerts on record read back as a
+# generic list. The manifest marks the write as an open kind, and the review page says so.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_patient_alerts
+  version: 0.1.0
+  name: Patient alerts
+  description: The warnings shown with the chart — falls risk, isolation, an interpreter needed — and the form that raises one.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  sections:
+    - kind: list
+      id: alerts
+      span: 8
+      resource: Flag
+      title: Alerts on record
+      columns:
+        - { label: Alert, path: code }
+        - { label: Kind, path: "category[0]" }
+        - { label: Since, path: period.start }
+        - { label: Review by, path: period.end }
+        - { label: Status, path: status, status: true }
+      rows: 10
+      empty_text: No alert on record.
+    - kind: record
+      id: new_alert
+      span: 4
+      shape: patient_alert
+      action_label: Raise alert
+      success_message: The alert is on the patient record.
+
+roles:
+  - id: ward_nurse
+    display_name: Ward nurse
+    phi_fields_visible: [name, dob]
+    capabilities: [view, record_entry]
+default_role: ward_nurse
+
+governance:
+  clinical_context: ward
+  intended_users: [ward_nurse]
+  intended_purpose: The patient's alerts, read and raised by the ward; a warning shown with the chart, never a judgement made by the platform.
+  mdr_classification: none

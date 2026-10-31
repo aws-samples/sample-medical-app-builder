@@ -1,0 +1,469 @@
+/* Type: Geist and Geist Mono, self-hosted (@fontsource-variable, imported in main.tsx) — the stacks live in theme.ts. */
+
+:root {
+  color-scheme: light;
+  /* The visual system's three rules (see theme.ts): shape, depth, motion. */
+  --ds-radius-card: 12px;
+  --ds-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* The colours (--ds-page, --ds-ink, --ds-hairline, --ds-shadow-card, …) are set on this element at boot from
+     src/branding.ts (theme.ts applyBranding) — this stylesheet names none of its own. */
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  background: var(--ds-page);
+  color: var(--ds-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Headings: a touch tighter than body text, as a grotesk at these sizes wants. */
+.ds-title {
+  letter-spacing: -0.012em;
+}
+.ds-title:where(h1, h2) {
+  letter-spacing: -0.018em;
+}
+
+/* Identifiers (MRNs, study UIDs, codes) in the mono face with lining tabular figures. */
+.ds-mono {
+  font-family: var(--mantine-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+.ds-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Facts about a thing (the inspector's App section): quiet labels in a narrow column, values beside them, one hairline
+   between rows — a definition list, not a row of pills. */
+.ds-facts {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+}
+.ds-facts dt,
+.ds-facts dd {
+  margin: 0;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ds-hairline);
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+.ds-facts dt {
+  color: var(--ds-muted);
+  font-size: var(--mantine-font-size-xs);
+}
+.ds-facts dd {
+  color: var(--ds-ink);
+  overflow-wrap: anywhere;
+}
+.ds-facts dt:last-of-type,
+.ds-facts dd:last-of-type {
+  border-bottom: 0;
+}
+
+/* The audit trail: time and ids in the mono face, two-line calls, quiet heads. */
+.ds-audit th {
+  white-space: nowrap;
+}
+
+/* Cards: one radius, a hairline, a shadow tinted with the ink colour that falls away from the card. */
+.ds-paper[data-with-border] {
+  border-color: var(--ds-hairline);
+  box-shadow: var(--ds-shadow-card);
+}
+/* Cards that share a row (a Grid column or a tile grid) are as tall as the row: the row reads as one line, not a
+   skyline. The reveal wrapper (RenderNode) sits between the column and the card, so it stretches too. */
+.mantine-Grid-col > .ds-paper,
+.mantine-Grid-col > .ds-reveal,
+.mantine-Grid-col > .ds-reveal > .ds-paper,
+.mantine-SimpleGrid-root > .ds-paper,
+.mantine-SimpleGrid-root > .ds-reveal,
+.mantine-SimpleGrid-root > .ds-reveal > .ds-paper {
+  height: 100%;
+}
+
+/* Tables: quiet column heads, lining tabular figures so numbers align, rules one step lighter than text. */
+.ds-table {
+  font-variant-numeric: tabular-nums;
+  --table-border-color: var(--ds-line);
+  --table-striped-color: var(--ds-stripe);
+  --table-highlight-on-hover-color: var(--ds-hover);
+}
+.ds-table thead th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ds-muted);
+  padding-top: 6px;
+  padding-bottom: 8px;
+}
+.ds-table tbody tr {
+  transition: background-color 120ms ease;
+}
+.ds-table tbody td {
+  color: var(--ds-ink);
+}
+
+/* Badges: a label, not a button — slightly tracked, never shouting. */
+.ds-badge {
+  font-weight: 600;
+  letter-spacing: 0.015em;
+}
+
+/* Pressable things answer the press: a small scale-down, back fast. Hover colour changes keep their own ease. */
+.ds-press {
+  transition:
+    transform 160ms var(--ds-ease-out),
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+.ds-press:active:not(:disabled):not([data-disabled]) {
+  transform: scale(0.98);
+}
+
+/* A request to send with one click (the composer's starters): a card that answers the hover with the accent border. */
+.starter-card:hover:not(:disabled) {
+  border-color: var(--mantine-color-clinical-4) !important;
+  background: var(--mantine-color-clinical-0) !important;
+}
+.starter-card:focus-visible {
+  outline: 2px solid var(--mantine-color-clinical-5);
+  outline-offset: 2px;
+}
+
+/* A section that waited for its data: when the placeholder gives way to the content, the content fades up
+   rather than popping in (opacity and transform only; off under reduced motion, below).
+   The fill mode is `backwards`, deliberately not `both`/`forwards`: a forwards fill keeps the animated transform
+   applied after the animation — and an animated transform computes to a matrix even when the keyframe says
+   `none` — and any transform, the identity included, makes this wrapper the containing block of every
+   `position: fixed` descendant. The study viewer's "expand over the page" overlay is such a descendant; with a
+   forwards fill it stayed the size of its card. With `backwards` the element returns to its own styles (no
+   transform) the moment the animation ends; the final keyframe equals those styles, so nothing jumps. */
+.ds-reveal {
+  animation: ds-reveal 200ms var(--ds-ease-out) backwards;
+}
+@keyframes ds-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Top-bar breadcrumb trail. One line; only the current page may shrink, with an ellipsis. */
+.crumbs {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: nowrap;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  line-height: 1.5;
+  font-size: var(--mantine-font-size-sm);
+}
+.crumbs .crumb {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.crumbs .crumb + .crumb::before {
+  content: '›';
+  margin: 0 var(--mantine-spacing-sm);
+  color: var(--mantine-color-gray-6);
+}
+.crumbs .crumb-brand {
+  font-size: var(--mantine-font-size-md);
+  font-weight: 600;
+  color: var(--mantine-color-clinical-7); /* the accent green used by buttons and links */
+}
+.crumbs .crumb-brand a {
+  color: inherit;
+}
+/* The brand with a logo (src/branding.ts): the image and the name side by side, centred on each other, and the
+   whole row centred on the logo instead of sharing a text baseline. The brand is a block-level flex box, not an
+   inline one: inline, the list item would add a line box's descender room under the image, and the page name —
+   centred on that taller item — would sit below the wordmark. The sample wordmark puts its baseline where a centred
+   14px line's baseline falls (docs/media/scripts/wordmark.py), so the two read as one line of text. */
+.crumbs.has-logo {
+  align-items: center;
+}
+.crumbs .crumb-brand .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.crumbs .crumb-brand .brand img {
+  display: block;
+  width: auto;
+}
+.crumbs .crumb-current {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+.crumbs a {
+  color: var(--mantine-color-clinical-7);
+  text-decoration: none;
+}
+.crumbs a:hover {
+  text-decoration: underline;
+}
+
+/* Panel frame: a sidebar naming the sections, the page beside it. The bar is white like the top bar, so the two
+   read as one frame around the grey page; the links are quiet text, the current one set in ink on a faint field. */
+.panel-body {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 57px); /* the top bar's height */
+}
+.panel-nav {
+  flex: 0 0 236px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 20px 12px;
+  background: var(--ds-surface);
+  border-right: 1px solid var(--ds-hairline);
+}
+.panel-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--ds-muted);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  line-height: 1.3;
+  text-decoration: none;
+  transition:
+    background-color 120ms var(--ds-ease-out),
+    color 120ms var(--ds-ease-out);
+}
+.panel-nav-link svg {
+  flex: 0 0 auto;
+}
+.panel-nav-link:hover {
+  color: var(--ds-ink);
+  background: rgba(var(--ds-ink-rgb), 0.04);
+}
+.panel-nav-link.is-active {
+  color: var(--ds-ink);
+  font-weight: 600;
+  background: rgba(var(--ds-ink-rgb), 0.07);
+}
+.panel-nav-link:focus-visible {
+  outline: 2px solid var(--mantine-color-clinical-6);
+  outline-offset: 1px;
+}
+.panel-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+@media (max-width: 960px) {
+  .panel-body {
+    flex-direction: column;
+    min-height: 0;
+  }
+  .panel-nav {
+    flex: 0 0 auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--ds-hairline);
+  }
+}
+
+/* Sign-in screen: brand panel left, form right; single column below 900px. */
+.signin {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(360px, 5fr) 7fr;
+}
+.signin-brand {
+  background: var(--ds-ink);
+  color: var(--ds-line);
+  padding: 40px 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+}
+.signin-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.signin-logo {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  align-self: flex-start;
+  margin: 8px 0 4px;
+}
+.signin-hospital {
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.signin-hero {
+  width: 100%;
+  max-width: 540px;
+  height: auto;
+  align-self: center;
+}
+.signin-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  counter-reset: step;
+}
+.signin-steps li {
+  counter-increment: step;
+  border-top: 1px solid var(--ds-ink-rule);
+  padding-top: 12px;
+}
+.signin-steps li > span {
+  display: block;
+  font-weight: 600;
+  color: var(--ds-surface);
+  margin-bottom: 4px;
+}
+.signin-steps li > span::before {
+  content: counter(step) ' ';
+  color: var(--ds-accent);
+  font-variant-numeric: tabular-nums;
+  margin-right: 6px;
+}
+.signin-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  /* a quiet dot grid, with a faint wash of the accent behind the card to tie both halves together */
+  background-color: var(--ds-page);
+  background-image:
+    radial-gradient(ellipse 60% 50% at 50% 45%, rgba(var(--ds-accent-rgb), 0.07), transparent 70%),
+    radial-gradient(circle at 1px 1px, rgba(var(--ds-ink-rgb), 0.09) 1px, transparent 1.5px);
+  background-size:
+    100% 100%,
+    22px 22px;
+}
+.signin-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-hairline);
+  border-radius: var(--ds-radius-card);
+  padding: 40px;
+  box-shadow:
+    0 24px 56px -24px rgba(var(--ds-ink-rgb), 0.3),
+    0 4px 8px rgba(var(--ds-ink-rgb), 0.05);
+}
+@media (max-width: 900px) {
+  .signin {
+    grid-template-columns: 1fr;
+  }
+  .signin-brand {
+    display: none;
+  }
+}
+
+/* Visible keyboard focus everywhere; Mantine's default is fine but make it consistent. */
+:focus-visible {
+  outline: 2px solid var(--ds-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+  .ds-reveal {
+    animation: none;
+  }
+}
+
+/* Assistant messages in the drafting chat are Markdown; keep them compact inside a bubble. */
+.chat-markdown {
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.5;
+}
+.chat-markdown > :first-child {
+  margin-top: 0;
+}
+.chat-markdown > :last-child {
+  margin-bottom: 0;
+}
+.chat-markdown p,
+.chat-markdown ul,
+.chat-markdown ol {
+  margin: 0.4em 0;
+}
+.chat-markdown ul,
+.chat-markdown ol {
+  padding-left: 1.4em;
+}
+.chat-markdown code {
+  font-size: 0.9em;
+  background: var(--ds-page);
+  padding: 0 0.3em;
+  border-radius: 3px;
+}
+.chat-markdown pre {
+  background: var(--ds-page);
+  padding: 0.6em;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+.chat-markdown table {
+  border-collapse: collapse;
+}
+.chat-markdown th,
+.chat-markdown td {
+  border: 1px solid var(--ds-line-soft);
+  padding: 0.2em 0.5em;
+}
+
+/* Tabs everywhere (launcher, drafting page, and the Tabs layout inside rendered apps): the selected
+   tab's label is bold. Applied through the theme (Tabs.classNames.tab), so one rule covers all. */
+.ds-tab {
+  font-weight: 500;
+  color: var(--ds-muted);
+  transition: color 120ms ease;
+}
+.ds-tab[data-active] {
+  font-weight: 600;
+  color: var(--ds-ink);
+}
+
+/* A vertical ScrollArea whose content must stay as wide as the viewport, no wider. Mantine's
+   content wrapper is `display: table; min-width: 100%`, which lets wide children push past the
+   edge instead of wrapping; a block wrapper makes them fit (the drafting page's two panes). */
+.scroll-fill {
+  display: block !important;
+  min-width: 0 !important;
+  width: 100%;
+}

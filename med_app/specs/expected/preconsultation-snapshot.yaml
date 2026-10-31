@@ -1,0 +1,169 @@
+# Golden output of the compiler for specs/preconsultation-snapshot.yaml (lifecycle omitted: it is registry-managed).
+# Regenerate deliberately when the compiler changes: npm run appspec -- compile specs/preconsultation-snapshot.yaml
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_preconsult_snapshot
+  version: 0.1.0
+  name: Pre-consultation snapshot
+  description: "What happened since the last visit: active problems, current medication and recent readings on one screen."
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+auth:
+  roles:
+    - id: clinician
+      display_name: Treating clinician
+      cognito_group: app-app_preconsult_snapshot-clinician
+      data_scope_ref: scope_clinician
+      ui_capabilities:
+        - view
+  default_role: clinician
+data_scopes:
+  scope_clinician:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Condition
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: MedicationRequest
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|85354-9
+          - http://loinc.org|29463-7
+          - http://loinc.org|4548-4
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_conditions
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: conditions
+  - id: p_medications
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: MedicationRequest
+      params:
+        patient: $context.patient_id
+        status: active
+    output_binding: medications
+  - id: p_vitals
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|85354-9
+        - http://loinc.org|29463-7
+        - http://loinc.org|4548-4
+      since: $context.window_start
+      count: 100
+    output_binding: vitals
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: Grid
+        props:
+          columns: 3
+        children:
+          - component: StatCard
+            props:
+              label: Active problems
+              value: $bindings.conditions.length
+              hint: On the problem list now
+          - component: StatCard
+            props:
+              label: Current medication
+              value: $bindings.medications.length
+              hint: Active prescriptions
+          - component: StatCard
+            props:
+              label: Readings, last 90 days
+              value: $bindings.vitals.length
+              hint: Vitals and key labs recorded in the window
+              tone: accent
+      - component: TwoColumn
+        props:
+          ratio:
+            - 7
+            - 5
+        children:
+          - component: VitalsTable
+            props:
+              observations: $bindings.vitals
+              title: Recent readings — last 90 days
+              max_rows: 8
+              compact: true
+          - component: Section
+            children:
+              - component: ProblemList
+                props:
+                  conditions: $bindings.conditions
+                  title: Active problems
+              - component: MedicationList
+                props:
+                  medications: $bindings.medications
+                  title: Current medication
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+  - name: window_start
+    type: iso8601
+    required: false
+    source:
+      - panel_selection
+    default: now-90d
+actions: []
+audit:
+  clinical_context: outpatient_consultation
+  intended_users:
+    - general_practitioner
+    - internist
+  intended_purpose: One-screen display of recorded problems, medication and readings before a consultation. Counts are list lengths; no computation or interpretation.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements
+    - medication
+lifecycle:
+  state: draft
+  signoff: null

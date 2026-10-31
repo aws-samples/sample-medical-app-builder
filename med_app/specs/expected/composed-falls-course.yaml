@@ -1,0 +1,162 @@
+# Golden output of the compiler for specs/composed-falls-course.yaml (lifecycle as compiled: a draft; the registry manages it from there).
+# Regenerate deliberately when the compiler changes: npm run appspec -- compile specs/composed-falls-course.yaml --created-at 2026-09-15T09:00:00Z
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_falls_course
+  version: 0.1.0
+  name: Falls risk over time
+  description: The timed up-and-go and the falls count across the ward's falls-risk screens, and the last screen in full.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: geriatric_nurse
+      display_name: Geriatric nurse
+      cognito_group: app-app_falls_course-geriatric_nurse
+      data_scope_ref: scope_geriatric_nurse
+      ui_capabilities:
+        - view
+  default_role: geriatric_nurse
+data_scopes:
+  scope_geriatric_nurse:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: QuestionnaireResponse
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Questionnaire
+        operations:
+          - read
+      - resource: Condition
+        operations:
+          - search
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_tug
+    kind: data.fhir.questionnaire_response.answers
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      questionnaire: https://hsp-musterstadt.medapp.eu/Questionnaire/app-falls-risk.falls-risk
+      link_ids:
+        - timed_up_and_go
+    output_binding: tug
+  - id: p_last_screen
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: QuestionnaireResponse
+      params:
+        patient: $context.patient_id
+        questionnaire: https://hsp-musterstadt.medapp.eu/Questionnaire/app-falls-risk.falls-risk
+    output_binding: last_screen
+  - id: p_falls
+    kind: data.fhir.questionnaire_response.answers
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      questionnaire: https://hsp-musterstadt.medapp.eu/Questionnaire/app-falls-risk.falls-risk
+      link_ids:
+        - falls_count
+    output_binding: falls
+  - id: p_problems
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: problems
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: ObservationTimeline
+            props:
+              title: Timed up-and-go across screens
+              observations: $bindings.tug
+              unit: s
+              height_px: 320
+              series:
+                - label: Timed up-and-go
+                  code: timed_up_and_go
+              thresholds:
+                - value: 13.5
+                  label: TUG ≥ 13.5 s
+              caption: "Reference lines: Shumway-Cook 2000: a timed up-and-go of 13.5 s or more marks a raised fall risk in community-dwelling older adults."
+          - component: LatestAnswers
+            props:
+              response: $bindings.last_screen[0]
+              title: Last falls screen
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: ObservationTimeline
+            props:
+              title: Falls reported per screen
+              observations: $bindings.falls
+              height_px: 220
+              series:
+                - label: Falls reported
+                  code: falls_count
+          - component: ProblemList
+            props:
+              conditions: $bindings.problems
+              title: Active problems
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+actions: []
+audit:
+  clinical_context: ward_round
+  intended_users:
+    - nurse
+  intended_purpose: The course of a patient's falls-risk screens — timed up-and-go and falls reported, plotted from the recorded screens — and the latest screen in full. Reference lines are visual; nothing is scored or interpreted.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_documentation

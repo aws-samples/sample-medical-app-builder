@@ -1,0 +1,152 @@
+# Archetype: single-patient viewer, tabbed record.
+# Shows: Medplum PatientHeader as-is, constrained FHIR queries, Tabs layout, schema-driven ResourceDetails.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+
+metadata:
+  app_id: app_patient_summary
+  version: 0.1.0
+  parent_version: null
+  name: Patient summary
+  description: Problem list, medication and recent vitals for one patient, with the full FHIR record on a separate tab.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: "2026-09-11T09:00:00Z"
+
+lifecycle:
+  state: published
+  signoff:
+    approver_sub: example-approver-sub
+    approved_at: "2026-09-11T10:00:00Z"
+    signature: "example: KMS-signed manifest_hash goes here"
+    clinical_notes: Display-only; no calculations. Approved for the pilot ward.
+  provenance:
+    generated_by_pipeline_version: 0.0.0-handwritten
+    prompt_hash: sha256:handwritten
+
+auth:
+  roles:
+    - id: clinician
+      display_name: Treating clinician
+      cognito_group: app-app_patient_summary-clinician
+      data_scope_ref: scope_clinician
+      ui_capabilities: [view, export_pdf]
+  default_role: clinician
+
+data_scopes:
+  scope_clinician:
+    patient_scope: individual
+    phi_fields_visible: [name, dob, gender, mrn, address, phone, email]
+    fhir:
+      - resource: Patient
+        operations: [read]
+      - resource: Condition
+        operations: [search]
+        filter: subject={context.patient_id}
+      - resource: MedicationRequest
+        operations: [search]
+        filter: subject={context.patient_id}
+      - resource: Observation
+        operations: [search]
+        codes: ["http://loinc.org|85354-9", "http://loinc.org|8867-4", "http://loinc.org|29463-7", "http://loinc.org|72166-2", "http://loinc.org|4548-4", "http://loinc.org|33914-3"]
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+
+  - id: p_conditions
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: conditions
+
+  - id: p_medications
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: MedicationRequest
+      params:
+        patient: $context.patient_id
+        status: active
+    output_binding: medications
+
+  - id: p_vitals
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes: ["http://loinc.org|85354-9", "http://loinc.org|8867-4", "http://loinc.org|29463-7", "http://loinc.org|72166-2", "http://loinc.org|4548-4", "http://loinc.org|33914-3"]
+      since: $context.window_start
+      count: 40
+    output_binding: vitals
+
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientHeader
+        props:
+          patient: $bindings.patient
+      - component: Tabs
+        props:
+          default_tab: Problems
+        children:
+          - component: Tab
+            props: { label: Problems }
+            children:
+              - component: ProblemList
+                props:
+                  conditions: $bindings.conditions
+                  title: Active problems
+          - component: Tab
+            props: { label: Medication }
+            children:
+              - component: MedicationList
+                props:
+                  medications: $bindings.medications
+                  title: Active medication
+          - component: Tab
+            props: { label: Vitals & labs }
+            children:
+              - component: VitalsTable
+                props:
+                  observations: $bindings.vitals
+                  title: Last two years
+                  max_rows: 40
+          - component: Tab
+            props: { label: FHIR record }
+            children:
+              - component: ResourceDetails
+                props:
+                  resource: $bindings.patient
+                  title: Patient resource
+
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source: [smart_launch, panel_selection]
+  - name: window_start
+    type: iso8601
+    required: false
+    default: now-2y
+
+audit:
+  clinical_context: general_chart_review
+  intended_users: [general_practitioner, internal_medicine]
+  intended_purpose: Display of the patient's recorded problems, medication and vitals. Not for diagnosis.
+  mdr_classification: none
+  data_categories: [phi, clinical_measurements]

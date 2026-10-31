@@ -1,0 +1,62 @@
+# AppSpec — composed page (APP-12): the page a cardiologist asked for in one sentence — "the blood
+# pressure trend with the current medication beside it, the kidney values and the problem list
+# underneath, and for reviewers the latest imaging study". Rows form from the spans: 8 + 4, 6 + 6, then
+# a gated section on a row of its own.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_htn_consultation
+  version: 0.1.0
+  name: Hypertension consultation
+  description: Blood pressure over two years with the current therapy, recent kidney values and the problem list on one page.
+
+archetype: APP-12
+knobs:
+  identity: banner
+  arrangement: stack
+  window: now-2y
+  sections:
+    - kind: trend
+      id: bp
+      span: 8
+      codes:
+        - { system: loinc, code: "85354-9", display: Blood pressure panel }
+      series:
+        - { label: Systolic, component_code: "8480-6" }
+        - { label: Diastolic, component_code: "8462-4" }
+      thresholds:
+        - { value: 140, label: Systolic ≥ 140 }
+        - { value: 90, label: Diastolic ≥ 90 }
+      unit: mmHg
+    - kind: medication
+      span: 4
+      title: Current therapy
+    - kind: readings
+      id: kidney
+      span: 6
+      title: Kidney values
+      codes:
+        - { system: loinc, code: "33914-3", display: eGFR }
+        - { system: loinc, code: "29463-7", display: Body weight }
+      rows: 8
+    - kind: problems
+      span: 6
+    - kind: imaging
+      roles: [reviewer]
+      modalities: [CT, MR, US]
+
+roles:
+  - id: viewer
+    display_name: Viewer
+    phi_fields_visible: [name, dob, mrn]
+  - id: reviewer
+    display_name: Reviewer
+    inherits: viewer
+    phi_fields_visible: [name, dob, gender, mrn, address, phone]
+default_role: viewer
+
+governance:
+  clinical_context: outpatient_bp_monitoring
+  intended_users: [cardiologist, general_practitioner]
+  intended_purpose: Display of recorded blood pressure, therapy, kidney values and problems for a hypertension consultation; reviewers may also open the patient's imaging studies. Display only; no interpretation.

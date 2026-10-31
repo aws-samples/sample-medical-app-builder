@@ -1,0 +1,29 @@
+# AppSpec for manifests/dicom-study-review.yaml — the imaging-review archetype (APP-05): the
+# patient's studies of the chosen modalities, one selected into the viewer.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_dicom_review
+  version: 0.1.0
+  name: Imaging study review
+  description: Studies for the patient in context; select one to open it in the viewer.
+
+archetype: APP-05
+knobs:
+  modalities: [CT, MR, DX, US]
+  list_title: Available studies
+  viewer_height_px: 560
+  column_ratio: [5, 7]
+
+roles:
+  - id: radiologist
+    display_name: Radiologist
+    phi_fields_visible: [name, dob, gender, mrn]
+    capabilities: [view, open_viewer]
+default_role: radiologist
+
+governance:
+  clinical_context: imaging_review
+  intended_users: [radiologist]
+  intended_purpose: Listing and display of existing imaging studies. No image processing or measurement.

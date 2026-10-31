@@ -1,0 +1,35 @@
+# AppSpec — longitudinal trend (APP-02) for a connected hospital record: haemoglobin over five years against the lower
+# reference values, the readings beside the chart (a laboratory history spans many years per patient). Such a record is
+# mostly laboratory values on a German LOINC panel; haemoglobin (718-7) is one of the most frequent.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_haemoglobin_trend
+  version: 0.1.0
+  name: Haemoglobin trend
+  description: Haemoglobin over the last five years against the lower reference values, with the readings.
+
+archetype: APP-02
+knobs:
+  codes:
+    - { system: loinc, code: "718-7", display: Haemoglobin }
+  series:
+    - { label: Haemoglobin, code: "718-7" }
+  thresholds:
+    - { value: 12, label: "Lower reference, women (12 g/dL)" }
+    - { value: 13, label: "Lower reference, men (13 g/dL)" }
+  unit: g/dL
+  window: now-5y
+  chart_title: Haemoglobin, last five years
+
+roles:
+  - id: haematology_ward
+    display_name: Haematology ward
+    phi_fields_visible: [name, dob, gender]
+default_role: haematology_ward
+
+governance:
+  clinical_context: inpatient_haematology
+  intended_users: [haematologist, ward_physician]
+  intended_purpose: Display of recorded haemoglobin values over time against laboratory reference values. Display only; not for diagnosis or transfusion decisions.

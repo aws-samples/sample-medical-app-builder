@@ -1,0 +1,149 @@
+# Seed app of hsp-musterstadt — compiled from specs/hypertension-register.yaml by scripts/build-showcase.mjs (npm run showcase); do not edit by hand.
+# The lifecycle block is an example sign-off: the registry seed publishes the app with it.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_hypertension_register
+  version: 1.0.0
+  name: Hypertension register
+  description: Patients with a hypertension diagnosis and their most recent blood
+    pressure, flagged from 140 mmHg systolic.
+  intent_class: cohort_dashboard
+  hospital_id: hsp-musterstadt
+  created_at: "2026-10-01T14:00:00Z"
+lifecycle:
+  state: published
+  signoff:
+    approver_sub: example-approver-sub
+    approved_at: "2026-10-01T15:00:00Z"
+    signature: "example: KMS-signed manifest_hash goes here"
+    clinical_notes: Listing of patients by a coded diagnosis with their latest blood
+      pressure; no risk scoring. Approved for the hypertension clinic.
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: hypertension_clinic
+      display_name: Hypertension clinic
+      cognito_group: app-app_hypertension_register-hypertension_clinic
+      data_scope_ref: scope_hypertension_clinic
+      ui_capabilities:
+        - view
+        - export_csv
+  default_role: hypertension_clinic
+data_scopes:
+  scope_hypertension_clinic:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Condition
+        operations:
+          - search
+        codes:
+          - http://snomed.info/sct|38341003
+          - http://fhir.de/CodeSystem/bfarm/icd-10-gm|I10.00
+          - http://fhir.de/CodeSystem/bfarm/icd-10-gm|I10.90
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|85354-9
+    patient_scope: cohort
+    phi_fields_visible:
+      - name
+      - dob
+      - mrn
+primitives:
+  - id: p_cohort
+    kind: data.cohort.by_condition
+    catalog_version: 1.0.0
+    config:
+      condition_codes:
+        - http://snomed.info/sct|38341003
+        - http://fhir.de/CodeSystem/bfarm/icd-10-gm|I10.00
+        - http://fhir.de/CodeSystem/bfarm/icd-10-gm|I10.90
+      clinical_status: active
+    output_binding: cohort
+  - id: p_latest
+    kind: data.cohort.latest_observation
+    catalog_version: 1.0.0
+    config:
+      patients: $bindings.cohort.patients
+      codes:
+        - http://loinc.org|85354-9
+      threshold:
+        component_code: 8480-6
+        value: 140
+    output_binding: latest
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: Grid
+        props:
+          columns: 4
+        children:
+          - component: StatCard
+            props:
+              label: Patients with hypertension
+              value: $bindings.cohort.count
+              hint: SNOMED CT 38341003, ICD-10-GM I10.00, ICD-10-GM I10.90 on the problem list
+              tone: accent
+          - component: StatCard
+            props:
+              label: Latest systolic ≥ 140 mmHg
+              value: $bindings.latest.above_threshold_count
+              hint: Most recent blood pressure panel per patient
+              tone: alert
+          - component: CohortRangeCard
+            props:
+              label: Systolic in range
+              rows: $bindings.latest.rows
+              range: $ui.cohort_range
+              unit: mmHg
+              hint: Members whose latest value lies in the selected range
+          - component: StatCard
+            props:
+              label: Data scope
+              value: cohort
+              hint: Name, date of birth and MRN visible; no contact details
+      - component: RangeFilter
+        props:
+          selection_key: cohort_range
+          label: Systolic range
+          unit: mmHg
+          min: 90
+          max: 220
+          step: 5
+          initial:
+            - 140
+            - 180
+          rows: $bindings.latest.rows
+          hint: The range filters the table and the count; nothing is read again.
+      - component: CohortTable
+        props:
+          title: Cohort members
+          rows: $bindings.latest.rows
+          value_label: Latest blood pressure
+          range: $ui.cohort_range
+          unit: mmHg
+context_inputs: []
+actions: []
+audit:
+  clinical_context: population_health
+  intended_users:
+    - hypertension_nurse
+    - cardiologist
+    - general_practitioner
+  intended_purpose: Listing of patients with a coded hypertension diagnosis with
+    their latest recorded blood pressure. No risk scoring, no treatment
+    recommendation.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements

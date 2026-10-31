@@ -1,0 +1,355 @@
+# Seed app of hsp-musterstadt — compiled from specs/falls-risk-assessment.yaml by scripts/build-showcase.mjs (npm run showcase); do not edit by hand.
+# The lifecycle block is an example sign-off: the registry seed publishes the app with it.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_falls_risk
+  version: 1.0.0
+  name: Falls risk screen
+  description: The ward's falls-risk screening form for one patient, the earlier
+    screens, and the timed up-and-go across them.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: "2026-10-01T14:00:00Z"
+lifecycle:
+  state: published
+  signoff:
+    approver_sub: example-approver-sub
+    approved_at: "2026-10-01T15:00:00Z"
+    signature: "example: KMS-signed manifest_hash goes here"
+    clinical_notes: Structured documentation on a form designed with the ward and
+      reviewed here, and the course of its numeric answers; written with
+      validation and provenance; no score is computed. Approved for the
+      geriatric wards.
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: ward_nurse
+      display_name: Ward nurse
+      cognito_group: app-app_falls_risk-ward_nurse
+      data_scope_ref: scope_ward_nurse
+      ui_capabilities:
+        - view
+  default_role: ward_nurse
+data_scopes:
+  scope_ward_nurse:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Questionnaire
+        operations:
+          - read
+      - resource: QuestionnaireResponse
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+      - resource: Observation
+        operations:
+          - create
+        codes:
+          - https://hsp-musterstadt.medapp.eu/CodeSystem/physio|tug
+        filter: subject={context.patient_id}
+      - resource: Provenance
+        operations:
+          - create
+      - resource: Condition
+        operations:
+          - search
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_screen_questionnaire
+    kind: data.fhir.questionnaire.read
+    catalog_version: 1.0.0
+    config:
+      questionnaire: https://hsp-musterstadt.medapp.eu/Questionnaire/app-falls-risk.falls-risk
+    output_binding: screen_questionnaire
+  - id: p_screen_submissions
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: QuestionnaireResponse
+      params:
+        patient: $context.patient_id
+        questionnaire: https://hsp-musterstadt.medapp.eu/Questionnaire/app-falls-risk.falls-risk
+    output_binding: screen_submissions
+  - id: p_screen_submit
+    kind: write.fhir.questionnaire_response.submit
+    catalog_version: 1.0.0
+    config:
+      questionnaire: https://hsp-musterstadt.medapp.eu/Questionnaire/app-falls-risk.falls-risk
+      subject: $context.patient_id
+      extract:
+        - link_id: timed_up_and_go
+          code: https://hsp-musterstadt.medapp.eu/CodeSystem/physio|tug
+          display: Timed up-and-go
+          unit: s
+      response: $ui.screen_response
+    output_binding: screen_submitted
+  - id: p_tug
+    kind: data.fhir.questionnaire_response.answers
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      questionnaire: https://hsp-musterstadt.medapp.eu/Questionnaire/app-falls-risk.falls-risk
+      link_ids:
+        - timed_up_and_go
+    output_binding: tug
+  - id: p_last_screen
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: QuestionnaireResponse
+      params:
+        patient: $context.patient_id
+        questionnaire: https://hsp-musterstadt.medapp.eu/Questionnaire/app-falls-risk.falls-risk
+    output_binding: last_screen
+  - id: p_problems
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: problems
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 7
+            - 5
+        children:
+          - component: AssessmentForm
+            props:
+              questionnaire: $bindings.screen_questionnaire
+              action: submit_screen
+              state_key: screen_response
+              submit_label: Record screen
+          - component: SubmissionList
+            props:
+              responses: $bindings.screen_submissions
+              title: Earlier screens
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: ObservationTimeline
+            props:
+              title: Timed up-and-go across screens
+              observations: $bindings.tug
+              unit: s
+              height_px: 320
+              series:
+                - label: Timed up-and-go
+                  code: timed_up_and_go
+              thresholds:
+                - value: 13.5
+                  label: TUG ≥ 13.5 s
+              caption: "Reference lines: Shumway-Cook 2000: a timed up-and-go of 13.5 s or
+                more marks a raised fall risk in community-dwelling older
+                adults."
+          - component: LatestAnswers
+            props:
+              response: $bindings.last_screen[0]
+              title: Last falls screen
+      - component: ProblemList
+        props:
+          conditions: $bindings.problems
+          title: Active problems
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+actions:
+  - id: submit_screen
+    label: Record screen
+    primitive: p_screen_submit
+    on_success: reload
+    success_message: The falls-risk screen is now part of the patient record.
+artifacts:
+  questionnaires:
+    - resourceType: Questionnaire
+      id: app-falls-risk.falls-risk
+      url: https://hsp-musterstadt.medapp.eu/Questionnaire/app-falls-risk.falls-risk
+      version: 1.0.0
+      title: Falls risk screen
+      status: active
+      subjectType:
+        - Patient
+      date: "2026-10-01T14:00:00Z"
+      description: Screening on admission and after any fall; repeated weekly on the
+        geriatric wards.
+      item:
+        - linkId: intro
+          text: Answer from the patient's account and the record. A screen is a prompt for
+            the care plan, not a score.
+          type: display
+        - linkId: history
+          text: History
+          type: group
+          item:
+            - linkId: fell_last_year
+              text: Has the patient fallen in the last 12 months?
+              type: choice
+              required: true
+              answerOption:
+                - valueCoding:
+                    code: "yes"
+                    display: "Yes"
+                - valueCoding:
+                    code: "no"
+                    display: "No"
+        - linkId: fall_details
+          text: About the falls
+          type: group
+          enableWhen:
+            - question: fell_last_year
+              operator: "="
+              answerCoding:
+                code: "yes"
+          item:
+            - linkId: falls_count
+              text: How many falls? (0–20)
+              type: integer
+              extension:
+                - url: http://hl7.org/fhir/StructureDefinition/minValue
+                  valueInteger: 0
+                - url: http://hl7.org/fhir/StructureDefinition/maxValue
+                  valueInteger: 20
+            - linkId: injury
+              text: Worst injury from a fall
+              type: choice
+              answerOption:
+                - valueCoding:
+                    code: none
+                    display: None
+                - valueCoding:
+                    code: minor
+                    display: Bruising or abrasion
+                - valueCoding:
+                    code: fracture
+                    display: Fracture
+                - valueCoding:
+                    code: head_injury
+                    display: Head injury
+        - linkId: mobility
+          text: Mobility
+          type: group
+          item:
+            - linkId: walking_aid
+              text: Walking aid in use
+              type: choice
+              required: true
+              answerOption:
+                - valueCoding:
+                    code: none
+                    display: None
+                - valueCoding:
+                    code: stick
+                    display: Stick
+                - valueCoding:
+                    code: frame
+                    display: Frame
+                - valueCoding:
+                    code: wheelchair
+                    display: Wheelchair
+            - linkId: unsteady
+              text: Unsteady when standing or turning?
+              type: boolean
+            - linkId: timed_up_and_go
+              text: Timed up-and-go (s, 0–300)
+              type: decimal
+              code:
+                - system: https://hsp-musterstadt.medapp.eu/CodeSystem/physio
+                  code: tug
+                  display: Timed up-and-go
+              extension:
+                - url: http://hl7.org/fhir/StructureDefinition/questionnaire-unit
+                  valueCoding:
+                    display: s
+                - url: http://hl7.org/fhir/StructureDefinition/minValue
+                  valueDecimal: 0
+                - url: http://hl7.org/fhir/StructureDefinition/maxValue
+                  valueDecimal: 300
+                - url: http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-observationExtract
+                  valueBoolean: true
+        - linkId: risk_factors
+          text: Risk factors
+          type: group
+          item:
+            - linkId: factors
+              text: Present
+              type: choice
+              repeats: true
+              answerOption:
+                - valueCoding:
+                    code: polypharmacy
+                    display: Four or more medications
+                - valueCoding:
+                    code: dizziness
+                    display: Dizziness or postural drop
+                - valueCoding:
+                    code: vision
+                    display: Impaired vision
+                - valueCoding:
+                    code: cognition
+                    display: Cognitive impairment
+                - valueCoding:
+                    code: continence
+                    display: Incontinence or urgency
+              extension:
+                - url: http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl
+                  valueCodeableConcept:
+                    coding:
+                      - system: http://hl7.org/fhir/questionnaire-item-control
+                        code: check-box
+        - linkId: plan
+          text: Measures agreed with the patient
+          type: text
+        - linkId: next_review
+          text: Next review
+          type: date
+audit:
+  clinical_context: inpatient_ward
+  intended_users:
+    - nurse
+  intended_purpose: Structured documentation of the falls-risk screen for one
+    patient, written to the record with provenance, and the course of the timed
+    up-and-go across the recorded screens. The reference line is visual; no
+    score and no recommendation is computed.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_documentation

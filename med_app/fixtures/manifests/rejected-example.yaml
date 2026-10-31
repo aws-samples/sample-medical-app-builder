@@ -1,0 +1,51 @@
+# Intentionally invalid. The registry must refuse it and explain why — this is what the
+# renderer does with pipeline output that drifts from the schema.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+
+metadata:
+  app_id: app_rejected_example
+  version: "1.2"            # not an exact semver
+  name: Rejected example
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+
+lifecycle:
+  state: draft
+
+auth:
+  roles:
+    - id: viewer
+      display_name: Viewer
+      cognito_group: app-app_rejected_example-viewer
+      data_scope_ref: scope_missing   # scope is not declared
+  default_role: editor                # role is not declared
+
+data_scopes:
+  scope_viewer:
+    fhir:
+      - resource: Patient
+        operations: [read]
+
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    style: { background: red }        # unknown key: manifests cannot carry styling
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true

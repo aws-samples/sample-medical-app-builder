@@ -1,0 +1,244 @@
+# Seed app of hsp-musterstadt — compiled from specs/hypertension-follow-up.yaml by scripts/build-showcase.mjs (npm run showcase); do not edit by hand.
+# The lifecycle block is an example sign-off: the registry seed publishes the app with it.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_hypertension_follow_up
+  version: 1.0.0
+  name: Hypertension follow-up visit
+  description: Record the structured follow-up assessment with the patient's blood
+    pressure trend, problems and medication alongside; earlier assessments stay
+    visible.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: "2026-10-01T14:00:00Z"
+lifecycle:
+  state: published
+  signoff:
+    approver_sub: example-approver-sub
+    approved_at: "2026-10-01T15:00:00Z"
+    signature: "example: KMS-signed manifest_hash goes here"
+    clinical_notes: Structured documentation with validation and provenance; no
+      scores or recommendations. Approved for the hypertension clinic.
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: hypertension_nurse
+      display_name: Hypertension nurse
+      cognito_group: app-app_hypertension_follow_up-hypertension_nurse
+      data_scope_ref: scope_hypertension_nurse
+      ui_capabilities:
+        - view
+        - document_assessment
+  default_role: hypertension_nurse
+data_scopes:
+  scope_hypertension_nurse:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Questionnaire
+        operations:
+          - read
+      - resource: QuestionnaireResponse
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+      - resource: Provenance
+        operations:
+          - create
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|85354-9
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+      - resource: Condition
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: MedicationRequest
+        operations:
+          - search
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_follow_up_questionnaire
+    kind: data.fhir.questionnaire.read
+    catalog_version: 1.0.0
+    config:
+      questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+    output_binding: follow_up_questionnaire
+  - id: p_follow_up_submissions
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: QuestionnaireResponse
+      params:
+        patient: $context.patient_id
+        questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+    output_binding: follow_up_submissions
+  - id: p_follow_up_submit
+    kind: write.fhir.questionnaire_response.submit
+    catalog_version: 1.0.0
+    config:
+      questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+      subject: $context.patient_id
+      response: $ui.follow_up_response
+    output_binding: follow_up_submitted
+  - id: p_bp
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|85354-9
+      since: $context.window_start
+      count: 500
+    output_binding: bp
+  - id: p_bp_readings
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|85354-9
+      since: $context.window_start
+      count: 10
+    output_binding: bp_readings
+  - id: p_problems
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: problems
+  - id: p_medication
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: MedicationRequest
+      params:
+        patient: $context.patient_id
+        status: active
+    output_binding: medication
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 7
+            - 5
+        children:
+          - component: AssessmentForm
+            props:
+              questionnaire: $bindings.follow_up_questionnaire
+              action: submit_follow_up
+              state_key: follow_up_response
+              title: Follow-up assessment
+              submit_label: Save assessment
+          - component: SubmissionList
+            props:
+              responses: $bindings.follow_up_submissions
+              title: Earlier assessments
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: ObservationTimeline
+            props:
+              title: Blood pressure, last two years
+              observations: $bindings.bp
+              unit: mmHg
+              height_px: 280
+              series:
+                - label: Systolic
+                  component_code: 8480-6
+                - label: Diastolic
+                  component_code: 8462-4
+              thresholds:
+                - value: 140
+                  label: 140 mmHg
+                - value: 90
+                  label: 90 mmHg
+          - component: VitalsTable
+            props:
+              observations: $bindings.bp_readings
+              title: Readings
+              max_rows: 10
+              compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: ProblemList
+            props:
+              conditions: $bindings.problems
+              title: Active problems
+          - component: MedicationList
+            props:
+              medications: $bindings.medication
+              title: Active medication
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+  - name: window_start
+    type: iso8601
+    required: false
+    source:
+      - panel_selection
+    default: now-2y
+actions:
+  - id: submit_follow_up
+    label: Save assessment
+    primitive: p_follow_up_submit
+    on_success: reload
+    success_message: The assessment is now part of the patient record.
+audit:
+  clinical_context: hypertension_clinic
+  intended_users:
+    - hypertension_nurse
+  intended_purpose: Structured documentation of the hypertension follow-up
+    assessment by the clinic nurse, with the recorded blood pressure, problems
+    and medication of the patient in context alongside. Documentation only; no
+    scores, no recommendations.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements
+    - medication
+    - clinical_documentation

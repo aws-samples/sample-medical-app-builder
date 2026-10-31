@@ -1,0 +1,10 @@
+aws-cdk-lib>=2.263.0,<3.0.0
+constructs>=10.5.0,<11.0.0
+# AWS Solutions rules applied to every stack at synth (app.py); an error-level finding fails the synth unless suppressed
+# with a reason next to the construct (NagSuppressions). v2 on purpose: v3 (2026) is a different API (Validations plugin).
+cdk-nag>=2.36,<3.0.0
+boto3
+pyyaml>=6
+# the reference PACS seed is generated at synth (seeding/dicom_seed.py)
+pydicom>=3.0
+numpy>=1.26

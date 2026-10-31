@@ -1,0 +1,45 @@
+# AppSpec — composed page (APP-12) as tabs: what a hypertension nurse needs at a follow-up visit —
+# counts at a glance, the assessment form (a write, so this is a workflow app), and the record itself
+# for the lead nurse only. Reviewers of the manifest: the gated tab is absent from the strip for others.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_htn_nurse_visit
+  version: 0.1.0
+  name: Hypertension nurse visit
+  description: An overview, the follow-up assessment form and, for the lead nurse, the patient record — one tab each.
+  language: en
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: tabs
+  window: now-1y
+  sections:
+    - kind: counts
+      readings_codes:
+        - { system: loinc, code: "85354-9", display: Blood pressure panel }
+    - kind: assessment
+      questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+      action_label: Save assessment
+    - kind: details
+      label: Record
+      resource: Patient
+      roles: [lead_nurse]
+
+roles:
+  - id: nurse
+    display_name: Hypertension nurse
+    phi_fields_visible: [name, dob, mrn]
+  - id: lead_nurse
+    display_name: Lead nurse
+    inherits: nurse
+    phi_fields_visible: [name, dob, gender, mrn, address, phone, email]
+default_role: nurse
+
+governance:
+  clinical_context: hypertension_follow_up_clinic
+  intended_users: [nurse]
+  intended_purpose: Structured documentation of the hypertension follow-up visit with an overview of the recorded problems, medication and readings. Records the assessment as entered; no scoring or recommendations.
+  mdr_classification: none

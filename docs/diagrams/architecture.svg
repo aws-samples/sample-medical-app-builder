@@ -1,0 +1,243 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1250" viewBox="0 0 1900 1250">
+<defs><marker id="arrow-0F7B5F" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F7B5F"/></marker><marker id="arrow-2F6FB2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2F6FB2"/></marker><marker id="arrow-5B6770" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5B6770"/></marker></defs>
+<rect width="1900" height="1250" fill="white"/>
+<text x="30" y="40" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#1F2933">One hospital deployment, as built</text>
+<text x="30" y="62" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" fill="#5B6770">Ten AWS CDK stacks in the hospital's own account (eu-central-1). The browser talks only to CloudFront, Cognito and API Gateway; every clinical data call goes through the dispatcher.</text>
+<rect x="30" y="100" width="300" height="340" rx="10" ry="10" fill="#F4F6F8" stroke="#D9E1E7" stroke-width="1.2"/>
+<text x="44" y="122" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#1F2933">Hospital staff</text>
+<rect x="50" y="140" width="260" height="70" rx="22" ry="22" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<circle cx="70" cy="167.0" r="5" fill="none" stroke="#5B6770" stroke-width="1.4"/>
+<path d="M61,185.0 a9,9 0 0 1 18,0" fill="none" stroke="#5B6770" stroke-width="1.4"/>
+<text x="192.0" y="173.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Clinicians · authors · approvers</text>
+<text x="192.0" y="186.54999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">sign in with the hospital's user pool</text>
+<rect x="50" y="240" width="260" height="80" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="180.0" y="272.65" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">The panel — React SPA</text>
+<text x="180.0" y="285.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">launcher · drafting · review · registry</text>
+<text x="180.0" y="297.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">record shapes · users · audit trail</text>
+<rect x="50" y="345" width="260" height="75" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="180.0" y="381.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Imaging viewer — OHIF</text>
+<text x="180.0" y="394.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">opened by the panel on a selected study</text>
+<rect x="360" y="100" width="1200" height="1030" rx="10" ry="10" fill="#F1F3F9" stroke="#C9D1E6" stroke-width="1.2"/>
+<text x="374" y="122" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#1F2933">AWS account of the hospital — eu-central-1 (EU data residency enforced at synth)</text>
+<rect x="380" y="145" width="320" height="135" rx="10" ry="10" fill="#FFFFFF" stroke="#E3D5B8" stroke-width="1.2"/>
+<text x="394" y="167" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">IdentityStack</text>
+<text x="394" y="180" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.5" fill="#5B6770">one user pool per hospital · SRP web client · MFA switch</text>
+<rect x="395" y="195" width="290" height="68" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="540.0" y="222.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Amazon Cognito user pool</text>
+<text x="540.0" y="234.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">platform groups: authors · approvers · admins · viewers</text>
+<text x="540.0" y="246.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">per-app role groups created at publish</text>
+<rect x="720" y="145" width="400" height="135" rx="10" ry="10" fill="#FFFFFF" stroke="#E3D5B8" stroke-width="1.2"/>
+<text x="734" y="167" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">HostingStack</text>
+<text x="734" y="180" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.5" fill="#5B6770">HTTPS, security headers, SPA routing; config.json written at deploy</text>
+<rect x="735" y="195" width="180" height="68" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="825.0" y="227.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">CloudFront</text>
+<text x="825.0" y="240.54999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">the panel</text>
+<path d="M930,202 a87.5,7 0 0 1 175,0 v54 a87.5,7 0 0 1 -175,0 z" fill="#F4F6F8" stroke="#5B6770" stroke-width="1.2"/>
+<path d="M930,202 a87.5,7 0 0 0 175,0" fill="none" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1017.5" y="232.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">S3 site bucket</text>
+<text x="1017.5" y="245.04999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">Vite build · private (OAC)</text>
+<rect x="1140" y="145" width="400" height="135" rx="10" ry="10" fill="#FFFFFF" stroke="#E3D5B8" stroke-width="1.2"/>
+<text x="1154" y="167" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">ViewerStack</text>
+<text x="1154" y="180" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.5" fill="#5B6770">OHIF release pinned by hash; reaches DICOMweb only through a viewer door</text>
+<rect x="1155" y="195" width="180" height="68" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1245.0" y="227.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">CloudFront</text>
+<text x="1245.0" y="240.54999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">the viewer</text>
+<path d="M1350,202 a87.5,7 0 0 1 175,0 v54 a87.5,7 0 0 1 -175,0 z" fill="#F4F6F8" stroke="#5B6770" stroke-width="1.2"/>
+<path d="M1350,202 a87.5,7 0 0 0 175,0" fill="none" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1437.5" y="232.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">S3 viewer bucket</text>
+<text x="1437.5" y="245.04999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">@ohif/app · app-config.js</text>
+<rect x="380" y="320" width="500" height="300" rx="10" ry="10" fill="#FFFFFF" stroke="#E3D5B8" stroke-width="1.2"/>
+<text x="394" y="342" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">ApiStack</text>
+<text x="394" y="355" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.5" fill="#5B6770">HTTP API Gateway · JWT authorizer on the user pool · CORS to the panel · shared Python layer · media bucket</text>
+<rect x="395" y="375" width="150" height="225" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="470.0" y="467.55" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">API Gateway</text>
+<text x="470.0" y="480.15000000000003" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">HTTP API</text>
+<text x="470.0" y="492.75000000000006" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">JWT authorizer</text>
+<text x="470.0" y="505.3500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">issuer + audience</text>
+<text x="470.0" y="517.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">every route</text>
+<rect x="565" y="375" width="300" height="48" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="715.0" y="398.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Registry API — Lambda</text>
+<text x="715.0" y="410.15000000000003" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">apps, versions, collections, shapes a person may open</text>
+<rect x="565" y="433" width="300" height="62" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="715.0" y="457.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Primitive dispatcher — Lambda</text>
+<text x="715.0" y="469.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">POST /primitives/{kind} · GET /patients</text>
+<text x="715.0" y="481.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">version → role → primitive → scope → execute → audit</text>
+<rect x="565" y="505" width="300" height="40" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="715.0" y="523.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="700" fill="#1F2933">User administration — Lambda</text>
+<text x="715.0" y="535.65" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">accounts, groups, invitations (admins)</text>
+<rect x="565" y="555" width="300" height="45" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="715.0" y="576.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="700" fill="#1F2933">Audit read API — Lambda</text>
+<text x="715.0" y="588.15" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">the trail by day, person, app, patient</text>
+<rect x="900" y="320" width="310" height="300" rx="10" ry="10" fill="#FFFFFF" stroke="#E3D5B8" stroke-width="1.2"/>
+<text x="914" y="342" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">RegistryStack</text>
+<text x="914" y="355" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.5" fill="#5B6770">KMS key · PITR · deletion protection · streams</text>
+<path d="M915,387 a140.0,7 0 0 1 280,0 v96 a140.0,7 0 0 1 -280,0 z" fill="#F4F6F8" stroke="#5B6770" stroke-width="1.2"/>
+<path d="M915,387 a140.0,7 0 0 0 280,0" fill="none" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1055.0" y="427.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">App registry — DynamoDB</text>
+<text x="1055.0" y="438.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">HEAD + VERSION items (manifest + spec)</text>
+<text x="1055.0" y="450.65000000000003" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">lifecycle events · collections · record shapes</text>
+<text x="1055.0" y="462.45000000000005" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">SHA-256 manifest hash per version</text>
+<rect x="915" y="510" width="255" height="95" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="1042.5" y="550.2" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">AppRegistryGuardStack (optional)</text>
+<text x="1042.5" y="562.0" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">table policy denies writes to all but the writer</text>
+<text x="1042.5" y="573.8" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">CloudTrail data events · EventBridge → SNS alerts</text>
+<rect x="1230" y="320" width="310" height="300" rx="10" ry="10" fill="#FFFFFF" stroke="#E3D5B8" stroke-width="1.2"/>
+<text x="1244" y="342" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">AuditStack</text>
+<text x="1244" y="355" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.5" fill="#5B6770">KMS key · PITR · RETAIN · writers may only PutItem</text>
+<path d="M1245,387 a140.0,7 0 0 1 280,0 v96 a140.0,7 0 0 1 -280,0 z" fill="#F4F6F8" stroke="#5B6770" stroke-width="1.2"/>
+<path d="M1245,387 a140.0,7 0 0 0 280,0" fill="none" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1385.0" y="427.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Audit trail — DynamoDB</text>
+<text x="1385.0" y="438.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">one record per data call, write, account</text>
+<text x="1385.0" y="450.65000000000003" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">change and lifecycle step — refusals included</text>
+<text x="1385.0" y="462.45000000000005" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">indexes by person, app and patient</text>
+<rect x="1245" y="510" width="280" height="95" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="1385.0" y="550.2" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">Written by every Lambda that acts</text>
+<text x="1385.0" y="562.0" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">dispatcher · registry write · user admin</text>
+<text x="1385.0" y="573.8" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">viewer door — fail-open, never blocking care</text>
+<rect x="380" y="660" width="1160" height="230" rx="10" ry="10" fill="#FFF9F0" stroke="#F0DDB8" stroke-width="1.2"/>
+<text x="394" y="682" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">AuthoringStack — everything that turns a conversation into a registered app</text>
+<rect x="395" y="705" width="215" height="70" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="502.5" y="739.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Drafts API — Lambda</text>
+<text x="502.5" y="751.15" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">sessions · async turns · PATCH edits</text>
+<rect x="630" y="705" width="240" height="70" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="750.0" y="733.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Drafting agent — Lambda</text>
+<text x="750.0" y="745.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">Strands Agent · 15 typed tools</text>
+<text x="750.0" y="757.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">asynchronous turn worker</text>
+<rect x="890" y="705" width="240" height="70" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1010.0" y="733.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Manifest service — Node.js Lambda</text>
+<text x="1010.0" y="745.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">the panel's TypeScript compiler:</text>
+<text x="1010.0" y="757.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">readiness · compile · validate</text>
+<rect x="1150" y="705" width="215" height="70" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1257.5" y="733.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Registry write — Lambda</text>
+<text x="1257.5" y="745.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">create · iterate · lifecycle · shapes</text>
+<text x="1257.5" y="757.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">four-eyes rule · KMS sign-off</text>
+<rect x="1385" y="705" width="140" height="70" rx="8" ry="8" fill="#EEF6F3" stroke="#0F7B5F" stroke-width="1.2"/>
+<text x="1455.0" y="739.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Amazon Bedrock</text>
+<text x="1455.0" y="751.15" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">Claude · eu.* profile</text>
+<path d="M395,802 a107.5,7 0 0 1 215,0 v61 a107.5,7 0 0 1 -215,0 z" fill="#F4F6F8" stroke="#5B6770" stroke-width="1.2"/>
+<path d="M395,802 a107.5,7 0 0 0 215,0" fill="none" stroke="#5B6770" stroke-width="1.2"/>
+<text x="502.5" y="830.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Drafts table — DynamoDB</text>
+<text x="502.5" y="842.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">sessions · spec · conversation</text>
+<text x="502.5" y="854.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">KMS key · TTL 30 days</text>
+<path d="M630,802 a120.0,7 0 0 1 240,0 v61 a120.0,7 0 0 1 -240,0 z" fill="#F4F6F8" stroke="#5B6770" stroke-width="1.2"/>
+<path d="M630,802 a120.0,7 0 0 0 240,0" fill="none" stroke="#5B6770" stroke-width="1.2"/>
+<text x="750.0" y="830.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Record vocabulary — S3</text>
+<text x="750.0" y="842.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">the codes actually on the record,</text>
+<text x="750.0" y="854.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">written by the data source's seed</text>
+<rect x="890" y="795" width="240" height="75" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1010.0" y="825.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Sign-off key — KMS (ECC P-256)</text>
+<text x="1010.0" y="837.75" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">signs the manifest hash at approval</text>
+<text x="1010.0" y="849.55" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">retained for the record's lifetime</text>
+<rect x="1150" y="795" width="375" height="75" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="1337.5" y="825.2" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">Built at synth, no Docker</text>
+<text x="1337.5" y="837.0" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">Python dependency layer (arm64) · TypeScript bundle (esbuild)</text>
+<text x="1337.5" y="848.8" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">frontend build · OHIF release · DICOM seed</text>
+<rect x="380" y="920" width="570" height="190" rx="10" ry="10" fill="#F4F6F8" stroke="#D9E1E7" stroke-width="1.2"/>
+<text x="394" y="942" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">ReferenceServersStack — stand-ins for the hospital's systems, synthetic record only</text>
+<text x="394" y="955" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.5" fill="#5B6770">deployed while reference_servers is true; no NAT, small tasks, one small database</text>
+<rect x="395" y="980" width="165" height="110" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="477.5" y="1022.55" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">HTTP API (IAM, SigV4)</text>
+<text x="477.5" y="1034.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">/fhir · /dicom-web</text>
+<text x="477.5" y="1046.1499999999999" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">VPC link → internal ALB</text>
+<text x="477.5" y="1057.9499999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">+ browser door for OHIF</text>
+<rect x="575" y="980" width="175" height="110" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="662.5" y="1022.55" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">HAPI FHIR R4 — Fargate</text>
+<text x="662.5" y="1034.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">Postgres 16 on RDS</text>
+<text x="662.5" y="1046.1499999999999" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">seeded with 189 resources</text>
+<text x="662.5" y="1057.9499999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">verified at deploy</text>
+<rect x="765" y="980" width="170" height="110" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="850.0" y="1022.55" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Orthanc PACS — Fargate</text>
+<text x="850.0" y="1034.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">DICOMweb QIDO/WADO</text>
+<text x="850.0" y="1046.1499999999999" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">studies generated at synth</text>
+<text x="850.0" y="1057.9499999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">from the same patients</text>
+<rect x="970" y="920" width="570" height="190" rx="10" ry="10" fill="#F4F6F8" stroke="#D9E1E7" stroke-width="1.2"/>
+<text x="984" y="942" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#1F2933">HospitalServersStack — a hospital's own FHIR server and DICOMweb gateway (optional)</text>
+<text x="984" y="955" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.5" fill="#5B6770">deployed while hospital_servers is set; the dispatcher is pointed at it by configuration</text>
+<rect x="985" y="980" width="170" height="110" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1070.0" y="1022.55" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Secrets Manager</text>
+<text x="1070.0" y="1034.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">OAuth2 client credentials</text>
+<text x="1070.0" y="1046.1499999999999" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">written by a script, read by</text>
+<text x="1070.0" y="1057.9499999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">dispatcher, door and seed only</text>
+<rect x="1170" y="980" width="175" height="110" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1257.5" y="1022.55" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Viewer door — API + Lambda</text>
+<text x="1257.5" y="1034.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">admits the panel's Cognito token,</text>
+<text x="1257.5" y="1046.1499999999999" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">forwards to DICOMweb with the</text>
+<text x="1257.5" y="1057.9499999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">hospital's token; spills big frames</text>
+<rect x="1360" y="980" width="165" height="110" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1442.5" y="1022.55" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Definitions seed — Lambda</text>
+<text x="1442.5" y="1034.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">an app's forms at publish —</text>
+<text x="1442.5" y="1046.1499999999999" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">never patients; record</text>
+<text x="1442.5" y="1057.9499999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">vocabulary nightly</text>
+<rect x="1590" y="100" width="280" height="1030" rx="10" ry="10" fill="#F4F6F8" stroke="#D9E1E7" stroke-width="1.2"/>
+<text x="1604" y="122" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#1F2933">Hospital data centre (optional)</text>
+<rect x="1605" y="160" width="250" height="80" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="1730.0" y="192.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="700" fill="#1F2933">Hospital IdP (Entra ID / Keycloak)</text>
+<text x="1730.0" y="204.75" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">production SSO, federated into the</text>
+<text x="1730.0" y="216.55" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">user pool — configuration, not code</text>
+<rect x="1605" y="620" width="250" height="90" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1730.0" y="658.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">FHIR server (R4)</text>
+<text x="1730.0" y="670.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">system of record · read + write</text>
+<text x="1730.0" y="682.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">e.g. HAPI behind an API gateway</text>
+<rect x="1605" y="740" width="250" height="80" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="1730.0" y="779.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">DICOMweb gateway</text>
+<text x="1730.0" y="791.15" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="8.8" font-weight="400" fill="#5B6770">QIDO-RS study lists · WADO-RS frames</text>
+<path d="M310,175 L345,175 L345,229 L395,229" fill="none" stroke="#5B6770" stroke-width="1.3" stroke-dasharray="6 4" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<path d="M310,280 L350,280 L350,300 L825,300 L825,263" fill="none" stroke="#2F6FB2" stroke-width="1.3" marker-end="url(#arrow-2F6FB2)" stroke-linejoin="round"/>
+<path d="M310,382 L340,382 L340,310 L1245,310 L1245,263" fill="none" stroke="#2F6FB2" stroke-width="1.3" marker-end="url(#arrow-2F6FB2)" stroke-linejoin="round"/>
+<path d="M250,320 L250,332 L355,332 L355,487 L395,487" fill="none" stroke="#2F6FB2" stroke-width="1.3" marker-end="url(#arrow-2F6FB2)" stroke-linejoin="round"/>
+<path d="M545,399 L565,399" fill="none" stroke="#2F6FB2" stroke-width="1.3" marker-end="url(#arrow-2F6FB2)" stroke-linejoin="round"/>
+<path d="M545,464 L565,464" fill="none" stroke="#2F6FB2" stroke-width="1.3" marker-end="url(#arrow-2F6FB2)" stroke-linejoin="round"/>
+<path d="M545,525 L565,525" fill="none" stroke="#2F6FB2" stroke-width="1.3" marker-end="url(#arrow-2F6FB2)" stroke-linejoin="round"/>
+<path d="M545,577 L565,577" fill="none" stroke="#2F6FB2" stroke-width="1.3" marker-end="url(#arrow-2F6FB2)" stroke-linejoin="round"/>
+<path d="M880,430 L915,430" fill="none" stroke="#2F6FB2" stroke-width="1.3" marker-end="url(#arrow-2F6FB2)" stroke-linejoin="round"/>
+<path d="M715,495 L715,640 L1575,640 L1575,665 L1605,665" fill="none" stroke="#2F6FB2" stroke-width="1.3" marker-end="url(#arrow-2F6FB2)" stroke-linejoin="round"/>
+<path d="M1345,1035 L1575,1035 L1575,780 L1605,780" fill="none" stroke="#2F6FB2" stroke-width="1.3" marker-end="url(#arrow-2F6FB2)" stroke-linejoin="round"/>
+<path d="M1210,470 L1245,470" fill="none" stroke="#5B6770" stroke-width="1.3" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<path d="M470,600 L470,705" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M610,740 L630,740" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M870,740 L890,740" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M1130,740 L1150,740" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M1365,740 L1385,740" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M500,775 L500,795" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M750,775 L750,795" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M1010,775 L1010,795" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M1257,705 L1257,648 L1185,648 L1185,490" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M1300,705 L1300,655 L1220,655 L1220,292 L540,292 L540,263" fill="none" stroke="#0F7B5F" stroke-width="1.3" stroke-dasharray="6 4" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M1605,200 L1575,200 L1575,128 L540,128 L540,195" fill="none" stroke="#5B6770" stroke-width="1.3" stroke-dasharray="6 4" marker-end="url(#arrow-5B6770)" stroke-linejoin="round"/>
+<rect x="301.992" y="202.8" width="86.01599999999999" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="345" y="212" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#5B6770">sign in · tokens</text>
+<rect x="554.306" y="284.8" width="71.388" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="590" y="294" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#2F6FB2">HTTPS · panel</text>
+<rect x="1081.372" y="294.8" width="37.256" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1100" y="304" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#2F6FB2">viewer</text>
+<rect x="287.61199999999997" y="410.8" width="134.776" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="355" y="420" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#2F6FB2">API calls · ID token (JWT)</text>
+<rect x="871.058" y="438.8" width="51.884" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="897" y="448" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#2F6FB2">manifests</text>
+<rect x="744.844" y="624.8" width="310.312" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="900" y="634" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#2F6FB2">FHIR R4 — reads and writes (OAuth2 client credentials · SigV4)</text>
+<rect x="1551.496" y="890.8" width="47.007999999999996" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1575" y="900" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#2F6FB2">DICOMweb</text>
+<rect x="1211.81" y="484.8" width="32.38" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1228" y="494" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#5B6770">audit</text>
+<rect x="523.356" y="640.8" width="193.28799999999998" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="620" y="650" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">/drafts · /manifest · /registry writes</text>
+<rect x="759.678" y="780.8" width="100.64399999999999" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="810" y="790" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">codes on the record</text>
+<rect x="1021.62" y="780.8" width="56.760000000000005" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1050" y="790" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">sign(hash)</text>
+<rect x="1168.496" y="550.8" width="47.007999999999996" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1192" y="560" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">versions</text>
+<rect x="842.364" y="276.8" width="115.27199999999999" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="900" y="286" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">role groups at publish</text>
+<rect x="1239.926" y="114.8" width="120.148" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1300" y="124" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#5B6770">federation (production)</text>
+<line x1="380" y1="1156" x2="414" y2="1156" stroke="#2F6FB2" stroke-width="1.6"/>
+<text x="422" y="1160" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" fill="#5B6770">clinical use: open an app, data through the dispatcher</text>
+<line x1="380" y1="1174" x2="414" y2="1174" stroke="#0F7B5F" stroke-width="1.6"/>
+<text x="422" y="1178" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" fill="#5B6770">authoring: drafts, agent, compiler, registry, sign-off</text>
+<line x1="380" y1="1192" x2="414" y2="1192" stroke="#5B6770" stroke-width="1.6"/>
+<text x="422" y="1196" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" fill="#5B6770">sign-in, audit, platform plumbing</text>
+<line x1="380" y1="1210" x2="414" y2="1210" stroke="#5B6770" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="422" y="1214" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" fill="#5B6770">optional / production configuration</text>
+</svg>

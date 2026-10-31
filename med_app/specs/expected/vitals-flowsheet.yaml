@@ -1,0 +1,133 @@
+# Golden output of the compiler for specs/vitals-flowsheet.yaml (lifecycle omitted: it is registry-managed).
+# Regenerate deliberately when the compiler changes: npm run appspec -- compile specs/vitals-flowsheet.yaml
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_vitals_flowsheet
+  version: 0.1.0
+  name: Vitals and renal flowsheet
+  description: Blood pressure, heart rate and weight, and the renal panel, as tables over the last six months.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+auth:
+  roles:
+    - id: ward_nurse
+      display_name: Ward nurse
+      cognito_group: app-app_vitals_flowsheet-ward_nurse
+      data_scope_ref: scope_ward_nurse
+      ui_capabilities:
+        - view
+  default_role: ward_nurse
+data_scopes:
+  scope_ward_nurse:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|85354-9
+          - http://loinc.org|8867-4
+          - http://loinc.org|29463-7
+          - http://loinc.org|33914-3
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_group_1
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|85354-9
+        - http://loinc.org|8867-4
+        - http://loinc.org|29463-7
+      since: $context.window_start
+      count: 40
+    output_binding: group_1
+  - id: p_group_2
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|33914-3
+      since: $context.window_start
+      count: 20
+    output_binding: group_2
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: Tabs
+        props:
+          default_tab: Vitals
+        children:
+          - component: Tab
+            props:
+              label: Vitals
+            children:
+              - component: VitalsTable
+                props:
+                  observations: $bindings.group_1
+                  title: Vitals, last six months
+                  max_rows: 40
+                  compact: true
+          - component: Tab
+            props:
+              label: Renal
+            children:
+              - component: VitalsTable
+                props:
+                  observations: $bindings.group_2
+                  title: Renal, last six months
+                  max_rows: 20
+                  compact: true
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+  - name: window_start
+    type: iso8601
+    required: false
+    source:
+      - panel_selection
+    default: now-6m
+actions: []
+audit:
+  clinical_context: ward_monitoring
+  intended_users:
+    - nurse
+  intended_purpose: Tabular display of recorded observations. No trend interpretation or alerts.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements
+lifecycle:
+  state: draft
+  signoff: null

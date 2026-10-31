@@ -1,0 +1,112 @@
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_hypertension_register
+  version: 0.1.0
+  name: Hypertension register
+  description: Patients with essential hypertension (ICD-10-GM I10.00, I10.90) and their most recent blood pressure.
+  intent_class: cohort_dashboard
+  hospital_id: hsp-musterstadt
+  created_at: 2026-10-01T12:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: hypertension_clinic
+      display_name: Hypertension clinic
+      cognito_group: app-app_hypertension_register-hypertension_clinic
+      data_scope_ref: scope_hypertension_clinic
+      ui_capabilities:
+        - view
+  default_role: hypertension_clinic
+data_scopes:
+  scope_hypertension_clinic:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Condition
+        operations:
+          - search
+        codes:
+          - http://fhir.de/CodeSystem/bfarm/icd-10-gm|I10.00
+          - http://fhir.de/CodeSystem/bfarm/icd-10-gm|I10.90
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|85354-9
+    patient_scope: cohort
+    phi_fields_visible:
+      - name
+      - dob
+primitives:
+  - id: p_cohort
+    kind: data.cohort.by_condition
+    catalog_version: 1.0.0
+    config:
+      condition_codes:
+        - http://fhir.de/CodeSystem/bfarm/icd-10-gm|I10.00
+        - http://fhir.de/CodeSystem/bfarm/icd-10-gm|I10.90
+      clinical_status: active
+    output_binding: cohort
+  - id: p_latest
+    kind: data.cohort.latest_observation
+    catalog_version: 1.0.0
+    config:
+      patients: $bindings.cohort.patients
+      codes:
+        - http://loinc.org|85354-9
+      threshold:
+        component_code: 8480-6
+        value: 140
+    output_binding: latest
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: Grid
+        props:
+          columns: 3
+        children:
+          - component: StatCard
+            props:
+              label: Patients with essential hypertension
+              value: $bindings.cohort.count
+              hint: ICD-10-GM I10.00, ICD-10-GM I10.90 on the problem list
+              tone: accent
+          - component: StatCard
+            props:
+              label: Latest systolic ≥ 140 mmHg
+              value: $bindings.latest.above_threshold_count
+              hint: Most recent blood pressure panel per patient
+              tone: alert
+          - component: StatCard
+            props:
+              label: Data scope
+              value: cohort
+              hint: Name and date of birth visible; no contact details
+      - component: CohortTable
+        props:
+          title: Cohort members
+          rows: $bindings.latest.rows
+          value_label: Latest blood pressure
+context_inputs: []
+actions: []
+audit:
+  clinical_context: population_health
+  intended_users:
+    - hypertension_nurse
+    - cardiologist
+  intended_purpose: Listing of patients with a coded hypertension diagnosis with their latest recorded blood pressure. No risk scoring.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements

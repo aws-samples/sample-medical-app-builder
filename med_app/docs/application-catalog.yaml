@@ -1,0 +1,895 @@
+# Machine-readable application catalog — the planner's ceiling.
+#
+# Consumed by the app_creator pipeline (intent classifier → data planner → layout designer).
+# Every component, prop, primitive, config key, manifest and route named here is verified against
+# the renderer's catalogs by src/tests/applicationCatalog.test.ts, so this file cannot describe an
+# app the renderer would refuse. Human-readable companion: application-catalog.md.
+apiVersion: medapp.eu/v1
+kind: ApplicationCatalog
+
+metadata:
+  version: 0.1.0
+  design_system_version: 1.0.0
+  data_catalog_version: 1.0.0
+  generated: "2026-09-11"
+  hospital_id: hsp-musterstadt
+  languages: [en, de]
+
+# ── Intent classes ─────────────────────────────────────────────────────────────
+intent_classes:
+  # workflow = structured data entry and task handling through actions (write.* primitives): forms, coded entries, tasks and worklists.
+  supported: [viewer, cohort_dashboard, workflow]
+  # Accepted by the manifest schema but no primitive or component realises them: refuse.
+  unrealised: [report, search]
+
+# ── Launch context an archetype may declare ───────────────────────────────────
+context_inputs:
+  patient_id:
+    type: fhir.reference
+    sources: [smart_launch, panel_selection]
+    description: The patient in context. Never guessed; supplied by SMART launch or the panel.
+  window_start:
+    type: iso8601
+    relative_syntax: "now-<n>[d|m|y]"
+    typical_default: now-2y
+    description: Lower bound for time-windowed observation queries.
+
+# ── Terminology the planner may bind to (hints, not an allow-list) ────────────
+terminology:
+  systems:
+    loinc: http://loinc.org
+    snomed: http://snomed.info/sct
+    atc: http://www.whocc.no/atc
+    icd10gm: http://fhir.de/CodeSystem/bfarm/icd-10-gm
+    ops: http://fhir.de/CodeSystem/bfarm/ops
+    ucum: http://unitsofmeasure.org
+    dicom_modality: http://dicom.nema.org/resources/ontology/DCM
+  # How the hospital's record is coded (a German hospital's FHIR server, as read during the prototype): what the assistant should assume when a
+  # request names a diagnosis or a procedure and the clinician gives no code. The synthetic record (the mock data)
+  # uses SNOMED for conditions and ATC for medication; the hospital's uses the German hospital codings.
+  record_notes:
+    - Conditions on the hospital's record are coded in ICD-10-GM (icd10gm), procedures in OPS (ops); observations and reports in LOINC.
+    - The hospital's record holds no MedicationRequest, Encounter, AllergyIntolerance, Immunization, DocumentReference or Consent resources yet; apps built on those show empty lists there.
+    - Patients on the hospital's record have no MRN; identify them by name and date of birth.
+  # Hints: what the assistant can name without the record. In a connected deployment the record's own vocabulary —
+  # every distinct code on the FHIR server with its display texts and counts, read by the data source's seed
+  # (infra/lambdas/dispatcher/vocabulary.py) — is searched beside these, so this list need not grow with the record;
+  # keep here what the record cannot supply: panel components, chart units, the thresholds the templates assume.
+  common_codes:
+    observations:
+      blood_pressure_panel: { system: loinc, code: "85354-9", components: { systolic: "8480-6", diastolic: "8462-4" }, unit: "mm[Hg]" }
+      heart_rate: { system: loinc, code: "8867-4", unit: "/min" }
+      oxygen_saturation: { system: loinc, code: "59408-5", unit: "%" }
+      body_weight: { system: loinc, code: "29463-7", unit: kg }
+      hba1c: { system: loinc, code: "4548-4", unit: "%" }
+      egfr: { system: loinc, code: "33914-3", unit: "mL/min/{1.73_m2}" }
+      egfr_ckd_epi: { system: loinc, code: "62238-1", unit: "mL/min/{1.73_m2}" }
+      glucose: { system: loinc, code: "2339-0", unit: "mg/dL" }
+      haemoglobin: { system: loinc, code: "718-7", unit: "g/dL" }
+      leukocytes: { system: loinc, code: "26464-8", unit: "10*3/uL" }
+      platelets: { system: loinc, code: "26515-7", unit: "10*3/uL" }
+      sodium: { system: loinc, code: "2951-2", unit: "mmol/L" }
+      potassium: { system: loinc, code: "2823-3", unit: "mmol/L" }
+      calcium: { system: loinc, code: "2000-8", unit: "mmol/L" }
+      crp: { system: loinc, code: "1988-5", unit: "mg/L" }
+      alt_gpt: { system: loinc, code: "1743-4", unit: "U/L" }
+      # The lab's own tests have no LOINC code (the physio system); pain on the 0–10 numeric rating scale does — the one
+      # form answer most often also recorded as a measurement (as_observation).
+      pain_nrs_0_10: { system: loinc, code: "72514-3", unit: "{score}" }
+      ast_got: { system: loinc, code: "1920-8", unit: "U/L" }
+      bilirubin_total: { system: loinc, code: "1975-2", unit: "mg/dL" }
+      smoking_status: { system: loinc, code: "72166-2", value_type: CodeableConcept }
+    conditions:
+      hypertension: { system: snomed, code: "38341003" }
+      type_2_diabetes: { system: snomed, code: "44054006" }
+      ckd_stage_3: { system: snomed, code: "433144002" }
+      migraine: { system: snomed, code: "37796009" }
+      knee_osteoarthritis: { system: snomed, code: "239873007" }
+      essential_hypertension_icd10gm: { system: icd10gm, code: "I10.90" }
+      benign_essential_hypertension_icd10gm: { system: icd10gm, code: "I10.00" }
+      type_2_diabetes_icd10gm: { system: icd10gm, code: "E11.90" }
+      lung_cancer_upper_lobe_icd10gm: { system: icd10gm, code: "C34.1" }
+      diffuse_large_b_cell_lymphoma_icd10gm: { system: icd10gm, code: "C83.3" }
+      prostate_cancer_icd10gm: { system: icd10gm, code: "C61" }
+      anaemia_in_neoplastic_disease_icd10gm: { system: icd10gm, code: "D63.0" }
+      hypokalaemia_icd10gm: { system: icd10gm, code: "E87.6" }
+      # ICD-10-GM categories: the three characters before the dot cover every subcode (I10 = I10.00, I10.90, …); the
+      # dispatcher and the mock match them by hierarchy, so a filter on a category needs no list of subcodes.
+      essential_hypertension_icd10gm_category: { system: icd10gm, code: I10 }
+      type_2_diabetes_icd10gm_category: { system: icd10gm, code: E11 }
+      chronic_kidney_disease_icd10gm_category: { system: icd10gm, code: N18 }
+      chronic_kidney_disease_stage_3_icd10gm: { system: icd10gm, code: "N18.3" }
+    medications:
+      ramipril: { system: atc, code: C09AA05 }
+      amlodipine: { system: atc, code: C08CA01 }
+      metformin: { system: atc, code: A10BA02 }
+      torasemide: { system: atc, code: C03CA04 }
+      sumatriptan: { system: atc, code: N02CC01 }
+    # ATC classes: anything shorter than a seven-character substance code names a class and matches every drug under it
+    # (C09A covers C09AA05 ramipril); what a disease template calls "the therapy" is a list of these.
+    medication_classes:
+      ace_inhibitors: { system: atc, code: C09A }
+      angiotensin_ii_receptor_blockers: { system: atc, code: C09C }
+      dihydropyridine_calcium_channel_blockers: { system: atc, code: C08CA }
+      diuretics: { system: atc, code: C03 }
+      loop_diuretics: { system: atc, code: C03C }
+      beta_blocking_agents: { system: atc, code: C07 }
+      antidiabetics_excl_insulins: { system: atc, code: A10B }
+      insulins_and_analogues: { system: atc, code: A10A }
+      statins: { system: atc, code: C10AA }
+    procedures:
+      radiotherapy_imrt_image_guided: { system: ops, code: "8-522.91" }
+      radiotherapy_imrt: { system: ops, code: "8-522.90" }
+      gastroscopy: { system: ops, code: "1-632.0" }
+      central_venous_catheter: { system: ops, code: "8-831.0" }
+      haemodialysis: { system: ops, code: "8-854.2" }
+      red_cell_transfusion: { system: ops, code: "8-800.c0" }
+    modalities: [CT, MR, DX, US, CR, NM, PT, MG, XA]
+  # Questionnaires that exist on the record and may be the form of a structured assessment (APP-11).
+  # The assistant offers these when they fit; a form the record lacks is designed in chat (the `form` knob) — it never invents a URL.
+  # Mirrors the seeded record (src/primitives/data/mock/seed.ts); a FHIR lookup replaces this list later.
+  questionnaires:
+    - { url: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup, title: Hypertension follow-up assessment, description: Blood pressure readings, symptoms, adherence and side effects at a follow-up visit }
+
+# ── Role patterns ─────────────────────────────────────────────────────────────
+role_patterns:
+  single_role:
+    description: One role, full PHI for that role.
+    phi_default: [name, dob, gender, mrn, address, phone, email]
+  viewer_reviewer:
+    description: Read-only viewer with minimal PHI; reviewer inherits and adds resources and PHI. Reviewer-only sections use show_only_if_role_in; their primitives use only_for_roles.
+    roles:
+      - { id: viewer, phi: [name, dob, mrn] }
+      - { id: reviewer, inherits: viewer, phi: [name, dob, gender, mrn, address, phone] }
+  cohort_analyst:
+    description: Population role; identifies patients but sees no contact details.
+    patient_scope: cohort
+    phi_default: [name, dob, mrn]
+
+# ── Archetypes ────────────────────────────────────────────────────────────────
+archetypes:
+  - id: APP-01
+    name: Patient summary
+    intent_class: viewer
+    patient_scope: individual
+    summary: >-
+      Single-patient overview: identity, active problems, current medication, recent vitals and
+      labs, and the raw FHIR record, as tabs or sections.
+    example_requests:
+      en:
+        - Give me an overview of the patient with problems, medication and recent vitals.
+        - What do I need to know about this patient before the consultation?
+      de:
+        - Zeig mir eine Übersicht des Patienten mit Diagnosen, Medikation und letzten Vitalwerten.
+        - Was muss ich über diesen Patienten vor der Sprechstunde wissen?
+    triage_signals: [overview, summary, chart, record, "everything about", Übersicht, Zusammenfassung, Akte]
+    requires_context: [patient_id]
+    optional_context: [window_start]
+    data_plan:
+      - { kind: data.fhir.patient.read, purpose: identity }
+      - { kind: data.fhir.query, resource: Condition, purpose: active problems, params: { clinical-status: active } }
+      - { kind: data.fhir.query, resource: MedicationRequest, purpose: current medication, params: { status: active } }
+      - { kind: data.fhir.observation.by_code, purpose: vitals and labs in the window }
+    components:
+      layout: [PageShell, Tabs, Tab, Section, Grid]
+      display: [PatientHeader, PatientBanner, ProblemList, MedicationList, VitalsTable, ResourceDetails]
+    knobs:
+      - { id: vitals_codes, description: Which observation codes count as vitals/labs, binds_to: { primitive: data.fhir.observation.by_code, config: codes } }
+      - { id: window, description: How far back to look, binds_to: { context: window_start } }
+      - { id: condition_status, description: Active only or all conditions, binds_to: { primitive: data.fhir.query, config: params } }
+      - { id: arrangement, description: Tabs vs stacked sections vs grid, binds_to: { component: Tabs } }
+      - { id: identity_component, description: Stock Medplum header (full PHI) vs masked banner, binds_to: { component: PatientBanner, prop: visible_fields } }
+    role_pattern: single_role
+    reference_manifest: fixtures/manifests/patient-summary.yaml
+    limits: []
+
+  - id: APP-02
+    name: Longitudinal observation trend
+    intent_class: viewer
+    patient_scope: individual
+    summary: >-
+      One or more numeric observations for a patient over time with guideline thresholds and the
+      latest readings alongside. Any quantity-valued code; panel components (e.g. BP) as separate series.
+    example_requests:
+      en:
+        - Blood pressure over the last two years against Stage 1 thresholds.
+        - Plot HbA1c for the last three years with a target line at 7 percent.
+      de:
+        - Blutdruckverlauf der letzten zwei Jahre mit Stage-1-Grenzwerten.
+        - HbA1c-Verlauf der letzten drei Jahre mit Zielwert 7 Prozent.
+    triage_signals: [trend, "over time", course, history of a value, plot, chart, Verlauf, Kurve, "im Zeitverlauf"]
+    requires_context: [patient_id]
+    optional_context: [window_start]
+    data_plan:
+      - { kind: data.fhir.patient.read, purpose: identity }
+      - { kind: data.fhir.observation.by_code, purpose: the plotted series }
+      - { kind: data.fhir.query, resource: Condition, purpose: reviewer-only clinical context, optional: true, only_for_roles: [reviewer] }
+    components:
+      layout: [PageShell, TwoColumn, Grid, Section]
+      display: [PatientBanner, ObservationTimeline, VitalsTable, ProblemList]
+    knobs:
+      - { id: series, description: Codes or component codes to plot, binds_to: { component: ObservationTimeline, prop: series } }
+      - { id: thresholds, description: Reference lines with labels, binds_to: { component: ObservationTimeline, prop: thresholds } }
+      - { id: codes, description: Codes requested from the record, binds_to: { primitive: data.fhir.observation.by_code, config: codes } }
+      - { id: window, description: Time window, binds_to: { context: window_start } }
+      - { id: readings_rows, description: Rows in the readings table, binds_to: { component: VitalsTable, prop: max_rows } }
+      - { id: column_ratio, description: Chart vs table width, binds_to: { component: TwoColumn, prop: ratio } }
+    role_pattern: viewer_reviewer
+    reference_manifest: fixtures/manifests/bp-trend.yaml
+    limits:
+      - One data point per day per series (same-day readings collapse to the latest).
+      - Only quantity values are plotted; coded results appear in the table only.
+
+  - id: APP-03
+    name: Observation flowsheet
+    intent_class: viewer
+    patient_scope: individual
+    summary: >-
+      Tabular history of many observations for one patient over a window, newest first, with
+      quantity, coded, text and component values rendered correctly.
+    example_requests:
+      en: [All vitals and lab results from the last six months in a table.]
+      de: [Alle Vital- und Laborwerte der letzten sechs Monate tabellarisch.]
+    triage_signals: [table, flowsheet, "all values", "all results", list of measurements, Tabelle, "alle Werte"]
+    requires_context: [patient_id]
+    optional_context: [window_start]
+    data_plan:
+      - { kind: data.fhir.patient.read, purpose: identity }
+      - { kind: data.fhir.observation.by_code, purpose: observations by code list }
+    components:
+      layout: [PageShell, Tabs, Tab, Section]
+      display: [PatientBanner, VitalsTable]
+    knobs:
+      - { id: codes, description: Codes to include, binds_to: { primitive: data.fhir.observation.by_code, config: codes } }
+      - { id: window, description: Time window, binds_to: { context: window_start } }
+      - { id: rows, description: Row cap, binds_to: { component: VitalsTable, prop: max_rows } }
+      - { id: density, description: Compact rows, binds_to: { component: VitalsTable, prop: compact } }
+    role_pattern: single_role
+    reference_manifest: null
+    limits: []
+
+  - id: APP-04
+    name: Problem list and medication review
+    intent_class: viewer
+    patient_scope: individual
+    summary: Focused view of the patient's conditions and/or medication requests, filtered by status.
+    example_requests:
+      en: [Active problems and current medication for this patient.]
+      de: [Aktive Diagnosen und aktuelle Medikation des Patienten.]
+    triage_signals: [problems, diagnoses, conditions, medication, prescriptions, Diagnosen, Medikation, Medikamente]
+    requires_context: [patient_id]
+    optional_context: []
+    data_plan:
+      - { kind: data.fhir.patient.read, purpose: identity }
+      - { kind: data.fhir.query, resource: Condition, purpose: problem list }
+      - { kind: data.fhir.query, resource: MedicationRequest, purpose: medication }
+    components:
+      layout: [PageShell, TwoColumn, Grid, Section]
+      display: [PatientBanner, ProblemList, MedicationList]
+    knobs:
+      - { id: condition_filters, description: clinical-status / code filters, binds_to: { primitive: data.fhir.query, config: params } }
+      - { id: layout, description: Side by side vs stacked, binds_to: { component: TwoColumn } }
+    role_pattern: single_role
+    reference_manifest: null
+    limits: []
+
+  - id: APP-05
+    name: Imaging study review
+    intent_class: viewer
+    patient_scope: individual
+    summary: >-
+      The patient's imaging studies, filterable by modality, with a viewer that opens the selected
+      study. Read-only (QIDO/WADO).
+    example_requests:
+      en:
+        - Show this patient's CT and MR studies and let me open them.
+        - The CT studies with the viewer opening in 3D, for surgery planning.
+      de:
+        - CT- und MRT-Untersuchungen des Patienten anzeigen und öffnen.
+        - Die CT-Untersuchungen, im Viewer direkt als 3D-Rekonstruktion, für die OP-Planung.
+    triage_signals: [images, imaging, scans, studies, CT, MRI, MR, x-ray, ultrasound, DICOM, viewer, 3D, MPR, reconstruction, Bilder, Bildgebung, Röntgen, Sonographie, Rekonstruktion]
+    requires_context: [patient_id]
+    optional_context: []
+    data_plan:
+      - { kind: data.fhir.patient.read, purpose: identity }
+      - { kind: data.dicom.studies.for_patient, purpose: study list }
+    components:
+      layout: [PageShell, TwoColumn]
+      display: [PatientBanner, ImagingStudyList, DicomViewer]
+    interaction:
+      - { writer: ImagingStudyList, prop: selection_key, reader: DicomViewer, reads: study_uid, via: "$ui.<selection_key>" }
+    knobs:
+      - { id: modalities, description: Modality filter, binds_to: { primitive: data.dicom.studies.for_patient, config: modalities } }
+      - { id: viewer_height, description: Viewer height, binds_to: { component: DicomViewer, prop: height_px } }
+      - { id: column_ratio, description: List vs viewer width, binds_to: { component: TwoColumn, prop: ratio } }
+      - { id: viewer_layout, description: "How a study opens: 2-D stack, MPR (three reconstructed planes) or MPR with a 3-D volume rendering; switchable in the viewer", binds_to: { component: DicomViewer, prop: layout } }
+    role_pattern: single_role
+    reference_manifest: manifests/imaging-review-3d.yaml
+    limits:
+      - No upload (STOW), measurement or annotation tools beyond the viewer's own; the layout choice is stack, MPR or MPR + 3-D.
+      - Viewer URL is deployment configuration; without it the study metadata is shown.
+      - MPR and 3-D need a volume — a series of many thin slices with consistent geometry; a radiograph or a two-image topogram reconstructs to nothing useful.
+
+  - id: APP-06
+    name: Disease-specific follow-up dashboard
+    intent_class: viewer
+    patient_scope: individual
+    summary: >-
+      Composition for a named chronic condition: the relevant trend(s), relevant medication, the
+      problem list and identity — the consultation view for a disease clinic.
+    example_requests:
+      en:
+        - A hypertension follow-up view with BP trend, antihypertensives and problems.
+        - A diabetes clinic view with HbA1c and weight trends and medication.
+      de:
+        - Eine Hypertonie-Verlaufsansicht mit Blutdrucktrend, Antihypertensiva und Diagnosen.
+        - Eine Diabetes-Sprechstundenansicht mit HbA1c- und Gewichtsverlauf und Medikation.
+    triage_signals: [follow-up, clinic view, disease name plus trend and medication, Verlaufskontrolle, Sprechstunde]
+    requires_context: [patient_id]
+    optional_context: [window_start]
+    data_plan:
+      - { kind: data.fhir.patient.read, purpose: identity }
+      - { kind: data.fhir.observation.by_code, purpose: disease-relevant series }
+      - { kind: data.fhir.query, resource: MedicationRequest, purpose: disease-relevant medication, params: { code: "<ATC codes>" } }
+      - { kind: data.fhir.query, resource: Condition, purpose: problem list }
+    components:
+      layout: [PageShell, TwoColumn, Grid, Section]
+      display: [PatientBanner, ObservationTimeline, MedicationList, ProblemList, VitalsTable]
+    # One word fills the dashboard. Conditions carry both codings the platform meets (SNOMED CT on the synthetic record,
+    # ICD-10-GM categories on the hospital's); the therapy is ATC classes; `source` names the guideline the lines come from.
+    templates:
+      - id: hypertension_follow_up
+        series: [{ label: Systolic, component_code: "8480-6" }, { label: Diastolic, component_code: "8462-4" }]
+        observation_codes: ["8480-6", "8462-4"]
+        thresholds: [{ value: 140, label: "Systolic ≥ 140" }, { value: 90, label: "Diastolic ≥ 90" }]
+        source: "ESC/ESH 2023 arterial hypertension guideline: office blood pressure ≥ 140/90 mmHg"
+        medication_codes: [C09A, C09C, C08CA, C03, C07]
+        condition_codes: ["38341003", I10]
+      - id: diabetes_follow_up
+        series: [{ label: HbA1c, code: "4548-4" }]
+        observation_codes: ["4548-4", "29463-7"]
+        thresholds: [{ value: 7, label: "HbA1c ≥ 7 %" }]
+        source: "ADA Standards of Care in Diabetes: HbA1c goal < 7 % for most non-pregnant adults"
+        medication_codes: [A10B, A10A]
+        condition_codes: ["44054006", E11]
+      - id: ckd_monitoring
+        series: [{ label: eGFR, code: "33914-3" }]
+        observation_codes: ["33914-3"]
+        thresholds: [{ value: 60, label: "eGFR 60" }, { value: 45, label: "eGFR 45" }]
+        source: "KDIGO 2024 CKD guideline: eGFR 60 and 45 mL/min/1.73 m² bound the G3a and G3b stages"
+        medication_codes: [C09A, C09C, C03C]
+        condition_codes: ["433144002", N18]
+    knobs:
+      - { id: series, description: Which values to trend, binds_to: { component: ObservationTimeline, prop: series } }
+      - { id: thresholds, description: Guideline lines, binds_to: { component: ObservationTimeline, prop: thresholds } }
+      - { id: thresholds_source, description: The guideline the lines come from — shown under the chart; template default, binds_to: { component: ObservationTimeline, prop: caption } }
+      - { id: medication_codes, description: Medication classes to list (ATC classes match every drug under them), binds_to: { primitive: data.fhir.query, config: params } }
+      - { id: window, description: Time window, binds_to: { context: window_start } }
+    role_pattern: viewer_reviewer
+    reference_manifest: null
+    limits:
+      - Inherits APP-02 chart limits; threshold lines are visual only (no flagging or scoring).
+
+  - id: APP-07
+    name: Pre-consultation snapshot
+    intent_class: viewer
+    patient_scope: individual
+    summary: >-
+      Dense one-screen view: compact banner, a few counts, latest readings, active problems and
+      medication. Counts come from list lengths, not computation.
+    example_requests:
+      en: [A one-screen snapshot before I see the patient.]
+      de: [Kurzübersicht vor dem Patientenkontakt auf einen Blick.]
+    triage_signals: [snapshot, "at a glance", quick, brief, one screen, Kurzübersicht, "auf einen Blick"]
+    requires_context: [patient_id]
+    optional_context: [window_start]
+    data_plan:
+      - { kind: data.fhir.patient.read, purpose: identity }
+      - { kind: data.fhir.query, resource: Condition, purpose: active problems, params: { clinical-status: active } }
+      - { kind: data.fhir.query, resource: MedicationRequest, purpose: current medication, params: { status: active } }
+      - { kind: data.fhir.observation.by_code, purpose: latest readings }
+    components:
+      layout: [PageShell, Grid, TwoColumn]
+      display: [PatientBanner, StatCard, VitalsTable, ProblemList, MedicationList]
+    knobs:
+      - { id: counts, description: "Which lengths to show, e.g. $bindings.conditions.length", binds_to: { component: StatCard, prop: value } }
+      - { id: window, description: Short window such as now-90d, binds_to: { context: window_start } }
+      - { id: density, description: Compact tables, binds_to: { component: VitalsTable, prop: compact } }
+    role_pattern: single_role
+    reference_manifest: null
+    limits: []
+
+  - id: APP-08
+    name: FHIR resource inspector
+    intent_class: viewer
+    patient_scope: individual
+    summary: >-
+      Schema-driven rendering of a single FHIR resource with references resolved: the patient
+      record, or the most recent report or encounter selected by index from a query.
+    example_requests:
+      en: [Show me the patient's latest diagnostic report in full.]
+      de: [Den letzten Befundbericht des Patienten vollständig anzeigen.]
+    triage_signals: [full record, raw, complete resource, latest report, letzter Befund, vollständig]
+    requires_context: [patient_id]
+    optional_context: []
+    data_plan:
+      - { kind: data.fhir.patient.read, purpose: identity or the resource itself }
+      - { kind: data.fhir.query, resource: DiagnosticReport, purpose: latest report, select: "$bindings.<binding>[0]" }
+      - { kind: data.fhir.query, resource: Encounter, purpose: latest encounter, select: "$bindings.<binding>[0]" }
+    components:
+      layout: [PageShell, Section]
+      display: [PatientBanner, ResourceDetails]
+    indexed_resource_types: [Patient, Observation, Condition, MedicationRequest, ImagingStudy, Encounter, DiagnosticReport, Practitioner, Organization, Questionnaire, QuestionnaireResponse, AllergyIntolerance, Procedure, Immunization, DocumentReference]
+    knobs:
+      - { id: resource, description: Which resource to show, binds_to: { component: ResourceDetails, prop: resource } }
+    role_pattern: single_role
+    reference_manifest: null
+    limits:
+      - One resource per component; lists of Encounter/DiagnosticReport have no component yet.
+
+  - id: APP-09
+    name: Condition-defined cohort register
+    intent_class: cohort_dashboard
+    patient_scope: cohort
+    summary: >-
+      Every patient with an active coded condition — optionally narrowed to those with imaging studies on
+      record (by modality, window and minimum count) — each with the most recent value of a chosen
+      observation flagged against a threshold, plus headline counts. An adjustable range (a two-handle
+      slider) can filter the members live by that value without reading the record again. With imaging,
+      the table carries each member's study count and latest study and can link to an imaging app; the
+      register names studies, it never retrieves pixels. A register may be defined by diagnosis and imaging
+      alone, without a value.
+    example_requests:
+      en:
+        - All patients with active hypertension and their latest blood pressure; flag anyone at or above 140.
+        - All diabetics with their latest HbA1c and a slider to narrow the list to a range, say 7 to 9 percent.
+        - All patients with lung cancer (C34) who have had a CT in the last two years, with a link to open the images.
+      de:
+        - Alle Patienten mit aktiver Hypertonie und letztem Blutdruck; ab 140 systolisch markieren.
+        - Alle Diabetiker mit dem letzten HbA1c und einem Schieberegler, um den Bereich einzugrenzen, etwa 7 bis 9 Prozent.
+        - Alle Patientinnen und Patienten mit C34.1, die ein CT hatten.
+    triage_signals: ["all patients with", registry, register, cohort, population, "who is above", "how many patients", "who have had a CT", "with imaging", Register, Kohorte, "alle Patienten mit", "die ein CT hatten"]
+    requires_context: []
+    optional_context: []
+    data_plan:
+      - { kind: data.cohort.by_condition, purpose: membership }
+      - { kind: data.cohort.with_imaging, purpose: "members with imaging (optional): study count and latest study per member, narrowed cohort", consumes: "$bindings.<cohort>.patients" }
+      - { kind: data.cohort.latest_observation, purpose: latest value per member, consumes: "$bindings.<cohort or imaging>.patients" }
+    components:
+      layout: [PageShell, Grid]
+      display: [StatCard, CohortTable, RangeFilter, CohortRangeCard]
+    knobs:
+      - { id: condition_codes, description: Cohort definition, binds_to: { primitive: data.cohort.by_condition, config: condition_codes } }
+      - { id: clinical_status, description: Active/resolved filter, binds_to: { primitive: data.cohort.by_condition, config: clinical_status } }
+      - { id: imaging_modalities, description: "Narrow to members with studies of these DICOM modalities (CT, MR, US, DX, …); empty: any imaging", binds_to: { primitive: data.cohort.with_imaging, config: modalities } }
+      - { id: imaging_within, description: "Only studies within a window (now-2y); omitted: ever", binds_to: { primitive: data.cohort.with_imaging, config: since } }
+      - { id: imaging_min_studies, description: How many matching studies a member needs, binds_to: { primitive: data.cohort.with_imaging, config: min_studies } }
+      - { id: imaging_open_in, description: "app_id of a published imaging app (APP-05) each member row links to, opened on that patient", binds_to: { component: CohortTable, prop: open_in } }
+      - { id: observation_codes, description: Which value to surface, binds_to: { primitive: data.cohort.latest_observation, config: codes } }
+      - { id: threshold, description: "Flag at or above (component_code optional)", binds_to: { primitive: data.cohort.latest_observation, config: threshold } }
+      - { id: value_label, description: Column label, binds_to: { component: CohortTable, prop: value_label } }
+      - { id: range, description: "Adjustable range over the compared value: slider bounds, step, the range selected at open; filters the table and counts members in range live", binds_to: { component: RangeFilter, prop: initial } }
+    role_pattern: cohort_analyst
+    reference_manifest: manifests/hypertension-register.yaml
+    limits:
+      - Threshold direction is "at or above" only; the range is a view filter over the fetched members, not a server-side criterion.
+      - Imaging narrows by modality, window and study count only — not by body part, series description or report wording; studies are listed, not displayed (link to an APP-05 app for that).
+      - Criteria other than Condition code and imaging (age, sex, medication, encounter, value) are not available.
+      - No sorting, paging or export controls.
+
+  - id: APP-10
+    name: Cohort KPI tiles
+    intent_class: cohort_dashboard
+    patient_scope: cohort
+    summary: APP-09 reduced to headline numbers for a landing tile or wall display — the same membership, imaging and value knobs.
+    example_requests:
+      en: ["How many patients have active hypertension, and how many are above 140 systolic?", "How many of our COPD patients have had a chest CT?"]
+      de: ["Wie viele Patienten haben eine aktive Hypertonie und wie viele liegen über 140 systolisch?"]
+    triage_signals: ["how many", count, number of patients, KPI, tiles, "wie viele", Anzahl]
+    requires_context: []
+    optional_context: []
+    data_plan:
+      - { kind: data.cohort.by_condition, purpose: membership }
+      - { kind: data.cohort.with_imaging, purpose: "members with imaging (optional)", consumes: "$bindings.<cohort>.patients" }
+      - { kind: data.cohort.latest_observation, purpose: threshold count, consumes: "$bindings.<cohort or imaging>.patients" }
+    components:
+      layout: [PageShell, Grid]
+      display: [StatCard]
+    knobs:
+      - { id: condition_codes, description: Cohort definition, binds_to: { primitive: data.cohort.by_condition, config: condition_codes } }
+      - { id: imaging_modalities, description: Count only members with studies of these modalities, binds_to: { primitive: data.cohort.with_imaging, config: modalities } }
+      - { id: threshold, description: Flag at or above, binds_to: { primitive: data.cohort.latest_observation, config: threshold } }
+    role_pattern: cohort_analyst
+    reference_manifest: null
+    limits:
+      - Same as APP-09.
+
+  - id: APP-11
+    name: Structured assessment
+    intent_class: workflow
+    patient_scope: individual
+    summary: >-
+      A form rendered for the patient in context and written to the record: a FHIR Questionnaire the
+      record already holds (by canonical URL), or one designed in the conversation — items of the standard
+      types (text, number with unit, yes/no, date, single and multiple choice, headings, notes), options
+      that may carry a terminology coding, numbers with an accepted range, and questions asked only when
+      another answer fits — that the compiler turns into a FHIR Questionnaire the app carries (answerOption
+      codings, minValue/maxValue, enableWhen), reviewed and signed with the app and written to the record when
+      it is published. The completed QuestionnaireResponse is validated against the Questionnaire — required,
+      types, options, ranges, conditions — and written through the dispatcher. Earlier submissions are listed alongside.
+    example_requests:
+      en:
+        - A follow-up assessment form for hypertension patients, saved to the record, with earlier assessments visible.
+        - Let the nurse document the pre-visit checklist as a structured form.
+        - A falls-risk screen for the ward — fallen in the last year, walking aid, timed up-and-go in seconds, risk factors — saved to the record.
+      de:
+        - Ein Verlaufsbogen für Hypertonie-Patienten, der in die Akte gespeichert wird, mit Anzeige früherer Bögen.
+        - Die Pflegekraft soll die Checkliste vor dem Termin strukturiert dokumentieren.
+        - Ein Sturzrisiko-Screening für die Station — Sturz im letzten Jahr, Gehhilfe, Timed-up-and-go in Sekunden, Risikofaktoren — in die Akte gespeichert.
+    triage_signals: [form, assessment, checklist, questionnaire, document, record an assessment, Bogen, Fragebogen, Checkliste, dokumentieren]
+    requires_context: [patient_id]
+    optional_context: []
+    data_plan:
+      - { kind: data.fhir.patient.read, purpose: identity }
+      - { kind: data.fhir.questionnaire.read, purpose: the form definition }
+      - { kind: data.fhir.query, resource: QuestionnaireResponse, purpose: earlier submissions, params: { patient: "<patient>", questionnaire: "<canonical url>" } }
+      - { kind: write.fhir.questionnaire_response.submit, purpose: save the completed form, via_action: true }
+    components:
+      layout: [PageShell, TwoColumn, Section]
+      display: [PatientBanner, AssessmentForm, SubmissionList]
+    interaction:
+      - { writer: AssessmentForm, prop: state_key, reader: AssessmentForm, reads: action, via: "$ui.<state_key> → action → write primitive" }
+    knobs:
+      - { id: questionnaire, description: Which Questionnaire (canonical URL) of the record defines the form — or `form` below, never both, binds_to: { primitive: data.fhir.questionnaire.read, config: questionnaire } }
+      - { id: form, description: "A form designed here: id, title, items (text, long_text, integer, decimal + unit, boolean, date, choice/multiple_choice with options, heading with items, note; required; a number's min/max; an option's system + code from lookup_codes; show_when — is, is_not, answered, at_least, at_most on another question, on a heading for a whole section; as_observation on a number that is a measurement in its own right — pain NRS, a test score — the Observation code it is also recorded under on submission, so it charts with the other measurements) — compiled into a Questionnaire the app carries (manifest artifacts) and read by the same primitive", binds_to: { primitive: data.fhir.questionnaire.read, config: questionnaire } }
+      - { id: submit_label, description: Button wording, binds_to: { component: AssessmentForm, prop: submit_label } }
+      - { id: history, description: Which earlier submissions to list, binds_to: { primitive: data.fhir.query, config: params } }
+    role_pattern: single_role
+    reference_manifest: fixtures/manifests/htn-assessment.yaml
+    limits:
+      - >-
+        A designed form has the standard item types only — no attachments, no computed fields; options are inline
+        (no ValueSet). An option's coding is a system and a code lookup_codes returned (snomed, loinc, icd10gm, ops or
+        a URL), never one from memory; a number's min/max is the range the form accepts, not a clinical threshold;
+        a condition (show_when) refers to another question of the same form — on a heading it hides the whole section,
+        and may not look at a question inside it — and a hidden question is neither required nor answered: the
+        renderer hides it (enableWhen) and the dispatcher refuses answers to it.
+      - A form never asks for identity (the app knows the patient) and never computes a score.
+      - >-
+        An answer that is a measurement in its own right (pain on the 0–10 scale, a timed test, a distance) may carry
+        as_observation with a code from lookup_codes: on submission the platform also writes it as an Observation —
+        the item's unit, category survey, derived from the response, its own Provenance — so it appears in a trend
+        beside values typed into an entry form. The answer stays in the response too; nothing is computed from it.
+      - Choice items must use inline answerOption (no ValueSet expansion).
+      - >-
+        A yes/no question that must be answered is a `choice` with Yes/No options, never a required `boolean`:
+        a required boolean renders as a checkbox that has to be ticked, so "No" cannot be submitted.
+        Use `boolean` only for optional tick-if-applicable flags.
+      - >-
+        A multi-select choice needs the `questionnaire-itemControl` `check-box` extension;
+        a bare `repeats: true` still renders as single-select radios.
+      - Creates only; editing or amending an earlier submission is not available.
+      - No calculations, scoring or recommendations from the answers.
+
+  - id: APP-12
+    name: Composed page
+    intent_class: viewer
+    patient_scope: individual
+    summary: >-
+      One patient, the page the clinician describes rather than the nearest template: an ordered list of
+      sections, each one of the blocks the archetypes are built from — trend chart, readings table, problem
+      list, medication list, imaging with a viewer, assessment form, one resource in detail, headline counts —
+      plus the rest of the record (allergies, visits, reports, letters and notes, procedures, immunizations, any
+      allow-listed resource as a table with named columns), the entry forms that write and make it a workflow
+      app (a measurement, a diagnosis, an allergy, a procedure, a photo taken with the device's camera — each
+      from a fixed list of codes or kinds — beside the list it adds to; the patient's tasks with a form for a new
+      one; `record`: a Goal, CarePlan, Encounter or DocumentReference with exactly the fields the author declares),
+      and a form read back as data (form_trend charts its numeric answers across responses, latest_answers shows
+      the last response). Stacked sections share a row while their widths fit, or every section is a tab;
+      a section may be gated to roles, whose scope is then derived from their part of the page.
+    example_requests:
+      en:
+        - The blood pressure trend with the current medication beside it, and the kidney values and the problem list underneath.
+        - One page for the nurse visit — counts at a glance, the follow-up form, and the record itself for the lead nurse.
+        - For the ward round, allergies first, then the visits and reports side by side, the letters, and the latest lab results.
+        - Ward documentation — the problem list with a form to add one of our common diagnoses, the allergy list with a form to record a drug allergy, the procedures with a form to document a gastroscopy or a central line.
+        - Wound documentation — the wound photos so far, newest first, and a form to take a new one on the ward tablet, with the body site and a remark.
+        - A therapy plan page — the patient's goals with a form to set a measurable one (what is measured, the target value and unit, the due date) and a progress note form, the notes beside it.
+      de:
+        - Den Blutdruckverlauf mit der aktuellen Medikation daneben, darunter die Nierenwerte und die Diagnosenliste.
+        - Eine Seite für den Pflegetermin — Kennzahlen auf einen Blick, der Verlaufsbogen und für die Pflegeleitung die Akte selbst.
+        - Für die Visite zuerst die Allergien, dann Aufenthalte und Befunde nebeneinander, die Arztbriefe und die letzten Laborwerte.
+        - Stationsdokumentation — die Diagnosenliste mit einem Formular für unsere häufigen Diagnosen, die Allergieliste mit einem Formular für Arzneimittelallergien, die Prozeduren mit einem Formular für Gastroskopie oder ZVK.
+        - Wunddokumentation — die bisherigen Wundfotos, neueste zuerst, und ein Formular, um am Stationstablet ein neues aufzunehmen, mit Lokalisation und Bemerkung.
+        - Eine Therapieplan-Seite — die Ziele des Patienten mit einem Formular für ein messbares Ziel (Messgröße, Zielwert und Einheit, Fälligkeit) und ein Formular für Verlaufsnotizen, die Notizen daneben.
+    triage_signals: [and also, together with, beside, underneath, on one page, plus, combined, several parts, dashboard of, visits, reports, letters, allergies, procedures, immunizations, record a reading, enter a value, mark resolved, stop a medication, add a diagnosis, record an allergy, document a procedure, photo, wound photo, take a picture, photograph, goal, care plan, therapy plan, note, visit, daneben, darunter, auf einer Seite, zusammen mit, kombiniert, Aufenthalte, Befunde, Arztbriefe, Allergien, Impfungen, Wert eintragen, erfassen, absetzen, Diagnose hinzufügen, Allergie erfassen, Prozedur dokumentieren, Foto, Wundfoto, fotografieren, Bild aufnehmen, Ziel, Therapieplan, Notiz, Besuch]
+    requires_context: [patient_id]
+    optional_context: [window_start]
+    data_plan:
+      - { kind: data.fhir.patient.read, purpose: identity }
+      - { kind: data.fhir.observation.by_code, purpose: trend charts, readings tables and readings counts (per section) }
+      - { kind: data.fhir.query, resource: Condition, purpose: problem list and problem count, params: { clinical-status: active } }
+      - { kind: data.fhir.query, resource: MedicationRequest, purpose: medication list and medication count, params: { status: active } }
+      - { kind: data.fhir.query, resource: DiagnosticReport, purpose: most recent resource in a details section }
+      - { kind: data.fhir.query, resource: Encounter, purpose: most recent resource in a details section }
+      - { kind: data.fhir.query, resource: Observation, purpose: most recent resource in a details section }
+      - { kind: data.fhir.query, resource: QuestionnaireResponse, purpose: earlier submissions of an assessment section, params: { patient: "<patient>", questionnaire: "<canonical url>" } }
+      - { kind: data.fhir.query, resource: AllergyIntolerance, purpose: allergies section, params: { clinical-status: active } }
+      - { kind: data.fhir.query, resource: Encounter, purpose: visits section }
+      - { kind: data.fhir.query, resource: DiagnosticReport, purpose: reports section, params: { category: "<RAD | LAB | …>" } }
+      - { kind: data.fhir.query, resource: DocumentReference, purpose: notes section, params: { type: "<LOINC document type>" } }
+      - { kind: data.fhir.query, resource: Procedure, purpose: procedures section }
+      - { kind: data.fhir.query, resource: Immunization, purpose: immunizations section }
+      - { kind: data.dicom.studies.for_patient, purpose: study list of an imaging section }
+      - { kind: data.fhir.questionnaire.read, purpose: the form of an assessment section }
+      - { kind: write.fhir.questionnaire_response.submit, purpose: save the completed form of an assessment section, via_action: true }
+      - { kind: write.fhir.observation.create, purpose: record a measurement from a record_observation section, via_action: true }
+      - { kind: write.fhir.condition.create, purpose: add a diagnosis to the problem list from a record_problem section, via_action: true }
+      - { kind: write.fhir.allergy_intolerance.create, purpose: record an allergy or intolerance from a record_allergy section, via_action: true }
+      - { kind: write.fhir.procedure.create, purpose: document a procedure from a record_procedure section, via_action: true }
+      - { kind: data.fhir.query, resource: Task, purpose: tasks section, params: { status: "requested,in-progress" } }
+      - { kind: data.fhir.questionnaire_response.answers, purpose: "form_trend section: a form's numeric answers as derived Observations, charted", params: { questionnaire: "<canonical url>", link_ids: ["<question ids>"] } }
+      - { kind: data.fhir.query, resource: QuestionnaireResponse, purpose: latest_answers section (newest first; the first is shown), params: { questionnaire: "<canonical url>" } }
+      - { kind: write.fhir.task.create, purpose: put a task on the list from a create_task section, via_action: true }
+      - { kind: data.fhir.query, resource: Media, purpose: "photos section: the patient's photos, newest first, optionally by kind", params: { type: photo, code: "urn:medapp:photo|<kind>,…" } }
+      - { kind: write.fhir.media.create, purpose: record a photo from a record_photo section (bytes to the media bucket, the Media to the record), via_action: true }
+      - { kind: data.fhir.query, resource: Goal, purpose: a list section of the patient's goals (read back of a record section), params: { patient: "<patient>" } }
+      - { kind: data.fhir.query, resource: CarePlan, purpose: a list section of the patient's care plans, params: { patient: "<patient>" } }
+      - { kind: write.fhir.record.create, purpose: "record section: a Goal, CarePlan, Encounter or DocumentReference with exactly the declared fields, stamped by the platform", via_action: true }
+      - { kind: write.fhir.task.update_status, purpose: start / complete a task from the tasks section, via_action: true }
+      - { kind: write.fhir.condition.update_status, purpose: mark a problem resolved (problems section with resolve), via_action: true }
+      - { kind: write.fhir.medication_request.update_status, purpose: stop a prescription with a reason (medication section with stop), via_action: true }
+    components:
+      layout: [PageShell, TwoColumn, Grid, Section, Tabs, Tab]
+      display: [PatientBanner, PatientHeader, ObservationTimeline, VitalsTable, ProblemList, MedicationList, ImagingStudyList, DicomViewer, AssessmentForm, SubmissionList, ResourceDetails, StatCard, AllergyList, EncounterList, ReportList, DocumentList, ResourceList, ObservationEntryForm, ProblemEntryForm, AllergyEntryForm, ProcedureEntryForm, TaskList, TaskEntryForm, LatestAnswers, PhotoGallery, PhotoEntryForm, RecordEntryForm]
+    interaction:
+      - { writer: ImagingStudyList, prop: selection_key, reader: DicomViewer, reads: study_uid, via: "$ui.<section id>_selected" }
+      - { writer: AssessmentForm, prop: state_key, reader: AssessmentForm, reads: action, via: "$ui.<section id>_response → submit_<section id> → write primitive" }
+      - { writer: ObservationEntryForm, prop: state_key, reader: ObservationEntryForm, reads: action, via: "$ui.<section id>_entry → record_<section id> → write.fhir.observation.create" }
+      - { writer: ProblemEntryForm, prop: state_key, reader: ProblemEntryForm, reads: action, via: "$ui.<section id>_entry → record_<section id> → write.fhir.condition.create" }
+      - { writer: AllergyEntryForm, prop: state_key, reader: AllergyEntryForm, reads: action, via: "$ui.<section id>_entry → record_<section id> → write.fhir.allergy_intolerance.create" }
+      - { writer: ProcedureEntryForm, prop: state_key, reader: ProcedureEntryForm, reads: action, via: "$ui.<section id>_entry → record_<section id> → write.fhir.procedure.create" }
+      - { writer: TaskEntryForm, prop: state_key, reader: TaskEntryForm, reads: action, via: "$ui.<section id>_entry → record_<section id> → write.fhir.task.create" }
+      - { writer: TaskList, prop: state_key, reader: TaskList, reads: status_action, via: "$ui.<section id>_status → update_<section id> → write.fhir.task.update_status" }
+      - { writer: PhotoEntryForm, prop: state_key, reader: PhotoEntryForm, reads: action, via: "$ui.<section id>_entry → record_<section id> → write.fhir.media.create" }
+      - { writer: RecordEntryForm, prop: state_key, reader: RecordEntryForm, reads: action, via: "$ui.<section id>_entry → record_<section id> → write.fhir.record.create" }
+      - { writer: ProblemList, prop: state_key, reader: ProblemList, reads: resolve_action, via: "$ui.<section id>_resolve → resolve_<section id> → write.fhir.condition.update_status" }
+      - { writer: MedicationList, prop: state_key, reader: MedicationList, reads: stop_action, via: "$ui.<section id>_stop → stop_<section id> → write.fhir.medication_request.update_status" }
+    knobs:
+      - { id: sections, description: "The page, top to bottom (or tab by tab): each section is one block — trend, form_trend (a form's numeric answers across responses, charted), latest_answers (the last response in full), readings, problems (optionally with resolve), medication (optionally with stop), imaging, assessment, details, counts, record_observation (an entry form that writes a measurement), record_problem / record_allergy / record_procedure (entry forms that add a diagnosis, an allergy, a procedure from a fixed list of codes), tasks (the patient's open tasks with Start / Complete) and create_task (a form that puts one on the list), photos (the patient's photo documentation, optionally by kind) and record_photo (a form that takes a photo with the device's camera, documenting one of a fixed list of kinds), record (a form for a Goal, CarePlan, Encounter or DocumentReference with the typed fields you declare, each mapped to an element path — read it back with a list of the same resource), allergies, encounters, reports, notes, procedures, immunizations, or a generic list of any allow-listed resource with named columns — with its own settings, a span (4, 6, 8 or 12 of 12) and an optional role gate", binds_to: { component: PageShell } }
+      - { id: arrangement, description: Stacked rows formed from the spans, or one tab per section, binds_to: { component: Tabs } }
+      - { id: identity, description: Masking banner (full or one-line), stock Medplum header (full PHI), or none, binds_to: { component: PatientBanner, prop: visible_fields } }
+      - { id: window, description: How far back charts, readings tables and readings counts look — one window for the page, binds_to: { context: window_start } }
+    role_pattern: viewer_reviewer
+    reference_manifest: manifests/patient-360.yaml
+    limits:
+      - The section kinds are the whole vocabulary; a request for a part no kind covers is still a catalog gap, not a composition problem — the generic `list` covers any allow-listed resource type with the columns you name.
+      - Lists show what the record holds; an empty allergy list says "none recorded", which is not the same as "no known allergies".
+      - Notes are shown inline only when the attachment is plain text; PDFs and images are named, not rendered.
+      - All sections are about the patient in context; population blocks (cohorts, KPI tiles) are not composable yet — use APP-09 / APP-10.
+      - One time window per page; a section cannot look further back than the others.
+      - A role-gated section always takes a whole row when stacked; in tabs it is absent from the strip for other roles.
+      - Named archetypes come first when they fit — they carry tuned defaults; compose when the request mixes their parts.
+      - form_trend plots integer and decimal answers only (a choice or a yes/no has no value to plot); it names the form by canonical URL, or by the id of a form designed in the same spec; nothing is scored — a line is drawn, a reference line may be stated with its source.
+      - >-
+        Writes are confined: record_observation records one coded value (or panel) in a declared unit and
+        plausibility range, dated within a window — a panel may relate its components (rules: one above another;
+        blood pressure gets systolic above diastolic by default), so a swapped pair is refused; a paired measurement
+        (range of motion, strength) asks the side (side: required → left, right or both, as SNOMED laterality in
+        bodySite, with body_site for the structure) and may offer test conditions (conditions → method); a trend with
+        by_side plots each series once per side, so "left against right" is one chart, and compare puts the first and the
+        latest value with their difference under it — a "side difference" or a "progress check" is that display, never a
+        computed value, so neither is a refusal; record_problem, record_allergy and record_procedure add one
+        entry from a fixed list of codes the author chose (from lookup_codes, never invented) with the few fields
+        that belong to it — verification and onset for a problem, type / category / criticality / reaction for an
+        allergy, status and date within a window for a procedure — always active, always the patient in context;
+        problems.resolve and medication.stop change one status within an allowed set on the patient's own record.
+        Each is versioned (a stale version is refused), attributed, and leaves a Provenance. No prescribing, no
+        free-text diagnoses or substances (a code the form does not list cannot be recorded), no deletion.
+      - >-
+        Photos: record_photo takes one image per submission (JPEG, PNG or WebP, downscaled in the browser, up to
+        max_size_kb — 1.5 MB by default), documenting one of the kinds the author fixed (the ward's own words,
+        urn:medapp:photo), with the body site as free text and a remark, dated within max_backdate_days. The
+        record keeps a Media resource — who, when, what, where, a hash — and the bytes live in the platform's
+        media bucket, encrypted, shown through short-lived links; nothing is measured, compared or interpreted,
+        there is no annotation, no DICOM, no import of existing images. Deployments without a media bucket
+        refuse the write.
+      - >-
+        record: the shape is the whole form. Prefer a published shape from the library — `shape: <id>` from
+        list_record_shapes — so every app writes the same reviewed thing; declare the fields only for a form the library
+        lacks. Resource types Goal, CarePlan, Encounter, DocumentReference, Consent (one decision per purpose — scope,
+        document type, permit or deny, purpose; one purpose never implies another, so a second purpose is a second record) —
+        and, through a published shape only (never inline), any patient-scoped kind an administrator has defined a shape
+        for (Flag, FamilyMemberHistory, ClinicalImpression, Immunization, … — list_record_shapes marks them); fields of
+        type text, long_text, number (unit, range), integer, date (past_days/future_days), datetime, boolean, code
+        (codings from lookup_codes) or choice (fixed options, with a system when the element wants a coding), each
+        mapped to an element path of the resource (choice elements by their typed name: target[0].detailQuantity,
+        target[0].dueDate; a note's text goes to content[0].attachment). The compiler checks every path against the
+        FHIR definitions and that the resource's required elements are covered — a Goal needs a required description
+        field, an Encounter a required class, a DocumentReference a required content[0].attachment. Status, subject,
+        author and dates are the platform's stamps, never fields; anything outside the declared fields is refused.
+        No references to other resources, no Patient, no orders.
+
+  - id: APP-13
+    name: Worklist
+    intent_class: workflow
+    patient_scope: cohort
+    summary: >-
+      Work across patients, two sources. tasks: the open FHIR Tasks of a ward or team — patient, what, by when,
+      how urgent, who took it — overdue first, Mine / Everyone, started / completed / cancelled from the row
+      (attributed status changes), each row opening the patient in another app; Tasks come from a create_task
+      section (APP-12) or another system. assessment_due: who is due an assessment, derived from the record —
+      a cohort (or everyone assessed before) against their latest answer to one Questionnaire every N days,
+      never assessed first, then the longest overdue; doing the assessment clears the row. Nothing is scheduled or reminded.
+    example_requests:
+      en:
+        - A worklist for the ward — every open falls screen, discharge letter and follow-up call across our patients, overdue first; the nurse takes a task on and completes it.
+        - The open tasks of the diabetes clinic, each opening the patient's follow-up page.
+        - Which hypertension patients are due the follow-up assessment — never done, or more than 90 days since the last one — with a link into the follow-up app.
+      de:
+        - Eine Aufgabenliste für die Station — alle offenen Sturzrisiko-Screenings, Arztbriefe und Rückrufe, überfällige zuerst; die Pflege übernimmt eine Aufgabe und schließt sie ab.
+        - Die offenen Aufgaben der Diabetes-Sprechstunde, jede öffnet die Verlaufsseite der Patientin.
+        - Welche Hypertonie-Patienten sind mit dem Verlaufsbogen fällig — noch nie oder länger als 90 Tage her — mit Link in die Verlaufs-App.
+    triage_signals: [worklist, open tasks, to-do list, "who is due", "due a", overdue, "take on", "since the last", Aufgabenliste, offene Aufgaben, überfällig, übernehmen, fällig]
+    requires_context: []
+    optional_context: []
+    data_plan:
+      - { kind: data.task.worklist, purpose: the open tasks with the patient each is for, overdue first }
+      - { kind: write.fhir.task.update_status, purpose: start / complete / cancel a task from its row, via_action: true }
+      - { kind: data.cohort.by_condition, purpose: "source assessment_due: who should have the assessment (optional)" }
+      - { kind: data.cohort.assessment_due, purpose: "source assessment_due: each member's latest answer against the interval — never, overdue, due, upcoming", consumes: "$bindings.cohort.patients" }
+    components:
+      layout: [PageShell, Grid]
+      display: [StatCard, Worklist, AssessmentDueList]
+    interaction:
+      - { writer: Worklist, prop: state_key, reader: Worklist, reads: status_action, via: "$ui.worklist_status → update_task → write.fhir.task.update_status" }
+    knobs:
+      - { id: source, description: "tasks (open FHIR Tasks by kind) or assessment_due (who is due an assessment, derived from the record)", binds_to: { primitive: data.task.worklist } }
+      - { id: due, description: "For assessment_due: the questionnaire (canonical URL — the record's or an app-authored form's), every_days, label, an optional cohort (diagnosis codes + status), upcoming_days", binds_to: { primitive: data.cohort.assessment_due, config: questionnaire } }
+      - { id: codes, description: "The task kinds listed — the ward's own words, e.g. falls_screen \"Falls risk screen\"; empty = every open task", binds_to: { primitive: data.task.worklist, config: codes } }
+      - { id: statuses, description: Which tasks count as open (requested and in-progress by default), binds_to: { primitive: data.task.worklist, config: statuses } }
+      - { id: complete, description: Offer Start / Complete on each row, binds_to: { component: Worklist, prop: status_action } }
+      - { id: cancel, description: Offer Cancel as well, binds_to: { component: Worklist, prop: cancel } }
+      - { id: mine, description: Offer the Mine / Everyone switch, binds_to: { component: Worklist, prop: mine } }
+      - { id: open_in, description: "app_id of a published app each row links to, opened on that patient — only when the clinician names one", binds_to: { component: Worklist, prop: open_in } }
+    role_pattern: cohort_analyst
+    reference_manifest: null
+    limits:
+      - A worklist lists; it does not schedule, remind or notify — nobody is paged, nothing recurs. Due dates are what the task carries.
+      - A task worklist lists Tasks a create_task section (APP-12) or another system wrote; "who is due an assessment" is the other source (assessment_due), derived from QuestionnaireResponses to one questionnaire — it has no row actions, because doing the assessment is what clears a row.
+      - assessment_due counts one questionnaire; an assessment recorded under another form (or as a note) does not count. Without a cohort, "never assessed" cannot be said — the population is then those assessed before.
+      - Ownership is by person (whoever takes the task on); there is no assignment to a team or a role, and no reassignment.
+      - Starting, completing and cancelling are the only transitions; no due-date or priority edits, no comments thread.
+
+# ── Patterns applicable to any archetype ──────────────────────────────────────
+patterns:
+  - id: role_differentiation
+    description: Viewer/reviewer split within one manifest.
+    mechanics: [auth.roles, data_scopes.inherits, show_only_if_role_in, only_for_roles]
+  - id: phi_minimisation
+    description: PatientBanner shows only fields in the role's effective scope; cohort roles typically get name, dob, mrn.
+    mechanics: [data_scopes.phi_fields_visible, PatientBanner.visible_fields]
+  - id: time_windows
+    description: Relative windows via context defaults.
+    mechanics: [context_inputs.default, "now-<n>[d|m|y]"]
+  - id: selection_interaction
+    description: A list writes $ui.<key>; another component reads it.
+    mechanics: [ImagingStudyList.selection_key, DicomViewer.study_uid, "$ui.<key>"]
+  - id: counts_without_computation
+    description: Lengths and primitive counts feed StatCard.
+    mechanics: ["$bindings.<list>.length", "$bindings.<cohort>.count", "$bindings.<summary>.above_threshold_count"]
+  - id: layout_vocabulary
+    description: Tabs for many views, TwoColumn for chart-beside-table or list-beside-detail, Grid for tiles, Section for titled groups.
+    mechanics: [Tabs, Tab, TwoColumn, Grid, Section]
+  - id: composition
+    description: A page assembled from catalog blocks (APP-12) — rows from spans, or tabs; gated sections derive per-role scopes like any archetype.
+    mechanics: [APP-12.sections, span, roles, show_only_if_role_in, only_for_roles]
+
+# ── Parameter space ───────────────────────────────────────────────────────────
+parameters:
+  - { id: observation_codes, range: any LOINC code (optionally system|code); panel components via component_code }
+  - { id: condition_codes, range: any SNOMED CT code }
+  - { id: medication_codes, range: ATC or other coding present in the record }
+  - { id: time_window, range: "ISO date or now-<n>d|m|y" }
+  - { id: thresholds, range: "timeline: any number of lines; cohort: one value, at-or-above" }
+  - { id: modalities, range: DICOM modality codes }
+  - { id: roles_and_phi, range: "any role set; PHI fields ⊆ name, dob, gender, mrn, address, phone, email" }
+  - { id: result_limits, range: "≤ 1000 per primitive; table default 50" }
+  - { id: layout, range: any nesting of the six layout components }
+
+# ── Refusals ──────────────────────────────────────────────────────────────────
+refusals:
+  - id: writes
+    description: >-
+      Ordering, prescribing new medication, importing DICOM or other existing image files, free editing of
+      clinical content, deleting records, or creating patients and other master data (identity is the KIS's).
+      (Supported writes, each from a fixed list and validated: a Questionnaire — APP-11, from the record or designed in
+      the conversation; the composed-page sections record_observation, record_problem, record_allergy, record_procedure,
+      record_photo, record (Goal/CarePlan/Encounter/DocumentReference/Consent), create_task, problems.resolve, medication.stop.)
+    triggers: [order, prescribe, book, schedule, write prescription, import images, upload DICOM, delete, rewrite, sign, approve, verordnen, anordnen, Bilder importieren, löschen, umschreiben]
+    reason: >-
+      Writes are confined to what the record can validate — a coded value within a declared range, a coded
+      entry from a list the author fixed, a status within an allowed set on the patient's own record — each
+      versioned, attributed and left with a Provenance. Orders and prescriptions decide treatment; free edits
+      cannot be validated.
+    unlock: Further write.* primitives, each with its own scope operation and clinical sign-off (regulatory review; orders/prescriptions likely IIa).
+  - id: patient_search
+    description: Free-text or name-based patient lookup.
+    triggers: [find patient, search patient, look up, "by name", Patienten suchen, suchen nach]
+    reason: Patient context comes from SMART launch or the panel; no search primitive.
+    unlock: data.fhir.patient.search and a search component.
+  - id: llm_content
+    description: AI summaries, extraction, interpretation, "explain this".
+    triggers: [summarise, summarize, explain, interpret, extract, "in plain language", zusammenfassen, erklären, interpretieren]
+    reason: No llm.* primitives yet (stretch goal).
+    unlock: llm.summarise with Bedrock Guardrails and a reviewer gate.
+  - id: computation
+    description: >-
+      Risk scores, BMI/MAP/eGFR, "improving/worsening", any derived clinical value. Not a refusal: comparing recorded
+      values — both sides in one trend (by_side), first against latest with their difference (compare).
+    triggers: [score, risk, calculate, compute, BMI, average, mean, improving, worsening, Risiko, berechnen, Durchschnitt]
+    reason: No computation primitives.
+    unlock: Computation primitives after regulatory review.
+  - id: cohort_criteria
+    description: Cohorts by age, sex, medication, encounter, observation value or combinations (imaging on record exists — APP-09).
+    triggers: [older than, younger than, "on medication", taking, seen in, admitted, "with a value", älter als, "unter Therapie", stationär]
+    reason: Membership primitives are data.cohort.by_condition and data.cohort.with_imaging only.
+    unlock: Additional cohort primitives.
+  - id: below_threshold
+    description: Flagging values below a limit in cohort tables.
+    triggers: [below, under, less than, unter, kleiner als]
+    reason: above_threshold is at-or-above only.
+    unlock: Threshold operator in data.cohort.latest_observation.
+  - id: other_charts
+    description: Bar, pie, scatter, or population charts.
+    triggers: [bar chart, pie, distribution, histogram, scatter, Balkendiagramm, Verteilung]
+    reason: Only ObservationTimeline exists (line, single patient).
+    unlock: Further chart components.
+  - id: workflow
+    description: Schedules, appointments, reminders, notifications, escalations. (Tasks and worklists are supported — APP-13 and the tasks / create_task sections of APP-12 — but nothing is scheduled, nobody is reminded or paged.)
+    triggers: [remind, notify, alert me, page me, schedule, appointment, recurring, erinnern, benachrichtigen, Termin, wiederkehrend]
+    reason: No scheduling or notification primitives; a worklist shows what is open, people pick it up.
+    unlock: Appointment / Schedule primitives; a notification channel with its own sign-off.
+  - id: reporting_export
+    description: Structured reports, PDF/CSV export, printing.
+    triggers: [export, PDF, CSV, print, report template, letter, exportieren, drucken, Arztbrief]
+    reason: intent class report is unrealised; ui_capabilities are declarative only.
+    unlock: Export primitive and report-template artifacts.
+  - id: image_tools
+    description: Measurement, annotation, hanging protocols.
+    triggers: [measure, annotate, hanging protocol, window level, messen, annotieren]
+    reason: OHIF is embedded read-only.
+    unlock: OHIF extension surface in the DicomViewer contract.
+  - id: styling_freeform
+    description: Free text, HTML, colours, branding, arbitrary layout.
+    triggers: [make it red, custom colour, logo, HTML, "add text saying", Farbe, Logo]
+    reason: Layout nodes carry only catalog components and props; unknown keys fail validation.
+    unlock: none — by design.
+  - id: multi_tenant
+    description: Cross-hospital or multi-site views.
+    triggers: [other hospital, all sites, network-wide, andere Klinik, standortübergreifend]
+    reason: One deployment per hospital.
+    unlock: none — by design.
+
+# ── Triage rules (first stage of the pipeline) ────────────────────────────────
+triage:
+  order: refusals_first
+  rules:
+    - { when: { refusal_trigger: [writes, patient_search, llm_content, computation, image_tools, reporting_export, workflow, styling_freeform, multi_tenant] }, route: refuse }
+    - { when: { intent_class: [report, search] }, route: refuse, refusal: workflow }
+    - { when: { scope: individual, signals: [form, assessment, checklist, questionnaire, document an assessment] }, route: APP-11 }
+    - { when: { scope: individual, signals: [overview, summary, chart, record] }, route: APP-01, alternative: { if: brevity, route: APP-07 } }
+    - { when: { scope: individual, signals: [trend, over time, course, plot] }, route: APP-02, alternative: { if: disease and medication named, route: APP-06 } }
+    - { when: { scope: individual, signals: [table, flowsheet, all values] }, route: APP-03 }
+    - { when: { scope: individual, signals: [problems, diagnoses, medication] }, route: APP-04 }
+    - { when: { scope: individual, signals: [images, scans, CT, MR, studies] }, route: APP-05 }
+    - { when: { scope: individual, signals: [full record, raw, latest report] }, route: APP-08 }
+    - { when: { scope: individual, signals: [and also, together with, beside, underneath, on one page, several parts] }, route: APP-12 }
+    - { when: { scope: cohort, signals: [all patients with, registry, who is above, who have had a CT, with imaging, die ein CT hatten] }, route: APP-09 }
+    - { when: { scope: cohort, signals: [how many, count, KPI] }, route: APP-10 }
+    - { when: { scope: cohort, signals: [worklist, open tasks, to-do list, who is due, overdue, take on, Aufgabenliste, offene Aufgaben, überfällig] }, route: APP-13 }
+    - { when: { scope: cohort, refusal_trigger: [cohort_criteria, below_threshold] }, route: refuse }
+    - { when: { scope: individual, signals: [visits, encounters, admissions, reports, letters, notes, allergies, procedures, immunizations, Aufenthalte, Befunde, Arztbriefe, Allergien, Impfungen] }, route: APP-12 }
+    - { when: { scope: individual, signals: [record a reading, enter a value, document a measurement, mark resolved, stop a medication, Wert eintragen, erfassen, absetzen] }, route: APP-12 }
+    - { when: { scope: individual, signals: [task, to-do, create a task, open tasks for this patient, Aufgabe, Aufgaben des Patienten] }, route: APP-12 }
+    - { when: { signals: [bar chart, pie, distribution] }, route: refuse, refusal: other_charts }

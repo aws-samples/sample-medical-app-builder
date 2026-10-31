@@ -1,0 +1,108 @@
+# Golden output of the compiler for specs/record-inspector.yaml (lifecycle omitted: it is registry-managed).
+# Regenerate deliberately when the compiler changes: npm run appspec -- compile specs/record-inspector.yaml
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_record_inspector
+  version: 0.1.0
+  name: Record inspector
+  description: The patient resource and the most recent assessment response, field by field.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+auth:
+  roles:
+    - id: data_steward
+      display_name: Clinical data steward
+      cognito_group: app-app_record_inspector-data_steward
+      data_scope_ref: scope_data_steward
+      ui_capabilities:
+        - view
+  default_role: data_steward
+data_scopes:
+  scope_data_steward:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: QuestionnaireResponse
+        operations:
+          - search
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+      - mrn
+      - address
+      - phone
+      - email
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_questionnaire_response
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: QuestionnaireResponse
+      params:
+        patient: $context.patient_id
+    output_binding: questionnaire_response
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: Tabs
+        props:
+          default_tab: Patient
+        children:
+          - component: Tab
+            props:
+              label: Patient
+            children:
+              - component: ResourceDetails
+                props:
+                  resource: $bindings.patient
+                  title: Patient resource
+          - component: Tab
+            props:
+              label: Latest assessment
+            children:
+              - component: ResourceDetails
+                props:
+                  resource: $bindings.questionnaire_response[0]
+                  title: Most recent assessment response
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+actions: []
+audit:
+  clinical_context: data_quality_review
+  intended_users:
+    - clinical_data_steward
+  intended_purpose: Inspection of stored FHIR resources for data quality. Read-only; no clinical interpretation.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_documentation
+lifecycle:
+  state: draft
+  signoff: null

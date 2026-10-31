@@ -1,0 +1,341 @@
+{
+  "_comment": "Shared cases for the write validators — asserted by med_app (writes.ts) and infra (writes.py). Same input, same problem strings, on both sides of the dispatcher. The coded entries (a problem, an allergy, a procedure) are asserted the same way.",
+  "now": "2026-09-11T12:00:00Z",
+  "patient": "pat-kms-0001",
+  "observation_rules": {
+    "codes": ["http://loinc.org|85354-9"],
+    "components": ["http://loinc.org|8480-6", "http://loinc.org|8462-4"],
+    "unit": "mmHg",
+    "ranges": { "http://loinc.org|8480-6": { "min": 50, "max": 300 }, "http://loinc.org|8462-4": { "min": 30, "max": 200 } },
+    "max_backdate_days": 7
+  },
+  "single_rules": { "codes": ["4548-4"], "unit": "%", "ranges": { "4548-4": { "min": 3, "max": 20 } } },
+  "bp_rules_related": {
+    "codes": ["http://loinc.org|85354-9"],
+    "components": ["http://loinc.org|8480-6", "http://loinc.org|8462-4"],
+    "unit": "mmHg",
+    "ranges": { "http://loinc.org|8480-6": { "min": 50, "max": 300 }, "http://loinc.org|8462-4": { "min": 30, "max": 200 } },
+    "rules": [{ "component": "http://loinc.org|8480-6", "above": "http://loinc.org|8462-4", "message": "Systolic must be above diastolic" }]
+  },
+  "bp_rules_unnamed": {
+    "codes": ["http://loinc.org|85354-9"],
+    "components": ["http://loinc.org|8480-6", "http://loinc.org|8462-4"],
+    "rules": [{ "component": "http://loinc.org|8480-6", "above": "http://loinc.org|8462-4" }]
+  },
+  "side_rules": { "codes": ["https://hsp-musterstadt.medapp.eu/CodeSystem/physio|knee_flexion"], "unit": "°", "ranges": { "https://hsp-musterstadt.medapp.eu/CodeSystem/physio|knee_flexion": { "min": 0, "max": 160 } }, "side": "required", "body_site": "http://snomed.info/sct|49076000", "conditions": ["https://hsp-musterstadt.medapp.eu/CodeSystem/physio|active", "https://hsp-musterstadt.medapp.eu/CodeSystem/physio|passive"] },
+  "observation_cases": [
+    {
+      "name": "a complete blood-pressure panel passes",
+      "rules": "observation_rules",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9" }] }, "effectiveDateTime": "2026-09-11T11:30:00Z", "component": [{ "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6" }] }, "valueQuantity": { "value": 138, "unit": "mmHg" } }, { "code": { "coding": [{ "system": "http://loinc.org", "code": "8462-4" }] }, "valueQuantity": { "value": 86, "unit": "mmHg" } }] },
+      "expected": []
+    },
+    {
+      "name": "a value outside the accepted range",
+      "rules": "observation_rules",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9" }] }, "component": [{ "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6" }] }, "valueQuantity": { "value": 900, "unit": "mmHg" } }, { "code": { "coding": [{ "system": "http://loinc.org", "code": "8462-4" }] }, "valueQuantity": { "value": 86, "unit": "mmHg" } }] },
+      "expected": ["component http://loinc.org|8480-6: 900 mmHg is outside the accepted range 50–300"]
+    },
+    {
+      "name": "the wrong unit, a missing component, a stray single value",
+      "rules": "observation_rules",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9" }] }, "valueQuantity": { "value": 1 }, "component": [{ "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6" }] }, "valueQuantity": { "value": 138, "unit": "kPa" } }] },
+      "expected": ["component http://loinc.org|8480-6: the value must be in mmHg, not kPa", "component http://loinc.org|8462-4 is missing", "a panel carries its values in components, not a single value"]
+    },
+    {
+      "name": "a code the form may not record, for another patient, dated in the future",
+      "rules": "observation_rules",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "http://loinc.org", "code": "8867-4" }] }, "subject": { "reference": "Patient/pat-kms-0002" }, "effectiveDateTime": "2026-09-12T09:00:00Z", "component": [{ "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6" }] }, "valueQuantity": { "value": 120 } }, { "code": { "coding": [{ "system": "http://loinc.org", "code": "8462-4" }] }, "valueQuantity": { "value": 80 } }] },
+      "expected": ["code http://loinc.org|8867-4 is not one this form may record (http://loinc.org|85354-9)", "observation subject Patient/pat-kms-0002 is not the patient in context", "effective date must not be in the future"]
+    },
+    {
+      "name": "too far in the past, a component that is not part of the form, a non-numeric value",
+      "rules": "observation_rules",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9" }] }, "effectiveDateTime": "2026-08-01", "component": [{ "code": { "coding": [{ "system": "http://loinc.org", "code": "8867-4" }] }, "valueQuantity": { "value": 70 } }, { "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6" }] }, "valueQuantity": { "value": "high" } }, { "code": { "coding": [{ "system": "http://loinc.org", "code": "8462-4" }] }, "valueQuantity": { "value": 80 } }] },
+      "expected": ["component http://loinc.org|8867-4 is not part of this form", "component http://loinc.org|8480-6: a numeric value is required", "effective date must not be more than 7 days ago"]
+    },
+    {
+      "name": "a single value with a bare code, in range",
+      "rules": "single_rules",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "http://loinc.org", "code": "4548-4" }] }, "valueQuantity": { "value": 6.8, "unit": "%" } },
+      "expected": []
+    },
+    {
+      "name": "a single value out of range, and components where none belong",
+      "rules": "single_rules",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "code": "4548-4" }] }, "valueQuantity": { "value": 42.5 }, "component": [{ "code": { "coding": [{ "code": "x" }] } }] },
+      "expected": ["this form records a single value, not components", "value: 42.5 % is outside the accepted range 3–20"]
+    },
+    {
+      "name": "not an Observation at all",
+      "rules": "single_rules",
+      "payload": { "resourceType": "Condition" },
+      "expected": ["payload must be an Observation"]
+    },
+    {
+      "name": "the two fields swapped: each value is within its own range, the panel is impossible",
+      "rules": "bp_rules_related",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9" }] }, "component": [{ "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6" }] }, "valueQuantity": { "value": 90, "unit": "mmHg" } }, { "code": { "coding": [{ "system": "http://loinc.org", "code": "8462-4" }] }, "valueQuantity": { "value": 120, "unit": "mmHg" } }] },
+      "expected": ["Systolic must be above diastolic (90 vs 120 mmHg)"]
+    },
+    {
+      "name": "equal values are not above either",
+      "rules": "bp_rules_related",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9" }] }, "component": [{ "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6" }] }, "valueQuantity": { "value": 110.5, "unit": "mmHg" } }, { "code": { "coding": [{ "system": "http://loinc.org", "code": "8462-4" }] }, "valueQuantity": { "value": 110.5, "unit": "mmHg" } }] },
+      "expected": ["Systolic must be above diastolic (110.5 vs 110.5 mmHg)"]
+    },
+    {
+      "name": "a plausible panel passes the relation",
+      "rules": "bp_rules_related",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9" }] }, "component": [{ "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6" }] }, "valueQuantity": { "value": 138, "unit": "mmHg" } }, { "code": { "coding": [{ "system": "http://loinc.org", "code": "8462-4" }] }, "valueQuantity": { "value": 86, "unit": "mmHg" } }] },
+      "expected": []
+    },
+    {
+      "name": "a missing component is named once; the relation is not judged on half a panel",
+      "rules": "bp_rules_related",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9" }] }, "component": [{ "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6" }] }, "valueQuantity": { "value": 90, "unit": "mmHg" } }] },
+      "expected": ["component http://loinc.org|8462-4 is missing"]
+    },
+    {
+      "name": "without a message the rule names the components; without a unit, the values alone",
+      "rules": "bp_rules_unnamed",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9" }] }, "component": [{ "code": { "coding": [{ "system": "http://loinc.org", "code": "8480-6" }] }, "valueQuantity": { "value": 80 } }, { "code": { "coding": [{ "system": "http://loinc.org", "code": "8462-4" }] }, "valueQuantity": { "value": 95 } }] },
+      "expected": ["component http://loinc.org|8480-6 must be above component http://loinc.org|8462-4 (80 vs 95)"]
+    },
+    {
+      "name": "a sided measurement with its structure and a test condition passes",
+      "rules": "side_rules",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", "code": "knee_flexion" }] }, "effectiveDateTime": "2026-09-11T11:30:00Z", "valueQuantity": { "value": 110, "unit": "°" }, "bodySite": { "coding": [{ "system": "http://snomed.info/sct", "code": "49076000", "display": "Knee joint structure" }, { "system": "http://snomed.info/sct", "code": "7771000", "display": "Left" }], "text": "Knee joint · left" }, "method": { "coding": [{ "system": "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", "code": "active", "display": "Active" }], "text": "Active" } },
+      "expected": []
+    },
+    {
+      "name": "the side is required when the form asks for it",
+      "rules": "side_rules",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", "code": "knee_flexion" }] }, "valueQuantity": { "value": 110, "unit": "°" }, "bodySite": { "coding": [{ "system": "http://snomed.info/sct", "code": "49076000" }] } },
+      "expected": ["the side of the body is required: left, right or both"]
+    },
+    {
+      "name": "two sides, a structure the form does not record, a condition it does not offer",
+      "rules": "side_rules",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", "code": "knee_flexion" }] }, "valueQuantity": { "value": 110, "unit": "°" }, "bodySite": { "coding": [{ "system": "http://snomed.info/sct", "code": "7771000" }, { "system": "http://snomed.info/sct", "code": "24028007" }, { "system": "http://snomed.info/sct", "code": "85562004", "display": "Hand structure" }] }, "method": { "coding": [{ "system": "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", "code": "with_aid" }] } },
+      "expected": ["bodySite names more than one side", "bodySite http://snomed.info/sct|85562004 is not the structure this form records (http://snomed.info/sct|49076000)", "method https://hsp-musterstadt.medapp.eu/CodeSystem/physio|with_aid is not one of the test conditions this form offers (https://hsp-musterstadt.medapp.eu/CodeSystem/physio|active, https://hsp-musterstadt.medapp.eu/CodeSystem/physio|passive)"]
+    },
+    {
+      "name": "a form without a side or conditions refuses both",
+      "rules": "single_rules",
+      "payload": { "resourceType": "Observation", "code": { "coding": [{ "system": "http://loinc.org", "code": "4548-4" }] }, "valueQuantity": { "value": 6.5, "unit": "%" }, "bodySite": { "coding": [{ "system": "http://snomed.info/sct", "code": "7771000" }] }, "method": { "text": "fasting" } },
+      "expected": ["this form does not record a side of the body", "this form does not record test conditions"]
+    }
+  ],
+  "status_cases": [
+    {
+      "name": "resolving an active problem",
+      "rules": { "allowed": ["resolved", "inactive"] },
+      "resourceType": "Condition",
+      "statusField": "clinicalStatus",
+      "current": { "resourceType": "Condition", "id": "c1", "subject": { "reference": "Patient/pat-kms-0001" }, "clinicalStatus": { "coding": [{ "code": "active" }] } },
+      "change": { "id": "c1", "status": "resolved", "versionId": "1" },
+      "expected": []
+    },
+    {
+      "name": "a status outside the allowed set",
+      "rules": { "allowed": ["resolved", "inactive"] },
+      "resourceType": "Condition",
+      "statusField": "clinicalStatus",
+      "current": { "resourceType": "Condition", "id": "c1", "subject": { "reference": "Patient/pat-kms-0001" }, "clinicalStatus": { "coding": [{ "code": "active" }] } },
+      "change": { "id": "c1", "status": "entered-in-error" },
+      "expected": ["status 'entered-in-error' is not one of resolved, inactive"]
+    },
+    {
+      "name": "someone else's record",
+      "rules": { "allowed": ["stopped"] },
+      "resourceType": "MedicationRequest",
+      "statusField": "status",
+      "current": { "resourceType": "MedicationRequest", "id": "m9", "subject": { "reference": "Patient/pat-kms-0002" }, "status": "active" },
+      "change": { "id": "m9", "status": "stopped" },
+      "expected": ["MedicationRequest/m9 belongs to another patient"]
+    },
+    {
+      "name": "already in that status",
+      "rules": { "allowed": ["stopped"] },
+      "resourceType": "MedicationRequest",
+      "statusField": "status",
+      "current": { "resourceType": "MedicationRequest", "id": "m1", "subject": { "reference": "Patient/pat-kms-0001" }, "status": "stopped" },
+      "change": { "id": "m1", "status": "stopped" },
+      "expected": ["MedicationRequest/m1 is already stopped"]
+    },
+    {
+      "name": "no such record, no id, no status",
+      "rules": { "allowed": ["resolved"] },
+      "resourceType": "Condition",
+      "statusField": "clinicalStatus",
+      "current": null,
+      "change": { "status": "resolved" },
+      "expected": ["target id is required"]
+    },
+    {
+      "name": "a record that does not exist",
+      "rules": { "allowed": ["resolved"] },
+      "resourceType": "Condition",
+      "statusField": "clinicalStatus",
+      "current": null,
+      "change": { "id": "c404", "status": "resolved" },
+      "expected": ["Condition/c404 was not found"]
+    },
+    {
+      "name": "not a status change",
+      "rules": { "allowed": ["resolved"] },
+      "resourceType": "Condition",
+      "statusField": "clinicalStatus",
+      "current": null,
+      "change": "resolve it",
+      "expected": ["payload must be a status change {id, status}"]
+    }
+  ],
+  "condition_rules": {"codes": ["http://fhir.de/CodeSystem/bfarm/icd-10-gm|I10.90", "http://fhir.de/CodeSystem/bfarm/icd-10-gm|E11.90"], "verification": ["confirmed", "provisional"], "severity": true},
+  "condition_rules_plain": {"codes": ["I10.90"]},
+  "allergy_rules": {"codes": ["http://www.whocc.no/atc|C09AA05", "http://www.whocc.no/atc|A10BA02"], "types": ["allergy", "intolerance"], "categories": ["medication"], "verification": ["confirmed", "unconfirmed"], "criticality": true, "reaction": true},
+  "allergy_rules_bare": {"codes": ["http://www.whocc.no/atc|C09AA05"], "categories": ["medication", "food"], "criticality": false, "reaction": false},
+  "procedure_rules": {"codes": ["http://fhir.de/CodeSystem/bfarm/ops|1-632.0", "http://fhir.de/CodeSystem/bfarm/ops|8-831.0"], "statuses": ["completed", "not-done"], "max_backdate_days": 30, "body_site": true, "outcome": false},
+  "condition_cases": [
+    {"name": "a confirmed problem with an onset in the past passes", "rules": "condition_rules", "payload": {"resourceType": "Condition", "code": {"coding": [{"system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm", "code": "I10.90", "display": "Essential hypertension"}]}, "subject": {"reference": "Patient/pat-kms-0001"}, "verificationStatus": {"coding": [{"code": "confirmed"}]}, "onsetDateTime": "2026-08-01", "severity": {"coding": [{"system": "http://snomed.info/sct", "code": "6736007"}]}, "note": [{"text": "Found at admission."}]}, "expected": []},
+    {"name": "a code the form does not offer, another patient, a status that is not active", "rules": "condition_rules", "payload": {"resourceType": "Condition", "code": {"coding": [{"system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm", "code": "J45.9"}]}, "subject": {"reference": "Patient/someone-else"}, "clinicalStatus": {"coding": [{"code": "resolved"}]}}, "expected": ["code http://fhir.de/CodeSystem/bfarm/icd-10-gm|J45.9 is not one this form may record (http://fhir.de/CodeSystem/bfarm/icd-10-gm|I10.90, http://fhir.de/CodeSystem/bfarm/icd-10-gm|E11.90)", "condition subject Patient/someone-else is not the patient in context", "a new problem is recorded as active, not 'resolved'"]},
+    {"name": "a verification status the form does not offer, a severity that is not a severity, an onset in the future", "rules": "condition_rules", "payload": {"resourceType": "Condition", "code": {"coding": [{"system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm", "code": "I10.90", "display": "Essential hypertension"}]}, "subject": {"reference": "Patient/pat-kms-0001"}, "verificationStatus": {"coding": [{"code": "refuted"}]}, "severity": {"coding": [{"code": "999"}]}, "onsetDateTime": "2027-01-01"}, "expected": ["verification status 'refuted' is not one of confirmed, provisional", "severity '999' is not mild, moderate or severe", "onset must not be in the future"]},
+    {"name": "a bare code matches a qualified one; severity where the form has none; an unreadable onset", "rules": "condition_rules_plain", "payload": {"resourceType": "Condition", "code": {"coding": [{"system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm", "code": "I10.90"}]}, "severity": {"coding": [{"code": "6736007"}]}, "onsetDateTime": "yesterday"}, "expected": ["severity is not part of this form", "onset is not a valid date"]},
+    {"name": "not a Condition at all", "rules": "condition_rules", "payload": {"resourceType": "Observation"}, "expected": ["payload must be a Condition"]}
+  ],
+  "allergy_cases": [
+    {"name": "a confirmed drug allergy with a reaction passes", "rules": "allergy_rules", "payload": {"resourceType": "AllergyIntolerance", "code": {"coding": [{"system": "http://www.whocc.no/atc", "code": "C09AA05", "display": "Ramipril"}]}, "patient": {"reference": "Patient/pat-kms-0001"}, "category": ["medication"], "type": "allergy", "criticality": "high", "verificationStatus": {"coding": [{"code": "confirmed"}]}, "reaction": [{"manifestation": [{"text": "Angio-oedema"}], "severity": "severe"}], "onsetDateTime": "2024-03-10"}, "expected": []},
+    {"name": "no category, a type the form does not offer, a criticality that is not one", "rules": "allergy_rules", "payload": {"resourceType": "AllergyIntolerance", "code": {"coding": [{"system": "http://www.whocc.no/atc", "code": "A10BA02"}]}, "patient": {"reference": "Patient/pat-kms-0001"}, "type": "sensitivity", "criticality": "medium"}, "expected": ["type 'sensitivity' is not one of allergy, intolerance", "a category is required", "criticality 'medium' is not low, high or unable-to-assess"]},
+    {"name": "a food allergy where only medication is offered, a reaction without a manifestation and with an odd severity", "rules": "allergy_rules", "payload": {"resourceType": "AllergyIntolerance", "code": {"coding": [{"system": "http://www.whocc.no/atc", "code": "C09AA05", "display": "Ramipril"}]}, "patient": {"reference": "Patient/pat-kms-0001"}, "category": ["food"], "reaction": [{"manifestation": [{"text": "  "}], "severity": "fatal"}]}, "expected": ["category 'food' is not one of medication", "a reaction needs its manifestation", "reaction severity 'fatal' is not mild, moderate or severe"]},
+    {"name": "criticality and reaction where the form has neither; not active; another patient", "rules": "allergy_rules_bare", "payload": {"resourceType": "AllergyIntolerance", "code": {"coding": [{"system": "http://www.whocc.no/atc", "code": "C09AA05"}]}, "patient": {"reference": "Patient/other"}, "category": ["food"], "clinicalStatus": {"coding": [{"code": "inactive"}]}, "criticality": "low", "reaction": [{"manifestation": [{"text": "Rash"}]}]}, "expected": ["allergy patient Patient/other is not the patient in context", "a new allergy is recorded as active, not 'inactive'", "criticality is not part of this form", "a reaction is not part of this form"]},
+    {"name": "not an AllergyIntolerance at all", "rules": "allergy_rules", "payload": {"resourceType": "Condition"}, "expected": ["payload must be an AllergyIntolerance"]}
+  ],
+  "procedure_cases": [
+    {"name": "a completed procedure, dated last week, with a body site, passes", "rules": "procedure_rules", "payload": {"resourceType": "Procedure", "code": {"coding": [{"system": "http://fhir.de/CodeSystem/bfarm/ops", "code": "1-632.0", "display": "Gastroscopy"}]}, "subject": {"reference": "Patient/pat-kms-0001"}, "status": "completed", "performedDateTime": "2026-09-04T09:30:00Z", "bodySite": [{"text": "Stomach"}], "note": [{"text": "Uneventful."}]}, "expected": []},
+    {"name": "no date", "rules": "procedure_rules", "payload": {"resourceType": "Procedure", "code": {"coding": [{"system": "http://fhir.de/CodeSystem/bfarm/ops", "code": "1-632.0", "display": "Gastroscopy"}]}, "subject": {"reference": "Patient/pat-kms-0001"}, "status": "completed"}, "expected": ["performed date is required"]},
+    {"name": "a status the form does not offer, a date too far back, an outcome the form has no field for", "rules": "procedure_rules", "payload": {"resourceType": "Procedure", "code": {"coding": [{"system": "http://fhir.de/CodeSystem/bfarm/ops", "code": "1-632.0", "display": "Gastroscopy"}]}, "subject": {"reference": "Patient/pat-kms-0001"}, "status": "in-progress", "performedDateTime": "2026-07-01T09:30:00Z", "outcome": {"text": "Fine"}}, "expected": ["status 'in-progress' is not one of completed, not-done", "performed date must not be more than 30 days ago", "outcome is not part of this form"]},
+    {"name": "a code the form does not offer, in the future, for another patient", "rules": "procedure_rules", "payload": {"resourceType": "Procedure", "code": {"coding": [{"system": "http://fhir.de/CodeSystem/bfarm/ops", "code": "5-470"}]}, "subject": {"reference": "Patient/x"}, "status": "completed", "performedDateTime": "2026-09-12T09:30:00Z"}, "expected": ["code http://fhir.de/CodeSystem/bfarm/ops|5-470 is not one this form may record (http://fhir.de/CodeSystem/bfarm/ops|1-632.0, http://fhir.de/CodeSystem/bfarm/ops|8-831.0)", "procedure subject Patient/x is not the patient in context", "performed date must not be in the future"]},
+    {"name": "not a Procedure at all", "rules": "procedure_rules", "payload": {"resourceType": "Observation"}, "expected": ["payload must be a Procedure"]}
+  ],
+  "task_rules": {"codes": ["urn:medapp:task|falls_screen", "urn:medapp:task|discharge_letter"], "priorities": ["routine", "urgent"], "due": true},
+  "task_rules_no_due": {"codes": ["urn:medapp:task|follow_up_call"], "due": false},
+  "task_cases": [
+    {"name": "a routine task due next week passes", "rules": "task_rules", "payload": {"resourceType": "Task", "code": {"coding": [{"system": "urn:medapp:task", "code": "falls_screen", "display": "Falls risk screen"}]}, "for": {"reference": "Patient/pat-kms-0001"}, "status": "requested", "priority": "routine", "restriction": {"period": {"end": "2026-09-18"}}, "description": "Jährliches Screening."}, "expected": []},
+    {"name": "a code the form does not offer, another patient, a status that is not requested, a priority not offered", "rules": "task_rules", "payload": {"resourceType": "Task", "code": {"coding": [{"system": "urn:medapp:task", "code": "lab_order"}]}, "for": {"reference": "Patient/x"}, "status": "completed", "priority": "stat"}, "expected": ["code urn:medapp:task|lab_order is not one this form may record (urn:medapp:task|falls_screen, urn:medapp:task|discharge_letter)", "task patient Patient/x is not the patient in context", "a new task is requested, not 'completed'", "priority 'stat' is not one of routine, urgent"]},
+    {"name": "due yesterday, an unreadable due date is its own problem", "rules": "task_rules", "payload": {"resourceType": "Task", "code": {"coding": [{"system": "urn:medapp:task", "code": "falls_screen", "display": "Falls risk screen"}]}, "for": {"reference": "Patient/pat-kms-0001"}, "restriction": {"period": {"end": "2026-09-10"}}}, "expected": ["due date must not be in the past"]},
+    {"name": "due today is fine; a description too long is not", "rules": "task_rules", "payload": {"resourceType": "Task", "code": {"coding": [{"system": "urn:medapp:task", "code": "falls_screen", "display": "Falls risk screen"}]}, "for": {"reference": "Patient/pat-kms-0001"}, "restriction": {"period": {"end": "2026-09-11"}}, "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}, "expected": ["description must be text of at most 500 characters"]},
+    {"name": "a due date where the form has none", "rules": "task_rules_no_due", "payload": {"resourceType": "Task", "code": {"coding": [{"system": "urn:medapp:task", "code": "follow_up_call"}]}, "for": {"reference": "Patient/pat-kms-0001"}, "restriction": {"period": {"end": "2026-09-20"}}}, "expected": ["a due date is not part of this form"]},
+    {"name": "not a Task at all", "rules": "task_rules", "payload": {"resourceType": "Condition"}, "expected": ["payload must be a Task"]}
+  ],
+  "media_rules": {"kinds": ["urn:medapp:photo|wound", "urn:medapp:photo|pressure_ulcer"], "body_site": true, "max_bytes": 1500000, "max_backdate_days": 30},
+  "media_rules_small": {"kinds": ["urn:medapp:photo|wound"], "body_site": false, "max_bytes": 20, "max_backdate_days": 30},
+  "media_cases": [
+    {"name": "a wound photo of the patient, jpeg, taken this morning, passes", "rules": "media_rules", "payload": {"resourceType": "Media", "type": {"coding": [{"code": "photo"}]}, "reasonCode": [{"coding": [{"system": "urn:medapp:photo", "code": "wound"}]}], "subject": {"reference": "Patient/pat-kms-0001"}, "content": {"contentType": "image/jpeg", "data": "XHg4OVBOR1xyXG5ceDFhXG4="}, "bodySite": {"text": "Left heel"}, "createdDateTime": "2026-09-11T08:30:00Z", "note": [{"text": "Day 3."}]}, "expected": []},
+    {"name": "a video, a kind the form does not offer, another patient", "rules": "media_rules", "payload": {"resourceType": "Media", "type": {"coding": [{"code": "video"}]}, "reasonCode": [{"coding": [{"system": "urn:medapp:photo", "code": "rash"}]}], "subject": {"reference": "Patient/x"}, "content": {"contentType": "image/jpeg", "data": "XHg4OVBOR1xyXG5ceDFhXG4="}}, "expected": ["a photo is recorded, not 'video'", "code urn:medapp:photo|rash is not one this form may record (urn:medapp:photo|wound, urn:medapp:photo|pressure_ulcer)", "photo subject Patient/x is not the patient in context"]},
+    {"name": "a gif, and no image data", "rules": "media_rules", "payload": {"resourceType": "Media", "type": {"coding": [{"code": "photo"}]}, "reasonCode": [{"coding": [{"system": "urn:medapp:photo", "code": "wound"}]}], "subject": {"reference": "Patient/pat-kms-0001"}, "content": {"contentType": "image/gif"}}, "expected": ["content type 'image/gif' is not one of image/jpeg, image/png, image/webp", "the photo has no image data"]},
+    {"name": "image data that is not base64", "rules": "media_rules", "payload": {"resourceType": "Media", "type": {"coding": [{"code": "photo"}]}, "reasonCode": [{"coding": [{"system": "urn:medapp:photo", "code": "wound"}]}], "subject": {"reference": "Patient/pat-kms-0001"}, "content": {"contentType": "image/png", "data": "not base64!"}}, "expected": ["image data is not valid base64"]},
+    {"name": "too large for the form, a body site the form has no field for, taken in the future", "rules": "media_rules_small", "payload": {"resourceType": "Media", "type": {"coding": [{"code": "photo"}]}, "reasonCode": [{"coding": [{"system": "urn:medapp:photo", "code": "wound"}]}], "subject": {"reference": "Patient/pat-kms-0001"}, "content": {"contentType": "image/png", "data": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYX"}, "bodySite": {"text": "Heel"}, "createdDateTime": "2026-09-12T08:30:00Z"}, "expected": ["the image is 0 KB; the form accepts up to 0 KB", "body site is not part of this form", "taken date must not be in the future"]},
+    {"name": "taken too long ago", "rules": "media_rules", "payload": {"resourceType": "Media", "type": {"coding": [{"code": "photo"}]}, "reasonCode": [{"coding": [{"system": "urn:medapp:photo", "code": "wound"}]}], "subject": {"reference": "Patient/pat-kms-0001"}, "content": {"contentType": "image/jpeg", "data": "XHg4OVBOR1xyXG5ceDFhXG4="}, "createdDateTime": "2026-07-01T08:30:00Z"}, "expected": ["taken date must not be more than 30 days ago"]},
+    {"name": "not a Media at all", "rules": "media_rules", "payload": {"resourceType": "Binary"}, "expected": ["payload must be a Media"]}
+  ],
+  "record_rules": {
+    "resource": "Goal",
+    "fields": [
+      { "id": "goal", "label": "Goal", "type": "text", "path": "description", "as": "concept_text", "required": true, "max_length": 20 },
+      { "id": "measure", "label": "Measured by", "type": "code", "path": "target[0].measure", "as": "codeable_concept", "required": true, "codes": [{ "system": "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", "code": "tug", "display": "Timed up-and-go" }] },
+      { "id": "target", "label": "Target value", "type": "number", "path": "target[0].detailQuantity", "as": "quantity", "unit": "s", "range": { "min": 0, "max": 600 } },
+      { "id": "due", "label": "Due", "type": "date", "path": "target[0].dueDate", "as": "date", "future_days": 365 },
+      { "id": "priority", "label": "Priority", "type": "choice", "path": "priority", "as": "codeable_concept", "options": [{ "code": "high-priority", "display": "High" }], "system": "http://terminology.hl7.org/CodeSystem/goal-priority" },
+      { "id": "note", "label": "Remark", "type": "long_text", "path": "note[0].text", "as": "string", "max_length": 2000 }
+    ],
+    "stamps": [{ "path": "lifecycleStatus", "value": "active" }, { "path": "subject", "value": "$patient" }, { "path": "expressedBy", "value": "$author" }, { "path": "statusDate", "value": "$today" }]
+  },
+  "note_rules": {
+    "resource": "DocumentReference",
+    "fields": [
+      { "id": "type", "label": "Kind of note", "type": "code", "path": "type", "as": "codeable_concept", "required": true, "codes": [{ "system": "http://loinc.org", "code": "11506-3", "display": "Progress note" }] },
+      { "id": "text", "label": "Note", "type": "long_text", "path": "content[0].attachment", "as": "attachment_text", "required": true, "max_length": 30 }
+    ],
+    "stamps": [{ "path": "status", "value": "current" }, { "path": "subject", "value": "$patient" }, { "path": "date", "value": "$now" }, { "path": "author[0]", "value": "$author" }]
+  },
+  "consent_rules": {
+    "resource": "Consent",
+    "fields": [
+      { "id": "scope", "label": "Kind of consent", "type": "choice", "path": "scope", "as": "codeable_concept", "required": true, "options": [{ "code": "treatment", "display": "Treatment" }, { "code": "research", "display": "Research" }], "system": "http://terminology.hl7.org/CodeSystem/consentscope" },
+      { "id": "category", "label": "Document type", "type": "code", "path": "category[0]", "as": "codeable_concept", "required": true, "codes": [{ "system": "http://loinc.org", "code": "59284-0", "display": "Patient Consent" }] },
+      { "id": "decision", "label": "Decision", "type": "choice", "path": "provision.type", "as": "code", "required": true, "options": [{ "code": "permit", "display": "Permitted" }, { "code": "deny", "display": "Denied" }] },
+      { "id": "purpose", "label": "Purpose", "type": "code", "path": "provision.purpose[0]", "as": "coding", "required": true, "codes": [{ "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason", "code": "TREAT", "display": "Treatment" }, { "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason", "code": "HRESCH", "display": "Healthcare research" }] },
+      { "id": "until", "label": "Valid until", "type": "date", "path": "provision.period.end", "as": "datetime", "future_days": 3650 }
+    ],
+    "stamps": [{ "path": "status", "value": "active" }, { "path": "patient", "value": "$patient" }, { "path": "dateTime", "value": "$now" }]
+  },
+  "record_cases": [
+    {
+      "name": "a goal within its declared shape passes",
+      "rules": "record_rules",
+      "payload": { "resourceType": "Goal", "identifier": [{ "system": "urn:medapp:submission", "value": "g-1" }], "description": { "text": "Walk unaided" }, "target": [{ "measure": { "coding": [{ "system": "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", "code": "tug", "display": "Timed up-and-go" }], "text": "Timed up-and-go" }, "detailQuantity": { "value": 11.5, "unit": "s" }, "dueDate": "2026-12-01" }], "priority": { "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/goal-priority", "code": "high-priority", "display": "High" }], "text": "High" }, "note": [{ "text": "Agreed with the patient." }] },
+      "expected": []
+    },
+    {
+      "name": "the wrong resource type",
+      "rules": "record_rules",
+      "payload": { "resourceType": "Condition" },
+      "expected": ["payload must be a Goal"]
+    },
+    {
+      "name": "required fields missing, named as the form labels them",
+      "rules": "record_rules",
+      "payload": { "resourceType": "Goal", "target": [{ "detailQuantity": { "value": 11, "unit": "s" } }] },
+      "expected": ["\"Goal\" is required", "\"Measured by\" is required"]
+    },
+    {
+      "name": "too long, out of range, in another unit, too far ahead, an option not offered",
+      "rules": "record_rules",
+      "payload": { "resourceType": "Goal", "description": { "text": "A goal far longer than twenty" }, "target": [{ "measure": { "coding": [{ "system": "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", "code": "tug" }] }, "detailQuantity": { "value": 900, "unit": "min" }, "dueDate": "2028-01-01" }], "priority": { "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/goal-priority", "code": "urgent" }] } },
+      "expected": ["\"Goal\": 29 characters is more than the 20 allowed", "\"Target value\": the value must be in s, not min", "\"Target value\": 900 s is outside the accepted range 0–600", "\"Due\" must not be more than 365 days ahead", "\"Priority\": http://terminology.hl7.org/CodeSystem/goal-priority|urgent is not one of the offered options (http://terminology.hl7.org/CodeSystem/goal-priority|high-priority)"]
+    },
+    {
+      "name": "elements the shape did not declare are refused by name; stamped elements may be sent (they are overwritten)",
+      "rules": "record_rules",
+      "payload": { "resourceType": "Goal", "lifecycleStatus": "completed", "subject": { "reference": "Patient/pat-kms-0001" }, "description": { "text": "Walk unaided" }, "target": [{ "measure": { "coding": [{ "system": "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", "code": "tug" }] }, "detailString": "fast" }], "outcomeCode": [{ "text": "achieved" }] },
+      "expected": ["element target[0].detailString is not part of this form", "element outcomeCode[0].text is not part of this form"]
+    },
+    {
+      "name": "another patient's goal",
+      "rules": "record_rules",
+      "payload": { "resourceType": "Goal", "subject": { "reference": "Patient/pat-kms-0002" }, "description": { "text": "Walk unaided" }, "target": [{ "measure": { "coding": [{ "system": "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", "code": "tug" }] } }] },
+      "expected": ["subject Patient/pat-kms-0002 is not the patient in context"]
+    },
+    {
+      "name": "a note as a text/plain attachment passes; one too long, or not text/plain, or not base64, does not",
+      "rules": "note_rules",
+      "payload": { "resourceType": "DocumentReference", "type": { "coding": [{ "system": "http://loinc.org", "code": "11506-3" }] }, "content": [{ "attachment": { "contentType": "text/plain", "data": "V2VlayAzOiBUVUcgMTQgcy4=" } }] },
+      "expected": []
+    },
+    {
+      "name": "a note that is too long and not text/plain",
+      "rules": "note_rules",
+      "payload": { "resourceType": "DocumentReference", "type": { "coding": [{ "system": "http://loinc.org", "code": "11506-3" }] }, "content": [{ "attachment": { "contentType": "text/html", "data": "QSBub3RlIHRoYXQgcnVucyB3ZWxsIG92ZXIgdGhpcnR5IGNoYXJhY3RlcnMu" } }] },
+      "expected": ["\"Note\": the attachment must be text/plain", "\"Note\": 45 characters is more than the 30 allowed"]
+    },
+    {
+      "name": "a note whose data is not base64 has no text",
+      "rules": "note_rules",
+      "payload": { "resourceType": "DocumentReference", "type": { "coding": [{ "system": "http://loinc.org", "code": "11506-3" }] }, "content": [{ "attachment": { "contentType": "text/plain", "data": "not base64!" } }] },
+      "expected": ["\"Note\": text is required"]
+    },
+    {
+      "name": "a consent decision within its shape passes: the kind, the document type, permit or deny, the purpose, a validity",
+      "rules": "consent_rules",
+      "payload": { "resourceType": "Consent", "identifier": [{ "system": "urn:medapp:submission", "value": "c1" }], "scope": { "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/consentscope", "code": "research", "display": "Research" }], "text": "Research" }, "category": [{ "coding": [{ "system": "http://loinc.org", "code": "59284-0", "display": "Patient Consent" }], "text": "Patient Consent" }], "provision": { "type": "deny", "purpose": [{ "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason", "code": "HRESCH", "display": "Healthcare research" }], "period": { "end": "2030-01-01" } } },
+      "expected": []
+    },
+    {
+      "name": "a consent without its decision and purpose, with a kind the shape does not offer, and a stray performer",
+      "rules": "consent_rules",
+      "payload": { "resourceType": "Consent", "scope": { "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/consentscope", "code": "adr" }] }, "category": [{ "coding": [{ "system": "http://loinc.org", "code": "59284-0" }] }], "performer": [{ "reference": "Patient/pat-kms-0001" }], "provision": { "period": { "end": "2040-01-01" } } },
+      "expected": ["\"Kind of consent\": http://terminology.hl7.org/CodeSystem/consentscope|adr is not one of the offered options (http://terminology.hl7.org/CodeSystem/consentscope|treatment, http://terminology.hl7.org/CodeSystem/consentscope|research)", "\"Decision\" is required", "\"Purpose\" is required", "\"Valid until\" must not be more than 3650 days ahead", "element performer[0].reference is not part of this form"]
+    }
+  ]
+}

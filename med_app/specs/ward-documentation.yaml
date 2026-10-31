@@ -1,0 +1,89 @@
+# Showcase — the everyday documentation of a ward on one composed page (APP-12): each list beside the form that adds
+# to it. The physician puts a diagnosis on the problem list, records an allergy and documents a procedure — each from
+# a fixed list of codes the author chose and the reviewer signed, with the few fields that belong to the entry — and
+# the ward puts tasks on the patient's list and moves them on. The platform stamps who, when and through which app;
+# every list refreshes after a save. The ward worklist shows the same tasks across patients and opens this page.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_ward_documentation
+  version: 1.0.0
+  name: Ward documentation
+  description: Problem list, allergies, procedures and tasks of one patient, each with the form that adds to it — on the record, with provenance.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  sections:
+    - kind: tasks
+      span: 8
+      title: Open tasks
+      cancel: true
+    - kind: create_task
+      id: new_task
+      span: 4
+      title: New task
+      codes:
+        - { code: falls_screen, display: Falls risk screen }
+        - { code: discharge_letter, display: Discharge letter }
+        - { code: follow_up_call, display: Follow-up call }
+        - { code: physio_referral, display: Physiotherapy referral }
+        - { code: wound_check, display: Wound check }
+      priorities: [routine, urgent, asap]
+    - kind: problems
+      span: 6
+      title: Problem list
+    - kind: record_problem
+      id: add_problem
+      span: 6
+      title: Add a diagnosis
+      codes:
+        - { system: icd10gm, code: I10.90, display: "Essential hypertension, unspecified" }
+        - { system: icd10gm, code: E11.90, display: "Type 2 diabetes mellitus, without complications" }
+        - { system: icd10gm, code: E87.6, display: Hypokalaemia }
+        - { system: icd10gm, code: D63.0, display: Anaemia in neoplastic disease }
+        - { system: icd10gm, code: L89.1, display: "Pressure ulcer, stage 2" }
+      verification: [confirmed, provisional]
+      severity: true
+      action_label: Add to problem list
+    - kind: allergies
+      span: 6
+    - kind: record_allergy
+      id: add_allergy
+      span: 6
+      title: Record an allergy or intolerance
+      codes:
+        - { system: atc, code: C09AA05, display: Ramipril }
+        - { system: atc, code: C08CA01, display: Amlodipine }
+        - { system: atc, code: A10BA02, display: Metformin }
+        - { system: atc, code: N02CC01, display: Sumatriptan }
+        - { system: atc, code: J01CA04, display: Amoxicillin }
+      categories: [medication]
+    - kind: procedures
+      span: 6
+    - kind: record_procedure
+      id: add_procedure
+      span: 6
+      title: Document a procedure
+      codes:
+        - { system: ops, code: 1-632.0, display: Gastroscopy }
+        - { system: ops, code: 8-831.0, display: Central venous catheter }
+        - { system: ops, code: 8-800.c0, display: Red cell transfusion }
+        - { system: ops, code: 8-133.0, display: Urinary catheter }
+      statuses: [completed, not-done]
+      body_site: true
+      max_backdate_days: 14
+
+roles:
+  - id: ward_team
+    display_name: Ward team
+    phi_fields_visible: [name, dob, mrn]
+    capabilities: [view, record_entry, create_task, update_status]
+default_role: ward_team
+
+governance:
+  clinical_context: ward_round
+  intended_users: [physician, nurse]
+  intended_purpose: Documentation by the ward on the patient in context — a diagnosis for the problem list, an allergy, a procedure performed, each from a fixed list of codes, and the patient's tasks — validated, attributed and versioned. Nothing is computed or interpreted.

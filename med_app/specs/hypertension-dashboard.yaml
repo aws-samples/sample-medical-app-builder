@@ -1,0 +1,27 @@
+# AppSpec — disease follow-up dashboard (APP-06) from the hypertension template: blood pressure
+# against guideline lines, the antihypertensive therapy and the related problems. One word fills
+# every clinical knob; only the window is set explicitly here.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_htn_dashboard
+  version: 0.1.0
+  name: Hypertension follow-up
+  description: Blood pressure over the last year against Stage 1 thresholds, current antihypertensives and related conditions.
+
+archetype: APP-06
+knobs:
+  template: hypertension_follow_up
+  window: now-1y
+
+roles:
+  - id: gp
+    display_name: General practitioner
+    phi_fields_visible: [name, dob, gender, mrn]
+default_role: gp
+
+governance:
+  clinical_context: hypertension_follow_up
+  intended_users: [general_practitioner]
+  intended_purpose: Display of blood pressure readings, therapy and problems for the follow-up consultation. Threshold lines are visual only; no scoring or recommendations.

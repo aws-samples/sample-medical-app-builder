@@ -1,0 +1,153 @@
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_wound_photos
+  version: 0.1.0
+  name: Wound documentation
+  description: Photo documentation of wounds and skin findings for this patient — the course so far, and a photo taken now.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: wound_nurse
+      display_name: Wound care nurse
+      cognito_group: app-app_wound_photos-wound_nurse
+      data_scope_ref: scope_wound_nurse
+      ui_capabilities:
+        - view
+        - record_photo
+  default_role: wound_nurse
+data_scopes:
+  scope_wound_nurse:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Media
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+      - resource: Provenance
+        operations:
+          - create
+      - resource: Condition
+        operations:
+          - search
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_photos
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Media
+      params:
+        patient: $context.patient_id
+        type: photo
+        code: urn:medapp:photo|wound,urn:medapp:photo|pressure_ulcer
+    output_binding: photos
+  - id: p_new_photo
+    kind: write.fhir.media.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      kinds:
+        - urn:medapp:photo|wound
+        - urn:medapp:photo|pressure_ulcer
+        - urn:medapp:photo|skin_finding
+      body_site: true
+      max_bytes: 1500000
+      max_backdate_days: 7
+      media: $ui.new_photo_entry
+    output_binding: new_photo_recorded
+  - id: p_problems
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: problems
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: PhotoGallery
+            props:
+              media: $bindings.photos
+              title: Wound course
+              max_rows: 24
+          - component: PhotoEntryForm
+            props:
+              action: record_new_photo
+              state_key: new_photo_entry
+              title: Document a wound
+              submit_label: Save photo
+              kinds:
+                - code: wound
+                  display: Wound
+                - code: pressure_ulcer
+                  display: Pressure ulcer
+                - code: skin_finding
+                  display: Skin finding
+              max_bytes: 1500000
+              max_backdate_days: 7
+      - component: ProblemList
+        props:
+          conditions: $bindings.problems
+          title: Active problems
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+actions:
+  - id: record_new_photo
+    label: Save photo
+    primitive: p_new_photo
+    on_success: reload
+    success_message: The photo is part of the patient record.
+audit:
+  clinical_context: ward_round
+  intended_users:
+    - nurse
+  intended_purpose: Photo documentation of wounds — the photos on record, and a form to add one taken now, documenting a wound, pressure ulcer or skin finding with the body site and a remark; recorded with who took it. Nothing is measured or interpreted.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - photos

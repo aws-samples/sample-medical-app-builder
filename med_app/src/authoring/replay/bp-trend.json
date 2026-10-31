@@ -1,0 +1,73 @@
+{
+  "title": "Blood pressure trend — a recorded drafting session",
+  "note": "The replies are what the drafting assistant (Claude on Amazon Bedrock, through the platform's 15 tools) answered in a recorded session against the synthetic record; the tool calls per turn are the ones it made, and the operations are what those calls did to the draft. Replayed by the panel's replay agent (VITE_AGENT_MODE=replay) so the drafting page can be seen and developed without a Bedrock connection.",
+  "turns": [
+    {
+      "user": "I'd like to see a patient's blood pressure over the last two years against the Stage 1 thresholds, 140 systolic and 90 diastolic.",
+      "tool_calls": ["choose_archetype", "lookup_codes", "set_app", "set_knobs"],
+      "ops": [
+        { "op": "choose_archetype", "args": { "archetype": "APP-02" } },
+        {
+          "op": "set_app",
+          "args": {
+            "app_id": "app_bp_trend",
+            "name": "Blood Pressure Trend",
+            "description": "Longitudinal blood pressure chart for a patient over the last two years, with Stage 1 hypertension thresholds.",
+            "language": "en"
+          }
+        },
+        {
+          "op": "set_knobs",
+          "args": {
+            "patch": {
+              "codes": [{ "system": "loinc", "code": "85354-9", "display": "Blood pressure panel with all children optional" }],
+              "series": [
+                { "label": "Systolic", "component_code": "8480-6" },
+                { "label": "Diastolic", "component_code": "8462-4" }
+              ],
+              "thresholds": [
+                { "value": 140, "label": "Stage 1 systolic (140 mmHg)" },
+                { "value": 90, "label": "Stage 1 diastolic (90 mmHg)" }
+              ],
+              "unit": "mmHg",
+              "window": "now-2y",
+              "chart_title": "Blood Pressure – Last 2 Years"
+            }
+          }
+        }
+      ],
+      "reply": "The blood pressure panel is on the record (72 observations across 3 patients), coded as LOINC `85354-9` with systolic component `8480-6` and diastolic `8462-4`. Let me set everything up now.\n\nThe chart is configured with both series and both thresholds. One thing to note: the archetype plots **one data point per day per series** — if a patient has multiple BP readings on the same day, only the latest one is shown.\n\nNow I need to sort out roles and governance. Here's what I propose:\n\n**Roles** (viewer/reviewer pattern):\n- **Viewer** — sees the chart and readings; identity fields: name, date of birth, MRN.\n- **Reviewer** (inherits Viewer) — same chart access, but also sees additional patient contact details (name, date of birth, gender, MRN, address, phone).\n\nDoes that work for you, or do you only need a single role? And one governance question: who is the intended user — general practitioners, cardiologists, hypertension nurses, or a mix?"
+    },
+    {
+      "user": "Two roles please. A viewer who only sees name, date of birth and MRN. A reviewer who also sees sex, address and phone, and gets the problem list underneath. Viewer is the default.",
+      "tool_calls": ["add_role", "add_role", "set_default_role", "set_knobs"],
+      "ops": [
+        { "op": "add_role", "args": { "role": { "id": "viewer", "display_name": "Viewer", "phi_fields_visible": ["name", "dob", "mrn"], "capabilities": ["view"] } } },
+        {
+          "op": "add_role",
+          "args": { "role": { "id": "reviewer", "display_name": "Reviewer", "phi_fields_visible": ["name", "dob", "gender", "mrn", "address", "phone"], "inherits": "viewer", "capabilities": ["view"] } }
+        },
+        { "op": "set_default_role", "args": { "id": "viewer" } },
+        { "op": "set_knobs", "args": { "patch": { "conditions_section": { "roles": ["reviewer"], "title": "Clinical context", "list_title": "Recorded conditions" } } } }
+      ],
+      "reply": "Roles and defaults are set. Just one thing left: governance. I'll propose the following — let me know if you'd like to adjust anything:\n\n- **Intended users:** general practitioners and cardiologists\n- **Clinical context:** outpatient blood pressure monitoring\n- **Purpose:** Displays a patient's longitudinal blood pressure trend against Stage 1 hypertension thresholds to support clinical follow-up. Not for diagnosis.\n\nDoes that reflect the intended use, or would you like to change the users or wording?"
+    },
+    {
+      "user": "It is for GPs and cardiologists in outpatient blood pressure monitoring. Display only, not for diagnosis. Take your defaults for anything else.",
+      "tool_calls": ["set_governance", "check_readiness", "compile_preview"],
+      "ops": [
+        {
+          "op": "set_governance",
+          "args": {
+            "patch": {
+              "clinical_context": "outpatient_bp_monitoring",
+              "intended_users": ["general_practitioner", "cardiologist"],
+              "intended_purpose": "Displays a patient's longitudinal blood pressure trend against Stage 1 hypertension thresholds to support clinical follow-up. Not for diagnosis."
+            }
+          }
+        }
+      ],
+      "reply": "The app is ready. Here's what it does:\n\n**Blood Pressure Trend** shows a patient's systolic and diastolic blood pressure as a line chart over the last two years, with Stage 1 threshold lines at 140 mmHg (systolic) and 90 mmHg (diastolic). The latest readings appear in a table alongside the chart.\n\n**Two roles:**\n- **Viewer** (the default) — sees the chart and latest readings; identity fields: name, date of birth, MRN.\n- **Reviewer** (inherits Viewer) — additionally sees sex, address and phone in the patient banner, and gets a problem list section underneath the chart showing the patient's recorded conditions.\n\nThe app is display-only, intended for GPs and cardiologists in outpatient BP monitoring, and is not for diagnosis.\n\nThe draft is complete. When you're happy with it, save it using the **\"Save to registry\"** button in the panel. That creates a version which can then be submitted for review; an approver (not you) reviews and signs it, after which it can be published and will appear in clinicians' launchers."
+    }
+  ]
+}

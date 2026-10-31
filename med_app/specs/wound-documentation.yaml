@@ -1,0 +1,47 @@
+# Showcase — photo documentation on a composed page (APP-12): the patient's wound photos so far (a wound on day 0, the
+# same wound two weeks on), newest first, beside a form that takes a new one with the ward tablet's camera — what it
+# documents from the ward's own kinds, the body site, a remark — over the problem list. A photo is a FHIR Media the
+# record keeps (who, when, what, where, a hash); its bytes live in the platform's media bucket, never inline in the
+# record, shown through short-lived links. Nothing is measured or compared.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_wound_photos
+  version: 1.0.0
+  name: Wound documentation
+  description: Photo documentation of wounds and skin findings for one patient — the course so far, and a photo taken now.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  sections:
+    - kind: photos
+      span: 8
+      title: Wound course
+    - kind: record_photo
+      id: new_photo
+      span: 4
+      title: Document a wound
+      kinds:
+        - { code: wound, display: Wound }
+        - { code: pressure_ulcer, display: Pressure ulcer }
+        - { code: skin_finding, display: Skin finding }
+      max_size_kb: 1500
+      max_backdate_days: 7
+    - kind: problems
+      span: 12
+      title: Active problems
+
+roles:
+  - id: wound_nurse
+    display_name: Wound care nurse
+    phi_fields_visible: [name, dob, mrn]
+    capabilities: [view, record_photo]
+default_role: wound_nurse
+
+governance:
+  clinical_context: ward_round
+  intended_users: [nurse]
+  intended_purpose: Photo documentation of wounds — the photos on record, and a form to add one taken now, documenting a wound, pressure ulcer or skin finding with the body site and a remark; recorded with who took it. Nothing is measured or interpreted.

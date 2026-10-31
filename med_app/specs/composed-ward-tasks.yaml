@@ -1,0 +1,45 @@
+# AppSpec — composed page (APP-12) with tasks: the patient's open tasks beside a form that puts a new one on the list,
+# over the problem list for context. A task started or completed here is the same Task resource the ward worklist
+# (specs/ward-worklist.yaml) shows across patients.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_patient_tasks
+  version: 0.1.0
+  name: Patient tasks
+  description: What is to be done for this patient — open tasks, a form for a new one, the problem list for context.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  sections:
+    - kind: tasks
+      span: 8
+      title: Open tasks
+      cancel: true
+    - kind: create_task
+      id: new_task
+      span: 4
+      codes:
+        - { code: falls_screen, display: Falls risk screen }
+        - { code: discharge_letter, display: Discharge letter }
+        - { code: follow_up_call, display: Follow-up call }
+        - { code: physio_referral, display: Physiotherapy referral }
+      priorities: [routine, urgent, asap]
+    - kind: problems
+      span: 12
+
+roles:
+  - id: ward_nurse
+    display_name: Ward nurse
+    phi_fields_visible: [name, dob, mrn]
+    capabilities: [view, create_task, update_status]
+default_role: ward_nurse
+
+governance:
+  clinical_context: ward_round
+  intended_users: [nurse]
+  intended_purpose: The patient's open tasks and a form to add one — a kind from the ward's list, a priority, a due date — recorded with who requested it; starting and completing tasks is recorded likewise. Nothing is scheduled or interpreted.
+  mdr_classification: none

@@ -1,0 +1,124 @@
+# Seed app of hsp-musterstadt — compiled from specs/imaging-review-3d.yaml by scripts/build-showcase.mjs (npm run showcase); do not edit by hand.
+# The lifecycle block is an example sign-off: the registry seed publishes the app with it.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_imaging_3d
+  version: 1.0.0
+  name: Imaging review (3D)
+  description: The patient's imaging studies; the viewer opens them as
+    reconstructed planes with a 3-D volume rendering.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: "2026-10-01T14:00:00Z"
+lifecycle:
+  state: published
+  signoff:
+    approver_sub: example-approver-sub
+    approved_at: "2026-10-01T15:00:00Z"
+    signature: "example: KMS-signed manifest_hash goes here"
+    clinical_notes: Listing and display of existing imaging studies with
+      reconstructions; no measurement or interpretation. Approved for imaging
+      review.
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: radiologist
+      display_name: Radiologist
+      cognito_group: app-app_imaging_3d-radiologist
+      data_scope_ref: scope_radiologist
+      ui_capabilities:
+        - view
+        - open_viewer
+  default_role: radiologist
+data_scopes:
+  scope_radiologist:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+    dicom:
+      - operations:
+          - qido
+          - wado
+        modalities:
+          - CT
+          - MR
+          - DX
+          - US
+        study_filter: PatientID={context.patient_mrn}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_studies
+    kind: data.dicom.studies.for_patient
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      modalities:
+        - CT
+        - MR
+        - DX
+        - US
+    output_binding: studies
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 4
+            - 8
+        children:
+          - component: ImagingStudyList
+            props:
+              studies: $bindings.studies
+              title: Imaging studies
+              selection_key: selected_study
+          - component: DicomViewer
+            props:
+              study_uid: $ui.selected_study
+              studies: $bindings.studies
+              height_px: 680
+              layout: volume
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+actions: []
+audit:
+  clinical_context: imaging_review
+  intended_users:
+    - radiologist
+    - surgeon
+  intended_purpose: Listing and display of existing imaging studies, including
+    multiplanar and volume reconstructions in the viewer. No image processing,
+    measurement or interpretation.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - imaging

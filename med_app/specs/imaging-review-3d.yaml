@@ -1,0 +1,31 @@
+# Showcase — the imaging archetype (APP-05) with the viewer opening in 3-D: the study list beside OHIF, which
+# opens each study as the three reconstructed planes plus a volume rendering (the viewer's control switches
+# to 2-D or MPR; studies without a volume open 2-D).
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_imaging_3d
+  version: 1.0.0
+  name: Imaging review (3D)
+  description: The patient's imaging studies; the viewer opens them as reconstructed planes with a 3-D volume rendering.
+
+archetype: APP-05
+knobs:
+  modalities: [CT, MR, DX, US]
+  list_title: Imaging studies
+  viewer_height_px: 680
+  column_ratio: [4, 8]
+  viewer_layout: volume
+
+roles:
+  - id: radiologist
+    display_name: Radiologist
+    phi_fields_visible: [name, dob, gender, mrn]
+    capabilities: [view, open_viewer]
+default_role: radiologist
+
+governance:
+  clinical_context: imaging_review
+  intended_users: [radiologist, surgeon]
+  intended_purpose: Listing and display of existing imaging studies, including multiplanar and volume reconstructions in the viewer. No image processing, measurement or interpretation.

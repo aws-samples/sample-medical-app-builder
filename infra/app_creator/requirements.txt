@@ -1,0 +1,4 @@
+# Runtime dependencies of the drafting agent (the Lambda / AgentCore package). boto3 comes with the runtime.
+strands-agents>=1.55
+jsonschema>=4.23
+pyyaml>=6

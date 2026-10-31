@@ -1,0 +1,34 @@
+# AppSpec — observation flowsheet (APP-03): vitals and the renal panel as two tabs, last six months.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_vitals_flowsheet
+  version: 0.1.0
+  name: Vitals and renal flowsheet
+  description: Blood pressure, heart rate and weight, and the renal panel, as tables over the last six months.
+
+archetype: APP-03
+knobs:
+  window: now-6m
+  groups:
+    - label: Vitals
+      codes:
+        - { system: loinc, code: "85354-9", display: Blood pressure panel }
+        - { system: loinc, code: "8867-4", display: Heart rate }
+        - { system: loinc, code: "29463-7", display: Body weight }
+    - label: Renal
+      codes:
+        - { system: loinc, code: "33914-3", display: eGFR }
+      rows: 20
+
+roles:
+  - id: ward_nurse
+    display_name: Ward nurse
+    phi_fields_visible: [name, dob, mrn]
+default_role: ward_nurse
+
+governance:
+  clinical_context: ward_monitoring
+  intended_users: [nurse]
+  intended_purpose: Tabular display of recorded observations. No trend interpretation or alerts.

@@ -1,0 +1,30 @@
+# AppSpec for manifests/htn-assessment.yaml — the structured-assessment archetype (APP-11): a
+# Questionnaire on the record is the form, a completed response is written through an action.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_htn_assessment
+  version: 0.1.0
+  name: Hypertension follow-up assessment
+  description: Record the structured follow-up assessment for a patient with hypertension and review earlier assessments.
+
+archetype: APP-11
+knobs:
+  questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+  action_label: Submit assessment
+  success_message: The assessment is now part of the patient record.
+  submissions_title: Previous assessments
+
+roles:
+  - id: nurse
+    display_name: Hypertension nurse
+    phi_fields_visible: [name, dob, gender, mrn]
+    capabilities: [view, record_assessment]
+default_role: nurse
+
+governance:
+  clinical_context: hypertension_clinic_documentation
+  intended_users: [hypertension_nurse, general_practitioner]
+  intended_purpose: Structured documentation of a follow-up assessment into the patient record. No calculations, scores or recommendations.
+  data_categories: [phi, clinical_documentation]

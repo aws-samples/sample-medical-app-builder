@@ -1,0 +1,180 @@
+# Golden output of the compiler for specs/composed-ward-tasks.yaml (lifecycle as compiled: a draft; the registry manages it from there).
+# Regenerate deliberately when the compiler changes: npm run appspec -- compile specs/composed-ward-tasks.yaml --created-at 2026-09-15T09:00:00Z
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_patient_tasks
+  version: 0.1.0
+  name: Patient tasks
+  description: What is to be done for this patient — open tasks, a form for a new one, the problem list for context.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: ward_nurse
+      display_name: Ward nurse
+      cognito_group: app-app_patient_tasks-ward_nurse
+      data_scope_ref: scope_ward_nurse
+      ui_capabilities:
+        - view
+        - create_task
+        - update_status
+  default_role: ward_nurse
+data_scopes:
+  scope_ward_nurse:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Task
+        operations:
+          - search
+          - update
+          - create
+        filter: subject={context.patient_id}
+      - resource: Provenance
+        operations:
+          - create
+      - resource: Condition
+        operations:
+          - search
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_tasks
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Task
+      params:
+        patient: $context.patient_id
+        status: requested,in-progress
+    output_binding: tasks
+  - id: p_tasks_status
+    kind: write.fhir.task.update_status
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      allowed:
+        - in-progress
+        - completed
+        - cancelled
+      change: $ui.tasks_status
+    output_binding: tasks_updated
+  - id: p_new_task
+    kind: write.fhir.task.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      codes:
+        - urn:medapp:task|falls_screen
+        - urn:medapp:task|discharge_letter
+        - urn:medapp:task|follow_up_call
+        - urn:medapp:task|physio_referral
+      priorities:
+        - routine
+        - urgent
+        - asap
+      due: true
+      task: $ui.new_task_entry
+    output_binding: new_task_created
+  - id: p_problems
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: problems
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: TaskList
+            props:
+              tasks: $bindings.tasks
+              title: Open tasks
+              status_action: update_tasks
+              state_key: tasks_status
+              cancel: true
+          - component: TaskEntryForm
+            props:
+              action: record_new_task
+              state_key: new_task_entry
+              submit_label: Create task
+              codes:
+                - code: falls_screen
+                  display: Falls risk screen
+                - code: discharge_letter
+                  display: Discharge letter
+                - code: follow_up_call
+                  display: Follow-up call
+                - code: physio_referral
+                  display: Physiotherapy referral
+              priorities:
+                - routine
+                - urgent
+                - asap
+      - component: ProblemList
+        props:
+          conditions: $bindings.problems
+          title: Active problems
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+actions:
+  - id: update_tasks
+    label: Update task
+    primitive: p_tasks_status
+    on_success: reload
+    success_message: The task was updated.
+  - id: record_new_task
+    label: Create task
+    primitive: p_new_task
+    on_success: reload
+    success_message: The task is on the list.
+audit:
+  clinical_context: ward_round
+  intended_users:
+    - nurse
+  intended_purpose: The patient's open tasks and a form to add one — a kind from the ward's list, a priority, a due date — recorded with who requested it; starting and completing tasks is recorded likewise. Nothing is scheduled or interpreted.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - tasks

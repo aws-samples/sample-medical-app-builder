@@ -1,0 +1,44 @@
+# Showcase — the cohort archetype (APP-09): every patient with a hypertension diagnosis, coded either way the
+# connected record codes it (SNOMED on the synthetic record, ICD-10-GM on the hospital's), each with the latest
+# blood pressure panel, flagged from 140 mmHg systolic.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_hypertension_register
+  version: 1.0.0
+  name: Hypertension register
+  description: Patients with a hypertension diagnosis and their most recent blood pressure, flagged from 140 mmHg systolic.
+
+archetype: APP-09
+knobs:
+  condition:
+    codes:
+      - { system: snomed, code: "38341003", display: Hypertensive disorder }
+      - { system: icd10gm, code: "I10.00", display: Benigne essentielle Hypertonie }
+      - { system: icd10gm, code: "I10.90", display: "Essentielle Hypertonie, nicht näher bezeichnet" }
+    clinical_status: active
+    label: hypertension
+  value:
+    codes: [{ system: loinc, code: "85354-9", display: Blood pressure panel }]
+    component_code: "8480-6"
+    name: systolic
+    unit: mmHg
+    threshold: 140
+    label: Latest blood pressure
+    # An adjustable range over the systolic value: the slider narrows the register live, nothing is read again.
+    range: { min: 90, max: 220, step: 5, default: [140, 180], label: Systolic range, card_label: Systolic in range }
+  cards:
+    threshold_hint: Most recent blood pressure panel per patient
+
+roles:
+  - id: hypertension_clinic
+    display_name: Hypertension clinic
+    phi_fields_visible: [name, dob, mrn]
+    capabilities: [view, export_csv]
+default_role: hypertension_clinic
+
+governance:
+  clinical_context: population_health
+  intended_users: [hypertension_nurse, cardiologist, general_practitioner]
+  intended_purpose: Listing of patients with a coded hypertension diagnosis with their latest recorded blood pressure. No risk scoring, no treatment recommendation.

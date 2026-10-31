@@ -1,0 +1,45 @@
+# AppSpec for manifests/bp-trend.yaml — what the drafting conversation produces; the compiler
+# turns it into the manifest deterministically (src/tests/specCompiler.test.ts proves they match).
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_bp_trend
+  version: 0.3.0
+  parent_version: 0.2.1
+  name: Longitudinal blood pressure
+  description: Systolic and diastolic readings over time against Stage 1 hypertension thresholds.
+
+archetype: APP-02
+knobs:
+  codes:
+    - { system: loinc, code: "8480-6", display: Systolic blood pressure }
+    - { system: loinc, code: "8462-4", display: Diastolic blood pressure }
+  series:
+    - { label: Systolic, component_code: "8480-6" }
+    - { label: Diastolic, component_code: "8462-4" }
+  thresholds:
+    - { value: 140, label: Systolic ≥ 140 (Stage 1) }
+    - { value: 90, label: Diastolic ≥ 90 (Stage 1) }
+  unit: mmHg
+  chart_title: Blood pressure, last two years
+  conditions_section:
+    roles: [reviewer]
+    title: Reviewer context
+    description: Visible to clinical reviewers only. Conditions are requested only for this role.
+
+roles:
+  - id: viewer
+    display_name: Read-only viewer
+    phi_fields_visible: [name, dob, mrn]
+  - id: reviewer
+    display_name: Clinical reviewer
+    inherits: viewer
+    phi_fields_visible: [name, dob, gender, mrn, address, phone]
+    capabilities: [view, export_pdf, add_annotation]
+default_role: viewer
+
+governance:
+  clinical_context: outpatient_bp_monitoring
+  intended_users: [general_practitioner, cardiologist]
+  intended_purpose: Display of longitudinal BP readings against guideline thresholds. Not for diagnosis.

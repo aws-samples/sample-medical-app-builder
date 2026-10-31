@@ -1,0 +1,18 @@
+*.swp
+__pycache__
+.pytest_cache
+.venv
+*.egg-info
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
+.idea*
+
+# synth-time staging (Lambda layer copy of medapp_shared)
+.build
+
+# drafting agent: saved harness sessions and eval transcripts
+.sessions
+.eval

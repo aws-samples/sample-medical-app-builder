@@ -1,0 +1,84 @@
+# Showcase — case discussion on one composed page (APP-12): the diagnoses and procedures as the record codes them
+# (ICD-10-GM and OPS on the hospital's record, SNOMED on the synthetic one — the sections name no codes), the
+# radiology reports, three laboratory trends over five years, the imaging studies opening in MPR, and the letters.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_tumour_board
+  version: 1.0.0
+  name: Tumour board
+  description: Diagnoses, procedures, radiology reports, laboratory trends, imaging in MPR and letters of one patient, for case discussion.
+
+archetype: APP-12
+knobs:
+  identity: banner
+  arrangement: stack
+  window: now-5y
+  sections:
+    - kind: problems
+      span: 6
+      status: active
+      title: Diagnoses
+    - kind: procedures
+      span: 6
+      title: Procedures
+      rows: 12
+    - kind: reports
+      span: 6
+      category: RAD
+      title: Radiology reports
+      rows: 8
+    - kind: trend
+      id: haemoglobin
+      span: 6
+      title: Haemoglobin, last five years
+      codes:
+        - { system: loinc, code: "718-7", display: Haemoglobin }
+      series:
+        - { label: Haemoglobin, code: "718-7" }
+      thresholds:
+        - { value: 12, label: "12 g/dL" }
+      unit: g/dL
+      height_px: 260
+    - kind: trend
+      id: crp
+      span: 6
+      title: CRP
+      codes:
+        - { system: loinc, code: "1988-5", display: C-reactive protein }
+      series:
+        - { label: CRP, code: "1988-5" }
+      unit: mg/L
+      height_px: 240
+    - kind: trend
+      id: leukocytes
+      span: 6
+      title: Leukocytes
+      codes:
+        - { system: loinc, code: "26464-8", display: Leukocytes }
+      series:
+        - { label: Leukocytes, code: "26464-8" }
+      unit: 10*3/uL
+      height_px: 240
+    - kind: imaging
+      modalities: [CT, MR, DX]
+      list_title: Imaging studies
+      viewer_height_px: 640
+      ratio: [5, 7]
+      layout: mpr
+    - kind: notes
+      title: Letters and notes
+      rows: 6
+
+roles:
+  - id: tumour_board
+    display_name: Tumour board
+    phi_fields_visible: [name, dob, gender, mrn]
+    capabilities: [view, open_viewer]
+default_role: tumour_board
+
+governance:
+  clinical_context: tumour_board
+  intended_users: [oncologist, radiologist, radiation_oncologist, surgeon]
+  intended_purpose: Display of the recorded diagnoses, procedures, radiology reports, laboratory values, imaging studies and letters of the patient in context, for case discussion. Display only; no staging, no scoring, no interpretation.

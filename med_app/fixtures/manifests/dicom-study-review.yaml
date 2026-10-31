@@ -1,0 +1,96 @@
+# Archetype: imaging review.
+# Shows: DICOM scope (qido/wado, no stow), component-to-component interaction through $ui state,
+# OHIF viewer whose URL is deployment config, compact patient banner, asymmetric TwoColumn.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+
+metadata:
+  app_id: app_dicom_review
+  version: 0.1.0
+  name: Imaging study review
+  description: Studies for the patient in context; select one to open it in the viewer.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: "2026-09-11T09:20:00Z"
+
+lifecycle:
+  state: draft
+  signoff: null
+
+auth:
+  roles:
+    - id: radiologist
+      display_name: Radiologist
+      cognito_group: app-app_dicom_review-radiologist
+      data_scope_ref: scope_radiologist
+      ui_capabilities: [view, open_viewer]
+  default_role: radiologist
+
+data_scopes:
+  scope_radiologist:
+    patient_scope: individual
+    phi_fields_visible: [name, dob, gender, mrn]
+    fhir:
+      - resource: Patient
+        operations: [read]
+    dicom:
+      - operations: [qido, wado]
+        modalities: [CT, MR, DX, US]
+        study_filter: PatientID={context.patient_mrn}
+
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+
+  - id: p_studies
+    kind: data.dicom.studies.for_patient
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      modalities: [CT, MR, DX, US]
+    output_binding: studies
+
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio: [5, 7]
+        children:
+          - component: ImagingStudyList
+            props:
+              studies: $bindings.studies
+              title: Available studies
+              selection_key: selected_study
+          - component: DicomViewer
+            props:
+              study_uid: $ui.selected_study
+              studies: $bindings.studies
+              height_px: 560
+
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source: [smart_launch, panel_selection]
+
+audit:
+  clinical_context: imaging_review
+  intended_users: [radiologist]
+  intended_purpose: Listing and display of existing imaging studies. No image processing or measurement.
+  mdr_classification: none
+  data_categories: [phi, imaging]

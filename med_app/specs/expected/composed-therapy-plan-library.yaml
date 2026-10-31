@@ -1,0 +1,546 @@
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_therapy_plan_library
+  version: 0.1.0
+  name: Therapy plan (library shapes)
+  description: Goals, progress notes and consent decisions from the record-shape library, read back beside their forms.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: physiotherapist
+      display_name: Physiotherapist
+      cognito_group: app-app_therapy_plan_library-physiotherapist
+      data_scope_ref: scope_physiotherapist
+      ui_capabilities:
+        - view
+        - record_entry
+  default_role: physiotherapist
+data_scopes:
+  scope_physiotherapist:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Goal
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+      - resource: Provenance
+        operations:
+          - create
+      - resource: DocumentReference
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+      - resource: Consent
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_goals
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Goal
+      params:
+        patient: $context.patient_id
+    output_binding: goals
+  - id: p_new_goal
+    kind: write.fhir.record.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      resource: Goal
+      fields:
+        - id: goal
+          label: Goal
+          type: text
+          path: description
+          as: concept_text
+          required: true
+          max_length: 200
+        - id: measure
+          label: Measured by
+          type: code
+          path: target[0].measure
+          as: codeable_concept
+          required: true
+          codes: &a1
+            - system: https://hsp-musterstadt.medapp.eu/CodeSystem/physio
+              code: tug
+              display: Timed up-and-go
+            - system: https://hsp-musterstadt.medapp.eu/CodeSystem/physio
+              code: knee_flexion
+              display: Knee flexion (ROM)
+            - system: https://hsp-musterstadt.medapp.eu/CodeSystem/physio
+              code: walking_distance
+              display: Walking distance
+            - system: https://hsp-musterstadt.medapp.eu/CodeSystem/physio
+              code: grip_strength
+              display: Grip strength
+        - id: target
+          label: Target value
+          type: number
+          path: target[0].detailQuantity
+          as: quantity
+          unit: s
+          range: &a2
+            min: 0
+            max: 600
+        - id: due
+          label: Due
+          type: date
+          path: target[0].dueDate
+          as: date
+          future_days: 365
+        - id: priority
+          label: Priority
+          type: choice
+          path: priority
+          as: codeable_concept
+          options: &a3
+            - code: high-priority
+              display: High
+            - code: medium-priority
+              display: Medium
+            - code: low-priority
+              display: Low
+          system: http://terminology.hl7.org/CodeSystem/goal-priority
+        - id: note
+          label: Remark
+          type: long_text
+          path: note[0].text
+          as: string
+          max_length: 2000
+      stamps:
+        - path: lifecycleStatus
+          value: active
+        - path: subject
+          value: $patient
+        - path: expressedBy
+          value: $author
+        - path: statusDate
+          value: $today
+      shape:
+        id: measurable_goal
+        checksum: fnv1a64:100ea52b9c43c47a
+        tag:
+          system: https://hsp-musterstadt.medapp.eu/CodeSystem/record-shape
+          code: measurable_goal
+          version: fnv1a64:100ea52b9c43c47a
+          display: Measurable goal
+      record: $ui.new_goal_entry
+    output_binding: new_goal_recorded
+  - id: p_notes
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: DocumentReference
+      params:
+        patient: $context.patient_id
+    output_binding: notes
+  - id: p_new_note
+    kind: write.fhir.record.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      resource: DocumentReference
+      fields:
+        - id: type
+          label: Kind of note
+          type: code
+          path: type
+          as: codeable_concept
+          required: true
+          codes: &a4
+            - system: http://loinc.org
+              code: 11506-3
+              display: Progress note
+            - system: http://loinc.org
+              code: 34746-8
+              display: Nurse note
+            - system: http://loinc.org
+              code: 28653-4
+              display: Physical therapy note
+        - id: title
+          label: Title
+          type: text
+          path: description
+          as: string
+          required: true
+          max_length: 120
+        - id: text
+          label: Note
+          type: long_text
+          path: content[0].attachment
+          as: attachment_text
+          required: true
+          max_length: 5000
+      stamps:
+        - path: status
+          value: current
+        - path: subject
+          value: $patient
+        - path: date
+          value: $now
+        - path: author[0]
+          value: $author
+      shape:
+        id: progress_note
+        checksum: fnv1a64:ed8106d7f99af713
+        tag:
+          system: https://hsp-musterstadt.medapp.eu/CodeSystem/record-shape
+          code: progress_note
+          version: fnv1a64:ed8106d7f99af713
+          display: Progress note
+      record: $ui.new_note_entry
+    output_binding: new_note_recorded
+  - id: p_consents
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Consent
+      params:
+        patient: $context.patient_id
+    output_binding: consents
+  - id: p_new_consent
+    kind: write.fhir.record.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      resource: Consent
+      fields:
+        - id: scope
+          label: Kind of consent
+          type: choice
+          path: scope
+          as: codeable_concept
+          required: true
+          options: &a5
+            - code: treatment
+              display: Treatment
+            - code: patient-privacy
+              display: Privacy and communication
+            - code: research
+              display: Research
+          system: http://terminology.hl7.org/CodeSystem/consentscope
+        - id: category
+          label: Document type
+          type: code
+          path: category[0]
+          as: codeable_concept
+          required: true
+          codes: &a6
+            - system: http://loinc.org
+              code: 59284-0
+              display: Patient Consent
+            - system: http://loinc.org
+              code: 64292-6
+              display: Release of information consent
+        - id: decision
+          label: Decision
+          type: choice
+          path: provision.type
+          as: code
+          required: true
+          options: &a7
+            - code: permit
+              display: Permitted
+            - code: deny
+              display: Denied
+        - id: purpose
+          label: Purpose
+          type: code
+          path: provision.purpose[0]
+          as: coding
+          required: true
+          codes: &a8
+            - system: http://terminology.hl7.org/CodeSystem/v3-ActReason
+              code: TREAT
+              display: Treatment
+            - system: http://terminology.hl7.org/CodeSystem/v3-ActReason
+              code: HMARKT
+              display: Communication and marketing
+            - system: http://terminology.hl7.org/CodeSystem/v3-ActReason
+              code: HRESCH
+              display: Healthcare research
+        - id: until
+          label: Valid until
+          type: date
+          path: provision.period.end
+          as: datetime
+          future_days: 3650
+        - id: note
+          label: How it was given
+          type: text
+          path: policyRule
+          as: concept_text
+          max_length: 200
+      stamps:
+        - path: status
+          value: active
+        - path: patient
+          value: $patient
+        - path: dateTime
+          value: $now
+      shape:
+        id: consent_per_purpose
+        checksum: fnv1a64:4997748ff1e563eb
+        tag:
+          system: https://hsp-musterstadt.medapp.eu/CodeSystem/record-shape
+          code: consent_per_purpose
+          version: fnv1a64:4997748ff1e563eb
+          display: Consent decision
+      record: $ui.new_consent_entry
+    output_binding: new_consent_recorded
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: ResourceList
+            props:
+              resources: $bindings.goals
+              title: Goals
+              columns:
+                - label: Goal
+                  path: description
+                - label: Measure
+                  path: target[0].measure
+                - label: Target
+                  path: target[0].detailQuantity
+                - label: Due
+                  path: target[0].dueDate
+                - label: Status
+                  path: lifecycleStatus
+                  status: true
+              max_rows: 10
+          - component: RecordEntryForm
+            props:
+              action: record_new_goal
+              state_key: new_goal_entry
+              title: Measurable goal
+              submit_label: Save goal
+              resource: Goal
+              fields:
+                - id: goal
+                  label: Goal
+                  type: text
+                  path: description
+                  as: concept_text
+                  required: true
+                  max_length: 200
+                - id: measure
+                  label: Measured by
+                  type: code
+                  path: target[0].measure
+                  as: codeable_concept
+                  required: true
+                  codes: *a1
+                - id: target
+                  label: Target value
+                  type: number
+                  path: target[0].detailQuantity
+                  as: quantity
+                  unit: s
+                  range: *a2
+                - id: due
+                  label: Due
+                  type: date
+                  path: target[0].dueDate
+                  as: date
+                  future_days: 365
+                - id: priority
+                  label: Priority
+                  type: choice
+                  path: priority
+                  as: codeable_concept
+                  options: *a3
+                  system: http://terminology.hl7.org/CodeSystem/goal-priority
+                - id: note
+                  label: Remark
+                  type: long_text
+                  path: note[0].text
+                  as: string
+                  max_length: 2000
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: DocumentList
+            props:
+              documents: $bindings.notes
+              title: Progress notes
+              max_rows: 8
+          - component: RecordEntryForm
+            props:
+              action: record_new_note
+              state_key: new_note_entry
+              title: Progress note
+              submit_label: Save note
+              resource: DocumentReference
+              fields:
+                - id: type
+                  label: Kind of note
+                  type: code
+                  path: type
+                  as: codeable_concept
+                  required: true
+                  codes: *a4
+                - id: title
+                  label: Title
+                  type: text
+                  path: description
+                  as: string
+                  required: true
+                  max_length: 120
+                - id: text
+                  label: Note
+                  type: long_text
+                  path: content[0].attachment
+                  as: attachment_text
+                  required: true
+                  max_length: 5000
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: ResourceList
+            props:
+              resources: $bindings.consents
+              title: Consent decisions
+              columns:
+                - label: Purpose
+                  path: scope
+                - label: Decision
+                  path: provision.type
+                  status: true
+                - label: Given on
+                  path: dateTime
+                - label: Status
+                  path: status
+                  status: true
+              max_rows: 10
+              empty_text: No consent decision recorded.
+          - component: RecordEntryForm
+            props:
+              action: record_new_consent
+              state_key: new_consent_entry
+              title: Consent decision
+              submit_label: Record decision
+              resource: Consent
+              fields:
+                - id: scope
+                  label: Kind of consent
+                  type: choice
+                  path: scope
+                  as: codeable_concept
+                  required: true
+                  options: *a5
+                  system: http://terminology.hl7.org/CodeSystem/consentscope
+                - id: category
+                  label: Document type
+                  type: code
+                  path: category[0]
+                  as: codeable_concept
+                  required: true
+                  codes: *a6
+                - id: decision
+                  label: Decision
+                  type: choice
+                  path: provision.type
+                  as: code
+                  required: true
+                  options: *a7
+                - id: purpose
+                  label: Purpose
+                  type: code
+                  path: provision.purpose[0]
+                  as: coding
+                  required: true
+                  codes: *a8
+                - id: until
+                  label: Valid until
+                  type: date
+                  path: provision.period.end
+                  as: datetime
+                  future_days: 3650
+                - id: note
+                  label: How it was given
+                  type: text
+                  path: policyRule
+                  as: concept_text
+                  max_length: 200
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+actions:
+  - id: record_new_goal
+    label: Save goal
+    primitive: p_new_goal
+    on_success: reload
+    success_message: The goal is on the patient record.
+  - id: record_new_note
+    label: Save note
+    primitive: p_new_note
+    on_success: reload
+    success_message: The note is on the patient record.
+  - id: record_new_consent
+    label: Record decision
+    primitive: p_new_consent
+    on_success: reload
+    success_message: The consent decision is on the patient record.
+audit:
+  clinical_context: physiotherapy
+  intended_users:
+    - physiotherapist
+  intended_purpose: Therapy goals, progress notes and the patient's consent decisions per purpose from the shape library, written to the record with provenance and read back. Nothing is computed, scored or recommended.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_documentation
+    - care_plans
+    - consent

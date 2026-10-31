@@ -1,0 +1,233 @@
+# Golden output of the compiler for specs/composed-consultation.yaml (lifecycle as compiled: a draft; the registry manages it from there).
+# Regenerate deliberately when the compiler changes: npm run appspec -- compile specs/composed-consultation.yaml --created-at 2026-09-15T09:00:00Z
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_htn_consultation
+  version: 0.1.0
+  name: Hypertension consultation
+  description: Blood pressure over two years with the current therapy, recent kidney values and the problem list on one page.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: viewer
+      display_name: Viewer
+      cognito_group: app-app_htn_consultation-viewer
+      data_scope_ref: scope_viewer
+      ui_capabilities:
+        - view
+    - id: reviewer
+      display_name: Reviewer
+      cognito_group: app-app_htn_consultation-reviewer
+      data_scope_ref: scope_reviewer
+      ui_capabilities:
+        - view
+  default_role: viewer
+data_scopes:
+  scope_viewer:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|85354-9
+          - http://loinc.org|33914-3
+          - http://loinc.org|29463-7
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+      - resource: MedicationRequest
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Condition
+        operations:
+          - search
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - mrn
+  scope_reviewer:
+    inherits: scope_viewer
+    dicom:
+      - operations:
+          - qido
+          - wado
+        modalities:
+          - CT
+          - MR
+          - US
+        study_filter: PatientID={context.patient_mrn}
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+      - mrn
+      - address
+      - phone
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_bp
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|85354-9
+      since: $context.window_start
+      count: 500
+    output_binding: bp
+  - id: p_medication
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: MedicationRequest
+      params:
+        patient: $context.patient_id
+        status: active
+    output_binding: medication
+  - id: p_kidney
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|33914-3
+        - http://loinc.org|29463-7
+      since: $context.window_start
+      count: 8
+    output_binding: kidney
+  - id: p_problems
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: problems
+  - id: p_imaging
+    kind: data.dicom.studies.for_patient
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      modalities:
+        - CT
+        - MR
+        - US
+    output_binding: imaging
+    only_for_roles:
+      - reviewer
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: ObservationTimeline
+            props:
+              title: Systolic / Diastolic, last two years
+              observations: $bindings.bp
+              unit: mmHg
+              height_px: 320
+              series:
+                - label: Systolic
+                  component_code: 8480-6
+                - label: Diastolic
+                  component_code: 8462-4
+              thresholds:
+                - value: 140
+                  label: Systolic ≥ 140
+                - value: 90
+                  label: Diastolic ≥ 90
+          - component: MedicationList
+            props:
+              medications: $bindings.medication
+              title: Current therapy
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: VitalsTable
+            props:
+              observations: $bindings.kidney
+              title: Kidney values
+              max_rows: 8
+              compact: true
+          - component: ProblemList
+            props:
+              conditions: $bindings.problems
+              title: Active problems
+      - component: TwoColumn
+        props:
+          ratio:
+            - 5
+            - 7
+        children:
+          - component: ImagingStudyList
+            props:
+              studies: $bindings.imaging
+              title: Available studies
+              selection_key: imaging_selected
+          - component: DicomViewer
+            props:
+              study_uid: $ui.imaging_selected
+              studies: $bindings.imaging
+              height_px: 560
+        show_only_if_role_in:
+          - reviewer
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+  - name: window_start
+    type: iso8601
+    required: false
+    source:
+      - panel_selection
+    default: now-2y
+actions: []
+audit:
+  clinical_context: outpatient_bp_monitoring
+  intended_users:
+    - cardiologist
+    - general_practitioner
+  intended_purpose: Display of recorded blood pressure, therapy, kidney values and problems for a hypertension consultation; reviewers may also open the patient's imaging studies. Display only; no interpretation.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements
+    - medication
+    - imaging

@@ -1,0 +1,130 @@
+# Archetype: structured assessment — the first app that WRITES to the record.
+# Shows: a write.* primitive that runs only through an action, create scope on QuestionnaireResponse,
+# a Questionnaire fetched from the record as the form definition, reload-after-write so the new
+# submission appears in the list, and the same identity/masking machinery as read-only apps.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+
+metadata:
+  app_id: app_htn_assessment
+  version: 0.1.0
+  name: Hypertension follow-up assessment
+  description: Record the structured follow-up assessment for a patient with hypertension and review earlier assessments.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: "2026-09-13T10:00:00Z"
+
+lifecycle:
+  state: published
+  signoff:
+    approver_sub: example-approver-sub
+    approved_at: "2026-09-13T11:00:00Z"
+    signature: "example: KMS-signed manifest_hash goes here"
+    clinical_notes: Structured documentation only; no calculations or recommendations. Approved for the hypertension clinic.
+
+auth:
+  roles:
+    - id: nurse
+      display_name: Hypertension nurse
+      cognito_group: app-app_htn_assessment-nurse
+      data_scope_ref: scope_nurse
+      ui_capabilities: [view, record_assessment]
+  default_role: nurse
+
+data_scopes:
+  scope_nurse:
+    patient_scope: individual
+    phi_fields_visible: [name, dob, gender, mrn]
+    fhir:
+      - resource: Patient
+        operations: [read]
+      - resource: Questionnaire
+        operations: [read]
+      - resource: QuestionnaireResponse
+        operations: [search, create]
+        filter: subject={context.patient_id}
+      # Every write leaves a Provenance (who, when, through which app version) beside the record.
+      - resource: Provenance
+        operations: [create]
+
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+
+  - id: p_questionnaire
+    kind: data.fhir.questionnaire.read
+    catalog_version: 1.0.0
+    config:
+      questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+    output_binding: questionnaire
+
+  - id: p_submissions
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: QuestionnaireResponse
+      params:
+        patient: $context.patient_id
+        questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+    output_binding: submissions
+
+  # Runs only through the action below; never at load.
+  - id: p_submit
+    kind: write.fhir.questionnaire_response.submit
+    catalog_version: 1.0.0
+    config:
+      questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+      subject: $context.patient_id
+      response: $ui.assessment_response
+    output_binding: submitted
+
+actions:
+  - id: submit_assessment
+    label: Submit assessment
+    primitive: p_submit
+    on_success: reload
+    success_message: The assessment is now part of the patient record.
+
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio: [7, 5]
+        children:
+          - component: AssessmentForm
+            props:
+              questionnaire: $bindings.questionnaire
+              action: submit_assessment
+              state_key: assessment_response
+          - component: SubmissionList
+            props:
+              responses: $bindings.submissions
+              title: Previous assessments
+
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source: [smart_launch, panel_selection]
+
+audit:
+  clinical_context: hypertension_clinic_documentation
+  intended_users: [hypertension_nurse, general_practitioner]
+  intended_purpose: Structured documentation of a follow-up assessment into the patient record. No calculations, scores or recommendations.
+  mdr_classification: none
+  data_categories: [phi, clinical_documentation]

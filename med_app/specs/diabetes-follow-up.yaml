@@ -1,0 +1,30 @@
+# Showcase — the disease follow-up dashboard (APP-06) from a catalog template: one word, `diabetes_follow_up`, fills
+# the observation codes, the chart series and unit, the guideline line and its source, the medication classes (ATC
+# A10B, A10A — matched as classes, so every antidiabetic on the record qualifies) and the related conditions (SNOMED
+# and the ICD-10-GM category E11). Only the window is set by hand. The cardio-renal page beside it is the hand-composed
+# counterpart; this is what the composer produces when a clinician names a disease and nothing else.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_diabetes_follow_up
+  version: 1.0.0
+  name: Diabetes follow-up
+  description: HbA1c over the last two years against the guideline goal, the current antidiabetic therapy by class, and the related conditions — filled from the diabetes template.
+
+archetype: APP-06
+knobs:
+  template: diabetes_follow_up
+  window: now-2y
+
+roles:
+  - id: diabetes_clinic
+    display_name: Diabetes clinic
+    phi_fields_visible: [name, dob, gender, mrn]
+    capabilities: [view]
+default_role: diabetes_clinic
+
+governance:
+  clinical_context: diabetes_follow_up
+  intended_users: [diabetologist, general_practitioner, diabetes_nurse]
+  intended_purpose: Display of HbA1c readings against the guideline goal, the current antidiabetic therapy and the related problems for the follow-up consultation. The goal line is visual only; no scoring, no treatment recommendation.

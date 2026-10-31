@@ -1,0 +1,30 @@
+# AppSpec — FHIR resource inspector (APP-08): the patient record and the most recent
+# QuestionnaireResponse, each rendered from its schema.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_record_inspector
+  version: 0.1.0
+  name: Record inspector
+  description: The patient resource and the most recent assessment response, field by field.
+
+archetype: APP-08
+knobs:
+  panels:
+    - kind: patient
+    - kind: latest
+      resource: QuestionnaireResponse
+      label: Latest assessment
+      title: Most recent assessment response
+
+roles:
+  - id: data_steward
+    display_name: Clinical data steward
+    phi_fields_visible: [name, dob, gender, mrn, address, phone, email]
+default_role: data_steward
+
+governance:
+  clinical_context: data_quality_review
+  intended_users: [clinical_data_steward]
+  intended_purpose: Inspection of stored FHIR resources for data quality. Read-only; no clinical interpretation.

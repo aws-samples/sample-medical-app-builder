@@ -1,0 +1,105 @@
+# Showcase — the composed page (APP-12) at full stretch: everything the record holds about one patient on one
+# page, in rows of mixed width, with a second role that sees more identity and the raw FHIR record. Thirteen
+# sections, two roles, no codes beyond blood pressure: the page lists whatever the record has. Imaging is not
+# here on purpose — the tumour board and the imaging review carry the viewer.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_patient_360
+  version: 1.0.0
+  name: Patient 360
+  description: Problems, medication, vitals, allergies, visits, reports, letters, procedures, immunizations, laboratory results and the FHIR record of one patient, on one page.
+
+archetype: APP-12
+knobs:
+  identity: banner
+  arrangement: stack
+  window: now-2y
+  sections:
+    - kind: counts
+      id: headline
+      problems: true
+      medication: true
+      readings_codes:
+        - { system: loinc, code: "85354-9", display: Blood pressure panel }
+    - kind: problems
+      span: 6
+      status: active
+      title: Active problems
+    - kind: medication
+      span: 6
+      status: active
+      title: Current medication
+    - kind: trend
+      id: bp
+      span: 8
+      title: Blood pressure, last two years
+      codes:
+        - { system: loinc, code: "85354-9", display: Blood pressure panel }
+      series:
+        - { label: Systolic, component_code: "8480-6" }
+        - { label: Diastolic, component_code: "8462-4" }
+      thresholds:
+        - { value: 140, label: "140 mmHg" }
+        - { value: 90, label: "90 mmHg" }
+      unit: mmHg
+      height_px: 300
+    - kind: readings
+      id: vitals
+      span: 4
+      title: Latest vitals
+      codes:
+        - { system: loinc, code: "85354-9", display: Blood pressure panel }
+        - { system: loinc, code: "8867-4", display: Heart rate }
+        - { system: loinc, code: "29463-7", display: Body weight }
+      rows: 8
+    - kind: allergies
+      span: 6
+    - kind: encounters
+      span: 6
+      rows: 8
+    - kind: reports
+      span: 6
+      rows: 6
+    - kind: notes
+      span: 6
+      title: Letters and notes
+      rows: 6
+    - kind: procedures
+      span: 6
+      rows: 10
+    - kind: immunizations
+      span: 6
+      rows: 10
+    - kind: list
+      id: labs
+      resource: Observation
+      params: { category: laboratory }
+      title: Laboratory results
+      columns:
+        - { label: Date, path: effectiveDateTime }
+        - { label: Test, path: code }
+        - { label: Result, path: valueQuantity }
+        - { label: Status, path: status, status: true }
+      rows: 15
+    - kind: details
+      roles: [senior_clinician]
+      resource: Patient
+      title: Patient record (FHIR)
+
+roles:
+  - id: clinician
+    display_name: Treating clinician
+    phi_fields_visible: [name, dob, gender, mrn]
+  - id: senior_clinician
+    display_name: Senior clinician
+    inherits: clinician
+    phi_fields_visible: [name, dob, gender, mrn, address, phone, email]
+    capabilities: [view, open_viewer]
+default_role: clinician
+
+governance:
+  clinical_context: chart_review
+  intended_users: [internist, ward_physician, general_practitioner]
+  intended_purpose: Display of the recorded problems, medication, observations, allergies, visits, reports, letters, procedures, immunizations and laboratory results of the patient in context, for chart review before and during a consultation. Display only; nothing is computed, scored or interpreted.

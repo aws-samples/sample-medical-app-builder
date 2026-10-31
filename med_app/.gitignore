@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+*.log
+.DS_Store
+
+# Local environment — never commit real Cognito / endpoint values.
+.env
+.env.*
+!.env.example
+.build

@@ -1,0 +1,50 @@
+# Record shape — one consent decision for one purpose, as the MII consent module frames it: what kind of consent (scope),
+# whether it permits or denies (provision.type), the purpose it covers, how it was given, until when, and a remark. The
+# platform stamps status active, the patient and the moment. One purpose never implies another: a second purpose is a
+# second record, written with the same shape.
+apiVersion: medapp.eu/v1
+kind: RecordShape
+shape:
+  id: consent_per_purpose
+  name: Consent decision
+  description: One consent decision for one purpose — treatment, communication or research — permitted or denied, as a FHIR Consent in force from the moment it is recorded.
+  resource: Consent
+  status: active
+  fields:
+    - id: scope
+      label: Kind of consent
+      type: choice
+      path: scope
+      required: true
+      system: http://terminology.hl7.org/CodeSystem/consentscope
+      options:
+        - { code: treatment, display: Treatment }
+        - { code: patient-privacy, display: Privacy and communication }
+        - { code: research, display: Research }
+    - id: category
+      label: Document type
+      type: code
+      path: "category[0]"
+      required: true
+      codes:
+        - { system: http://loinc.org, code: "59284-0", display: Patient Consent }
+        - { system: http://loinc.org, code: "64292-6", display: Release of information consent }
+    - id: decision
+      label: Decision
+      type: choice
+      path: provision.type
+      required: true
+      options:
+        - { code: permit, display: Permitted }
+        - { code: deny, display: Denied }
+    - id: purpose
+      label: Purpose
+      type: code
+      path: "provision.purpose[0]"
+      required: true
+      codes:
+        - { system: http://terminology.hl7.org/CodeSystem/v3-ActReason, code: TREAT, display: Treatment }
+        - { system: http://terminology.hl7.org/CodeSystem/v3-ActReason, code: HMARKT, display: Communication and marketing }
+        - { system: http://terminology.hl7.org/CodeSystem/v3-ActReason, code: HRESCH, display: Healthcare research }
+    - { id: until, label: Valid until, type: date, path: provision.period.end, future_days: 3650 }
+    - { id: note, label: How it was given, type: text, path: "policyRule", max_length: 200 }

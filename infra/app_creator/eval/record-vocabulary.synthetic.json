@@ -1,0 +1,748 @@
+{
+ "version": 1,
+ "built_at": "2026-10-30T11:48:43Z",
+ "source": "",
+ "complete": true,
+ "duration_s": 0.0,
+ "scanned": {
+  "Observation": 125,
+  "Condition": 6,
+  "Procedure": 3,
+  "MedicationRequest": 6,
+  "MedicationStatement": 0,
+  "DiagnosticReport": 5,
+  "AllergyIntolerance": 3,
+  "Immunization": 5
+ },
+ "totals": {
+  "Observation": 125,
+  "Condition": 6,
+  "Procedure": 3,
+  "MedicationRequest": 6,
+  "MedicationStatement": 0,
+  "DiagnosticReport": 5,
+  "AllergyIntolerance": 3,
+  "Immunization": 5
+ },
+ "notes": [],
+ "codes": [
+  {
+   "resource": "Observation",
+   "system": "http://loinc.org",
+   "code": "85354-9",
+   "display": "Blood pressure panel with all children optional",
+   "displays": [
+    "Blood pressure panel with all children optional"
+   ],
+   "count": 72,
+   "patients": 3,
+   "unit": null,
+   "category": "vital-signs",
+   "components": [
+    "8462-4",
+    "8480-6"
+   ],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Observation",
+   "system": "http://loinc.org",
+   "code": "8462-4",
+   "display": "Diastolic blood pressure",
+   "displays": [
+    "Diastolic blood pressure"
+   ],
+   "count": 72,
+   "patients": 3,
+   "unit": "mm[Hg]",
+   "category": "vital-signs",
+   "components": [],
+   "component_of": [
+    "85354-9"
+   ],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Observation",
+   "system": "http://loinc.org",
+   "code": "8480-6",
+   "display": "Systolic blood pressure",
+   "displays": [
+    "Systolic blood pressure"
+   ],
+   "count": 72,
+   "patients": 3,
+   "unit": "mm[Hg]",
+   "category": "vital-signs",
+   "components": [],
+   "component_of": [
+    "85354-9"
+   ],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Observation",
+   "system": "http://loinc.org",
+   "code": "29463-7",
+   "display": "Body weight",
+   "displays": [
+    "Body weight"
+   ],
+   "count": 12,
+   "patients": 3,
+   "unit": "kg",
+   "category": "vital-signs",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Observation",
+   "system": "http://loinc.org",
+   "code": "8867-4",
+   "display": "Heart rate",
+   "displays": [
+    "Heart rate"
+   ],
+   "count": 12,
+   "patients": 3,
+   "unit": "/min",
+   "category": "vital-signs",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Observation",
+   "system": "https://hsp-musterstadt.medapp.eu/CodeSystem/physio",
+   "code": "knee_flexion",
+   "display": "Knee flexion (ROM)",
+   "displays": [
+    "Knee flexion (ROM)"
+   ],
+   "count": 12,
+   "patients": 1,
+   "unit": "deg",
+   "category": "exam",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Observation",
+   "system": "https://hsp-musterstadt.medapp.eu/CodeSystem/physio",
+   "code": "grip_strength",
+   "display": "Grip strength",
+   "displays": [
+    "Grip strength"
+   ],
+   "count": 6,
+   "patients": 1,
+   "unit": "kg",
+   "category": "exam",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Observation",
+   "system": "http://loinc.org",
+   "code": "33914-3",
+   "display": "Glomerular filtration rate/1.73 sq M.predicted",
+   "displays": [
+    "Glomerular filtration rate/1.73 sq M.predicted"
+   ],
+   "count": 4,
+   "patients": 1,
+   "unit": "mL/min/{1.73_m2}",
+   "category": "laboratory",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Observation",
+   "system": "http://loinc.org",
+   "code": "4548-4",
+   "display": "Hemoglobin A1c/Hemoglobin.total in Blood",
+   "displays": [
+    "Hemoglobin A1c/Hemoglobin.total in Blood"
+   ],
+   "count": 4,
+   "patients": 1,
+   "unit": "%",
+   "category": "laboratory",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Observation",
+   "system": "http://loinc.org",
+   "code": "72166-2",
+   "display": "Tobacco smoking status",
+   "displays": [
+    "Tobacco smoking status"
+   ],
+   "count": 3,
+   "patients": 3,
+   "unit": null,
+   "category": "social-history",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Condition",
+   "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+   "code": "I10.90",
+   "display": "Essentielle Hypertonie, nicht näher bezeichnet",
+   "displays": [
+    "Essentielle Hypertonie, nicht näher bezeichnet"
+   ],
+   "count": 2,
+   "patients": 2,
+   "unit": null,
+   "category": "problem-list-item",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": [
+    {
+     "system": "http://snomed.info/sct",
+     "code": "38341003",
+     "display": "Hypertensive disorder",
+     "count": 2
+    }
+   ]
+  },
+  {
+   "resource": "Condition",
+   "system": "http://snomed.info/sct",
+   "code": "38341003",
+   "display": "Hypertensive disorder",
+   "displays": [
+    "Hypertensive disorder"
+   ],
+   "count": 2,
+   "patients": 2,
+   "unit": null,
+   "category": "problem-list-item",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": [
+    {
+     "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+     "code": "I10.90",
+     "display": "Essentielle Hypertonie, nicht näher bezeichnet",
+     "count": 2
+    }
+   ]
+  },
+  {
+   "resource": "Condition",
+   "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+   "code": "E11.90",
+   "display": "Typ-2-Diabetes mellitus: Ohne Komplikationen",
+   "displays": [
+    "Typ-2-Diabetes mellitus: Ohne Komplikationen"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "problem-list-item",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": [
+    {
+     "system": "http://snomed.info/sct",
+     "code": "44054006",
+     "display": "Type 2 diabetes mellitus",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "resource": "Condition",
+   "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+   "code": "G43.9",
+   "display": "Migräne, nicht näher bezeichnet",
+   "displays": [
+    "Migräne, nicht näher bezeichnet"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "problem-list-item",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": [
+    {
+     "system": "http://snomed.info/sct",
+     "code": "37796009",
+     "display": "Migraine",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "resource": "Condition",
+   "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+   "code": "M17.9",
+   "display": "Gonarthrose, nicht näher bezeichnet",
+   "displays": [
+    "Gonarthrose, nicht näher bezeichnet"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "problem-list-item",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": [
+    {
+     "system": "http://snomed.info/sct",
+     "code": "239873007",
+     "display": "Osteoarthritis of knee",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "resource": "Condition",
+   "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+   "code": "N18.3",
+   "display": "Chronische Nierenkrankheit, Stadium 3",
+   "displays": [
+    "Chronische Nierenkrankheit, Stadium 3"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "problem-list-item",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": [
+    {
+     "system": "http://snomed.info/sct",
+     "code": "433144002",
+     "display": "Chronic kidney disease stage 3",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "resource": "Condition",
+   "system": "http://snomed.info/sct",
+   "code": "239873007",
+   "display": "Osteoarthritis of knee",
+   "displays": [
+    "Osteoarthritis of knee"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "problem-list-item",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": [
+    {
+     "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+     "code": "M17.9",
+     "display": "Gonarthrose, nicht näher bezeichnet",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "resource": "Condition",
+   "system": "http://snomed.info/sct",
+   "code": "37796009",
+   "display": "Migraine",
+   "displays": [
+    "Migraine"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "problem-list-item",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": [
+    {
+     "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+     "code": "G43.9",
+     "display": "Migräne, nicht näher bezeichnet",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "resource": "Condition",
+   "system": "http://snomed.info/sct",
+   "code": "433144002",
+   "display": "Chronic kidney disease stage 3",
+   "displays": [
+    "Chronic kidney disease stage 3"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "problem-list-item",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": [
+    {
+     "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+     "code": "N18.3",
+     "display": "Chronische Nierenkrankheit, Stadium 3",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "resource": "Condition",
+   "system": "http://snomed.info/sct",
+   "code": "44054006",
+   "display": "Type 2 diabetes mellitus",
+   "displays": [
+    "Type 2 diabetes mellitus"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "problem-list-item",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": [
+    {
+     "system": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+     "code": "E11.90",
+     "display": "Typ-2-Diabetes mellitus: Ohne Komplikationen",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "resource": "Procedure",
+   "system": "http://snomed.info/sct",
+   "code": "179344006",
+   "display": "Arthroscopy of knee",
+   "displays": [
+    "Arthroscopy of knee"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Procedure",
+   "system": "http://snomed.info/sct",
+   "code": "22778000",
+   "display": "Renal biopsy",
+   "displays": [
+    "Renal biopsy"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Procedure",
+   "system": "http://snomed.info/sct",
+   "code": "410451008",
+   "display": "Diabetic retinopathy screening",
+   "displays": [
+    "Diabetic retinopathy screening"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "MedicationRequest",
+   "system": "http://www.whocc.no/atc",
+   "code": "C09AA05",
+   "display": "Ramipril 10 mg",
+   "displays": [
+    "Ramipril 10 mg",
+    "Ramipril 5 mg"
+   ],
+   "count": 2,
+   "patients": 2,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "MedicationRequest",
+   "system": "http://www.whocc.no/atc",
+   "code": "A10BA02",
+   "display": "Metformin 1000 mg",
+   "displays": [
+    "Metformin 1000 mg"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "MedicationRequest",
+   "system": "http://www.whocc.no/atc",
+   "code": "C03CA04",
+   "display": "Torasemid 5 mg",
+   "displays": [
+    "Torasemid 5 mg"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "MedicationRequest",
+   "system": "http://www.whocc.no/atc",
+   "code": "C08CA01",
+   "display": "Amlodipin 5 mg",
+   "displays": [
+    "Amlodipin 5 mg"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "MedicationRequest",
+   "system": "http://www.whocc.no/atc",
+   "code": "N02CC01",
+   "display": "Sumatriptan 50 mg",
+   "displays": [
+    "Sumatriptan 50 mg"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "DiagnosticReport",
+   "system": "http://loinc.org",
+   "code": "24323-8",
+   "display": "Comprehensive metabolic 2000 panel",
+   "displays": [
+    "Comprehensive metabolic 2000 panel"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "LAB",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "DiagnosticReport",
+   "system": "http://loinc.org",
+   "code": "24362-6",
+   "display": "Renal function panel",
+   "displays": [
+    "Renal function panel"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "LAB",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "DiagnosticReport",
+   "system": "http://loinc.org",
+   "code": "24590-2",
+   "display": "MR Brain",
+   "displays": [
+    "MR Brain"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "RAD",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "DiagnosticReport",
+   "system": "http://loinc.org",
+   "code": "24627-2",
+   "display": "CT Chest",
+   "displays": [
+    "CT Chest"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "RAD",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "DiagnosticReport",
+   "system": "http://loinc.org",
+   "code": "28582-4",
+   "display": "US Kidney",
+   "displays": [
+    "US Kidney"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": "RAD",
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "AllergyIntolerance",
+   "system": "http://snomed.info/sct",
+   "code": "256259004",
+   "display": "Pollen",
+   "displays": [
+    "Pollen"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "AllergyIntolerance",
+   "system": "http://snomed.info/sct",
+   "code": "293637006",
+   "display": "Contrast media allergy",
+   "displays": [
+    "Contrast media allergy"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "AllergyIntolerance",
+   "system": "http://snomed.info/sct",
+   "code": "373270004",
+   "display": "Penicillin -class of antibiotic-",
+   "displays": [
+    "Penicillin -class of antibiotic-"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Immunization",
+   "system": "http://snomed.info/sct",
+   "code": "46233009",
+   "display": "Influenza virus vaccine",
+   "displays": [
+    "Influenza virus vaccine"
+   ],
+   "count": 2,
+   "patients": 2,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Immunization",
+   "system": "http://snomed.info/sct",
+   "code": "1119349007",
+   "display": "SARS-CoV-2 mRNA vaccine",
+   "displays": [
+    "SARS-CoV-2 mRNA vaccine"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Immunization",
+   "system": "http://snomed.info/sct",
+   "code": "333598008",
+   "display": "Pneumococcal vaccine",
+   "displays": [
+    "Pneumococcal vaccine"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  },
+  {
+   "resource": "Immunization",
+   "system": "http://snomed.info/sct",
+   "code": "333620004",
+   "display": "Tetanus vaccine",
+   "displays": [
+    "Tetanus vaccine"
+   ],
+   "count": 1,
+   "patients": 1,
+   "unit": null,
+   "category": null,
+   "components": [],
+   "component_of": [],
+   "also_coded_as": []
+  }
+ ]
+}

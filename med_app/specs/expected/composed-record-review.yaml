@@ -1,0 +1,246 @@
+# Golden output of the compiler for specs/composed-record-review.yaml (lifecycle as compiled: a draft; the registry manages it from there).
+# Regenerate deliberately when the compiler changes: npm run appspec -- compile specs/composed-record-review.yaml --created-at 2026-09-15T09:00:00Z
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_record_review
+  version: 0.1.0
+  name: Record review
+  description: Allergies, visits, reports, letters, procedures, immunizations and recent laboratory results for one patient.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: ward_clinician
+      display_name: Ward clinician
+      cognito_group: app-app_record_review-ward_clinician
+      data_scope_ref: scope_ward_clinician
+      ui_capabilities:
+        - view
+  default_role: ward_clinician
+data_scopes:
+  scope_ward_clinician:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: AllergyIntolerance
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Encounter
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: DiagnosticReport
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: DocumentReference
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Procedure
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Immunization
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Observation
+        operations:
+          - search
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_allergies
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: AllergyIntolerance
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: allergies
+  - id: p_encounters
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Encounter
+      params:
+        patient: $context.patient_id
+    output_binding: encounters
+  - id: p_reports
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: DiagnosticReport
+      params:
+        patient: $context.patient_id
+    output_binding: reports
+  - id: p_notes
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: DocumentReference
+      params:
+        patient: $context.patient_id
+    output_binding: notes
+  - id: p_procedures
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Procedure
+      params:
+        patient: $context.patient_id
+    output_binding: procedures
+  - id: p_immunizations
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Immunization
+      params:
+        patient: $context.patient_id
+    output_binding: immunizations
+  - id: p_labs
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Observation
+      params:
+        patient: $context.patient_id
+        category: laboratory
+    output_binding: labs
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: AllergyList
+        props:
+          allergies: $bindings.allergies
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: EncounterList
+            props:
+              encounters: $bindings.encounters
+              title: Visits
+              max_rows: 10
+          - component: ReportList
+            props:
+              reports: $bindings.reports
+              title: Reports
+              max_rows: 5
+      - component: DocumentList
+        props:
+          documents: $bindings.notes
+          title: Letters and notes
+          max_rows: 10
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: ResourceList
+            props:
+              resources: $bindings.procedures
+              title: Procedures
+              columns:
+                - label: Date
+                  path: performedDateTime
+                - label: Procedure
+                  path: code
+                - label: Body site
+                  path: bodySite[0]
+                - label: Outcome
+                  path: outcome
+                - label: Status
+                  path: status
+                  status: true
+              max_rows: 20
+              empty_text: No procedures recorded.
+          - component: ResourceList
+            props:
+              resources: $bindings.immunizations
+              title: Immunizations
+              columns:
+                - label: Date
+                  path: occurrenceDateTime
+                - label: Vaccine
+                  path: vaccineCode
+                - label: Lot
+                  path: lotNumber
+                - label: Status
+                  path: status
+                  status: true
+              max_rows: 20
+              empty_text: No immunizations recorded.
+      - component: ResourceList
+        props:
+          resources: $bindings.labs
+          title: Laboratory results
+          columns:
+            - label: Date
+              path: effectiveDateTime
+            - label: Test
+              path: code
+            - label: Result
+              path: valueQuantity
+            - label: Status
+              path: status
+              status: true
+          max_rows: 12
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+actions: []
+audit:
+  clinical_context: ward_round
+  intended_users:
+    - internist
+    - ward_physician
+  intended_purpose: Display of the recorded allergies, visits, reports, letters, procedures, immunizations and laboratory results of the patient in context, for the ward round. Display only; no interpretation.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements
+    - allergies
+    - encounters
+    - procedures
+    - immunizations
+    - clinical_documentation

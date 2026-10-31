@@ -1,0 +1,210 @@
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_patient_alerts
+  version: 0.1.0
+  name: Patient alerts
+  description: The warnings shown with the chart — falls risk, isolation, an interpreter needed — and the form that raises one.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: ward_nurse
+      display_name: Ward nurse
+      cognito_group: app-app_patient_alerts-ward_nurse
+      data_scope_ref: scope_ward_nurse
+      ui_capabilities:
+        - view
+        - record_entry
+  default_role: ward_nurse
+data_scopes:
+  scope_ward_nurse:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Flag
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+      - resource: Provenance
+        operations:
+          - create
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_alerts
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Flag
+      params:
+        patient: $context.patient_id
+    output_binding: alerts
+  - id: p_new_alert
+    kind: write.fhir.record.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      resource: Flag
+      fields:
+        - id: alert
+          label: Alert
+          type: choice
+          path: code
+          as: codeable_concept
+          required: true
+          options: &a1
+            - code: falls_risk
+              display: Falls risk
+            - code: isolation_precautions
+              display: Isolation precautions
+            - code: interpreter_needed
+              display: Interpreter needed
+            - code: hearing_impaired
+              display: Hearing impaired
+            - code: mobility_aid
+              display: Walks with an aid
+          system: https://hsp-musterstadt.medapp.eu/CodeSystem/alerts
+        - id: category
+          label: Kind of alert
+          type: choice
+          path: category[0]
+          as: codeable_concept
+          options: &a2
+            - code: safety
+              display: Safety
+            - code: clinical
+              display: Clinical
+            - code: admin
+              display: Administrative
+          system: http://terminology.hl7.org/CodeSystem/flag-category
+        - id: until
+          label: Review by
+          type: date
+          path: period.end
+          as: datetime
+          future_days: 365
+      stamps:
+        - path: status
+          value: active
+        - path: subject
+          value: $patient
+        - path: author
+          value: $author
+        - path: period.start
+          value: $today
+      shape:
+        id: patient_alert
+        checksum: fnv1a64:1d48abdf786a9652
+        open_kind: true
+        tag:
+          system: https://hsp-musterstadt.medapp.eu/CodeSystem/record-shape
+          code: patient_alert
+          version: fnv1a64:1d48abdf786a9652
+          display: Patient alert
+      record: $ui.new_alert_entry
+    output_binding: new_alert_recorded
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: ResourceList
+            props:
+              resources: $bindings.alerts
+              title: Alerts on record
+              columns:
+                - label: Alert
+                  path: code
+                - label: Kind
+                  path: category[0]
+                - label: Since
+                  path: period.start
+                - label: Review by
+                  path: period.end
+                - label: Status
+                  path: status
+                  status: true
+              max_rows: 10
+              empty_text: No alert on record.
+          - component: RecordEntryForm
+            props:
+              action: record_new_alert
+              state_key: new_alert_entry
+              title: Patient alert
+              submit_label: Raise alert
+              resource: Flag
+              fields:
+                - id: alert
+                  label: Alert
+                  type: choice
+                  path: code
+                  as: codeable_concept
+                  required: true
+                  options: *a1
+                  system: https://hsp-musterstadt.medapp.eu/CodeSystem/alerts
+                - id: category
+                  label: Kind of alert
+                  type: choice
+                  path: category[0]
+                  as: codeable_concept
+                  options: *a2
+                  system: http://terminology.hl7.org/CodeSystem/flag-category
+                - id: until
+                  label: Review by
+                  type: date
+                  path: period.end
+                  as: datetime
+                  future_days: 365
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+actions:
+  - id: record_new_alert
+    label: Raise alert
+    primitive: p_new_alert
+    on_success: reload
+    success_message: The alert is on the patient record.
+audit:
+  clinical_context: ward
+  intended_users:
+    - ward_nurse
+  intended_purpose: The patient's alerts, read and raised by the ward; a warning shown with the chart, never a judgement made by the platform.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - other_records

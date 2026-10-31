@@ -1,0 +1,37 @@
+# AppSpec for manifests/hypertension-cohort.yaml.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_htn_cohort
+  version: 0.1.0
+  name: Hypertension cohort
+  description: Patients with an active hypertension diagnosis and their most recent blood pressure.
+
+archetype: APP-09
+knobs:
+  condition:
+    codes: [{ system: snomed, code: "38341003", display: Hypertensive disorder }]
+    clinical_status: active
+    label: active hypertension
+  value:
+    codes: [{ system: loinc, code: "85354-9", display: Blood pressure panel }]
+    component_code: "8480-6"
+    name: systolic
+    unit: mmHg
+    threshold: 140
+    label: Latest blood pressure
+  cards:
+    threshold_hint: Most recent blood pressure panel per patient
+
+roles:
+  - id: cohort_analyst
+    display_name: Cohort analyst
+    phi_fields_visible: [name, dob, mrn]
+    capabilities: [view, export_csv]
+default_role: cohort_analyst
+
+governance:
+  clinical_context: population_health
+  intended_users: [hypertension_nurse, cardiologist]
+  intended_purpose: Listing of patients meeting a coded criterion with their latest recorded values. No risk scoring.

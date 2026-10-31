@@ -1,0 +1,29 @@
+{
+  "hospital_id": "hsp-musterstadt",
+  "hospital_name": "Klinikum Musterstadt",
+  "invitation_language": "en",
+  "model_id": "eu.anthropic.claude-sonnet-4-6",
+  "data_residency": "eu",
+  "reference_servers": true,
+  "branding": {
+    "palette": {
+      "page": "#F3F5F9",
+      "surface": "#FFFFFF",
+      "ink": "#16213A",
+      "muted": "#566274",
+      "line": "#DDE3EC",
+      "accent": "#1F4E9E",
+      "data": "#D97706",
+      "data2": "#7A4DB3",
+      "data3": "#0E9488",
+      "alert": "#B42318"
+    },
+    "logo": {
+      "src": "logo.svg",
+      "srcOnDark": "logo-on-dark.svg",
+      "alt": "Klinikum Musterstadt",
+      "height": 28,
+      "hideName": true
+    }
+  }
+}

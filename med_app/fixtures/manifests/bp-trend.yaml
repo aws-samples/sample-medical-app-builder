@@ -1,0 +1,151 @@
+# Archetype: longitudinal trend for one patient.
+# Shows: two roles with inherited scopes, PHI masking driven by the scope, a role-gated section,
+# a role-gated primitive, thresholds on the timeline, TwoColumn layout.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+
+metadata:
+  app_id: app_bp_trend
+  version: 0.3.0
+  parent_version: 0.2.1
+  name: Longitudinal blood pressure
+  description: Systolic and diastolic readings over time against Stage 1 hypertension thresholds.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: "2026-09-11T09:10:00Z"
+
+lifecycle:
+  state: in_review
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.0.0-handwritten
+    prompt_hash: sha256:handwritten
+
+auth:
+  roles:
+    - id: viewer
+      display_name: Read-only viewer
+      cognito_group: app-app_bp_trend-viewer
+      data_scope_ref: scope_viewer
+      ui_capabilities: [view]
+    - id: reviewer
+      display_name: Clinical reviewer
+      cognito_group: app-app_bp_trend-reviewer
+      data_scope_ref: scope_reviewer
+      ui_capabilities: [view, export_pdf, add_annotation]
+  default_role: viewer
+
+data_scopes:
+  scope_viewer:
+    patient_scope: individual
+    # Viewers identify the patient but do not see contact details.
+    phi_fields_visible: [name, dob, mrn]
+    fhir:
+      - resource: Patient
+        operations: [read]
+      - resource: Observation
+        operations: [search]
+        codes: ["http://loinc.org|8480-6", "http://loinc.org|8462-4"]
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+  scope_reviewer:
+    inherits: scope_viewer
+    phi_fields_visible: [name, dob, gender, mrn, address, phone]
+    fhir:
+      - resource: Condition
+        operations: [search]
+        filter: subject={context.patient_id}
+
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+
+  - id: p_series
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes: ["http://loinc.org|8480-6", "http://loinc.org|8462-4"]
+      since: $context.window_start
+      count: 500
+    output_binding: series
+
+  # Only reviewers may search Conditions; viewers never issue this request.
+  - id: p_conditions
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    only_for_roles: [reviewer]
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+    output_binding: conditions
+
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+      - component: TwoColumn
+        props:
+          ratio: [8, 4]
+        children:
+          - component: ObservationTimeline
+            props:
+              title: Blood pressure, last two years
+              observations: $bindings.series
+              unit: mmHg
+              height_px: 380
+              series:
+                - label: Systolic
+                  component_code: "8480-6"
+                - label: Diastolic
+                  component_code: "8462-4"
+              thresholds:
+                - value: 140
+                  label: Systolic ≥ 140 (Stage 1)
+                - value: 90
+                  label: Diastolic ≥ 90 (Stage 1)
+          - component: VitalsTable
+            props:
+              title: Latest readings
+              observations: $bindings.series
+              max_rows: 10
+              compact: true
+      - component: Section
+        show_only_if_role_in: [reviewer]
+        props:
+          title: Reviewer context
+          description: Visible to clinical reviewers only. Conditions are requested only for this role.
+        children:
+          - component: ProblemList
+            props:
+              conditions: $bindings.conditions
+              title: Recorded conditions
+
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source: [smart_launch, panel_selection]
+  - name: window_start
+    type: iso8601
+    required: false
+    default: now-2y
+
+audit:
+  clinical_context: outpatient_bp_monitoring
+  intended_users: [general_practitioner, cardiologist]
+  intended_purpose: Display of longitudinal BP readings against guideline thresholds. Not for diagnosis.
+  mdr_classification: none
+  data_categories: [phi, clinical_measurements]

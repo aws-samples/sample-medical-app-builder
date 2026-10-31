@@ -1,0 +1,237 @@
+# Golden output of the compiler for specs/composed-nurse-visit.yaml (lifecycle as compiled: a draft; the registry manages it from there).
+# Regenerate deliberately when the compiler changes: npm run appspec -- compile specs/composed-nurse-visit.yaml --created-at 2026-09-15T09:00:00Z
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_htn_nurse_visit
+  version: 0.1.0
+  name: Hypertension nurse visit
+  description: An overview, the follow-up assessment form and, for the lead nurse, the patient record — one tab each.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: nurse
+      display_name: Hypertension nurse
+      cognito_group: app-app_htn_nurse_visit-nurse
+      data_scope_ref: scope_nurse
+      ui_capabilities:
+        - view
+    - id: lead_nurse
+      display_name: Lead nurse
+      cognito_group: app-app_htn_nurse_visit-lead_nurse
+      data_scope_ref: scope_lead_nurse
+      ui_capabilities:
+        - view
+  default_role: nurse
+data_scopes:
+  scope_nurse:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Condition
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: MedicationRequest
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|85354-9
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+      - resource: Questionnaire
+        operations:
+          - read
+      - resource: QuestionnaireResponse
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+      - resource: Provenance
+        operations:
+          - create
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - mrn
+  scope_lead_nurse:
+    inherits: scope_nurse
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+      - mrn
+      - address
+      - phone
+      - email
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_counts_conditions
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: counts_conditions
+  - id: p_counts_medications
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: MedicationRequest
+      params:
+        patient: $context.patient_id
+        status: active
+    output_binding: counts_medications
+  - id: p_counts_readings
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|85354-9
+      since: $context.window_start
+      count: 100
+    output_binding: counts_readings
+  - id: p_assessment_questionnaire
+    kind: data.fhir.questionnaire.read
+    catalog_version: 1.0.0
+    config:
+      questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+    output_binding: assessment_questionnaire
+  - id: p_assessment_submissions
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: QuestionnaireResponse
+      params:
+        patient: $context.patient_id
+        questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+    output_binding: assessment_submissions
+  - id: p_assessment_submit
+    kind: write.fhir.questionnaire_response.submit
+    catalog_version: 1.0.0
+    config:
+      questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+      subject: $context.patient_id
+      response: $ui.assessment_response
+    output_binding: assessment_submitted
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: Tabs
+        props:
+          default_tab: Overview
+        children:
+          - component: Tab
+            props:
+              label: Overview
+            children:
+              - component: Grid
+                props:
+                  columns: 3
+                children:
+                  - component: StatCard
+                    props:
+                      label: Active problems
+                      value: $bindings.counts_conditions.length
+                      hint: On the problem list now
+                  - component: StatCard
+                    props:
+                      label: Current medication
+                      value: $bindings.counts_medications.length
+                      hint: Active prescriptions
+                  - component: StatCard
+                    props:
+                      label: Readings, last year
+                      value: $bindings.counts_readings.length
+                      hint: Vitals and key labs recorded in the window
+                      tone: accent
+          - component: Tab
+            props:
+              label: Assessment
+            children:
+              - component: TwoColumn
+                props:
+                  ratio:
+                    - 7
+                    - 5
+                children:
+                  - component: AssessmentForm
+                    props:
+                      questionnaire: $bindings.assessment_questionnaire
+                      action: submit_assessment
+                      state_key: assessment_response
+                      submit_label: Save assessment
+                  - component: SubmissionList
+                    props:
+                      responses: $bindings.assessment_submissions
+                      title: Previous assessments
+          - component: Tab
+            props:
+              label: Record
+            children:
+              - component: ResourceDetails
+                props:
+                  resource: $bindings.patient
+                  title: Patient resource
+            show_only_if_role_in:
+              - lead_nurse
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+  - name: window_start
+    type: iso8601
+    required: false
+    source:
+      - panel_selection
+    default: now-1y
+actions:
+  - id: submit_assessment
+    label: Save assessment
+    primitive: p_assessment_submit
+    on_success: reload
+    success_message: The assessment is now part of the patient record.
+audit:
+  clinical_context: hypertension_follow_up_clinic
+  intended_users:
+    - nurse
+  intended_purpose: Structured documentation of the hypertension follow-up visit with an overview of the recorded problems, medication and readings. Records the assessment as entered; no scoring or recommendations.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements
+    - medication
+    - clinical_documentation

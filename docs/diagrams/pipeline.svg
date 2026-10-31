@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="1610" viewBox="0 0 1300 1610">
+<defs><marker id="arrow-0F7B5F" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F7B5F"/></marker><marker id="arrow-2F6FB2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2F6FB2"/></marker><marker id="arrow-6B4FA8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6B4FA8"/></marker><marker id="arrow-B7791F" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B7791F"/></marker></defs>
+<rect width="1300" height="1610" fill="white"/>
+<text x="30" y="40" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#1F2933">From a plain-language request to a running, audited app</text>
+<text x="30" y="62" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" fill="#5B6770">Three hand-offs, each narrowing what the next stage may do: the model proposes within a typed vocabulary, a pure function decides what it means, people approve it, two interpreters execute only that.</text>
+<rect x="30" y="90" width="1240" height="400" rx="10" ry="10" fill="#F5F1FA" stroke="#D9CCEA" stroke-width="1.2"/>
+<text x="44" y="112" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#1F2933">1 · The model decides — within a schema</text>
+<rect x="50" y="140" width="300" height="110" rx="22" ry="22" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<circle cx="70" cy="187.0" r="5" fill="none" stroke="#5B6770" stroke-width="1.4"/>
+<path d="M61,205.0 a9,9 0 0 1 18,0" fill="none" stroke="#5B6770" stroke-width="1.4"/>
+<text x="212.0" y="181.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Clinician</text>
+<text x="212.0" y="193.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">“Knee flexion over the course of</text>
+<text x="212.0" y="206.54999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">therapy, both sides, with the</text>
+<text x="212.0" y="219.14999999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">assessment form”</text>
+<rect x="50" y="280" width="300" height="120" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="200.0" y="326.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Lookups — the hospital's facts</text>
+<text x="200.0" y="338.95000000000005" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">lookup_codes: terminology hints + the</text>
+<text x="200.0" y="351.55000000000007" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">record's own vocabulary (what is on the record)</text>
+<text x="200.0" y="364.1500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">list_record_shapes · list_groups</text>
+<rect x="390" y="140" width="860" height="110" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="820.0" y="187.65" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Drafting agent — Strands Agent on Amazon Bedrock (eu. inference profile)</text>
+<text x="820.0" y="200.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">system prompt generated from the catalogue: archetypes, knob names, refusals — never a manifest or a component</text>
+<text x="820.0" y="212.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">fifteen typed tools are the only way to change the draft · the readiness list drives the questions it asks</text>
+<rect x="390" y="280" width="860" height="120" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="820.0" y="326.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">AppSpec — the typed specification</text>
+<text x="820.0" y="338.95000000000005" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">apiVersion medapp.eu/v1 · kind AppSpec · archetype + its knobs · roles with identity fields · governance statement</text>
+<text x="820.0" y="351.55000000000007" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">every tool argument validated against the Zod / JSON Schema before it is applied: the draft can be incomplete, never invalid</text>
+<text x="820.0" y="364.1500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">recorded refusals travel with the draft</text>
+<rect x="30" y="530" width="1240" height="300" rx="10" ry="10" fill="#EEF6F3" stroke="#BFDCD1" stroke-width="1.2"/>
+<text x="44" y="552" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#1F2933">2 · Deterministic code — the compiler</text>
+<rect x="50" y="580" width="590" height="130" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="345.0" y="625.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">compileSpec() — a pure TypeScript function</text>
+<text x="345.0" y="637.65" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">same spec + options → the same manifest, byte for byte; compiler version in provenance</text>
+<text x="345.0" y="650.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">the archetype's build turns knobs into data primitives and a layout tree of catalogue components</text>
+<text x="345.0" y="662.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">data scopes derived from what the primitives read and write · forms → FHIR Questionnaires</text>
+<text x="345.0" y="675.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">golden fixture per archetype · runs in the panel, the Lambda and the CLI — one implementation</text>
+<rect x="660" y="580" width="590" height="130" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="955.0" y="625.05" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">AppManifest — the resolved artefact</text>
+<text x="955.0" y="637.65" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">metadata · roles → groups · data scopes (resource types, operations, codes, identity fields)</text>
+<text x="955.0" y="650.25" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">primitives · layout · context inputs · actions · the app's Questionnaires</text>
+<text x="955.0" y="662.85" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">provenance: compiler version, prompt hash · SHA-256 hash addresses the version</text>
+<text x="955.0" y="675.45" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">validated by one shared Zod schema in the registry, the panel and the Lambdas</text>
+<rect x="30" y="870" width="1240" height="300" rx="10" ry="10" fill="#FFF9F0" stroke="#F0DDB8" stroke-width="1.2"/>
+<text x="44" y="892" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#1F2933">3 · People decide — review, approval, publication</text>
+<rect x="50" y="920" width="590" height="130" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="345.0" y="971.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Review page</text>
+<text x="345.0" y="983.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">the manifest shown as facts: what is read and under which filter, which identity fields each role</text>
+<text x="345.0" y="996.5500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">sees, which groups grant which role, what is written — and the agent's recorded refusals</text>
+<text x="345.0" y="1009.1500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">the difference against the published version, widenings first</text>
+<rect x="660" y="920" width="590" height="130" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="955.0" y="971.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Governed lifecycle — the registry</text>
+<text x="955.0" y="983.95" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">draft → in_review → approved → published → deprecated; only published versions reach clinicians</text>
+<text x="955.0" y="996.5500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">the author never approves their own version · approval signs the manifest hash with the</text>
+<text x="955.0" y="1009.1500000000001" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">hospital's KMS key · lifecycle events are append-only · a new version records its parent</text>
+<rect x="30" y="1210" width="1240" height="300" rx="10" ry="10" fill="#EEF6F3" stroke="#BFDCD1" stroke-width="1.2"/>
+<text x="44" y="1232" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#1F2933">4 · Deterministic code — two interpreters at runtime</text>
+<rect x="50" y="1260" width="590" height="130" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="345.0" y="1311.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Renderer — in the browser</text>
+<text x="345.0" y="1323.9499999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">validates the manifest with the same schema · plans primitives in dependency waves</text>
+<text x="345.0" y="1336.5499999999997" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">manifest node → exactly one catalogue component; there is no third path</text>
+<text x="345.0" y="1349.1499999999996" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">$bindings · $context · $auth references, no expression language; identity fields masked per role</text>
+<rect x="660" y="1260" width="590" height="130" rx="8" ry="8" fill="#FFFFFF" stroke="#5B6770" stroke-width="1.2"/>
+<text x="955.0" y="1311.35" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#1F2933">Dispatcher — on the server</text>
+<text x="955.0" y="1323.9499999999998" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">loads the published version itself; role from the token's groups; primitive declared? scope grants it?</text>
+<text x="955.0" y="1336.5499999999997" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">runs the manifest's config, not the browser's; FHIR / DICOMweb with the platform's credentials</text>
+<text x="955.0" y="1349.1499999999996" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.6" font-weight="400" fill="#5B6770">writes validated and stamped; one audit record per call, refusals included</text>
+<path d="M350,195 L390,195" fill="none" stroke="#6B4FA8" stroke-width="1.3" marker-end="url(#arrow-6B4FA8)" stroke-linejoin="round"/>
+<path d="M820,250 L820,280" fill="none" stroke="#6B4FA8" stroke-width="1.3" marker-end="url(#arrow-6B4FA8)" stroke-linejoin="round"/>
+<path d="M390,340 L350,340" fill="none" stroke="#6B4FA8" stroke-width="1.3" marker-end="url(#arrow-6B4FA8)" stroke-linejoin="round"/>
+<path d="M640,645 L660,645" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M820,400 L820,580" fill="none" stroke="#0F7B5F" stroke-width="1.3" marker-end="url(#arrow-0F7B5F)" stroke-linejoin="round"/>
+<path d="M640,985 L660,985" fill="none" stroke="#B7791F" stroke-width="1.3" marker-end="url(#arrow-B7791F)" stroke-linejoin="round"/>
+<path d="M955,710 L955,920" fill="none" stroke="#B7791F" stroke-width="1.3" marker-end="url(#arrow-B7791F)" stroke-linejoin="round"/>
+<path d="M955,1050 L955,1260" fill="none" stroke="#2F6FB2" stroke-width="1.3" marker-end="url(#arrow-2F6FB2)" stroke-linejoin="round"/>
+<path d="M640,1325 L660,1325" fill="none" stroke="#2F6FB2" stroke-width="1.3" marker-end="url(#arrow-2F6FB2)" stroke-linejoin="round"/>
+<text x="50" y="440" text-anchor="start" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" font-weight="400" fill="#1F2933">Checked here: every argument against the knob schema · codes verified on the record · unknown shapes refused · readiness empty before compile</text>
+<rect x="346.496" y="172.8" width="47.007999999999996" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="370" y="182" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#6B4FA8">sentence</text>
+<rect x="841.62" y="260.8" width="56.760000000000005" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="870" y="270" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#6B4FA8">tool calls</text>
+<text x="50" y="775" text-anchor="start" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" font-weight="400" fill="#1F2933">Checked here: the spec validated again, with cross-field rules · the manifest against the shared schema</text>
+<rect x="633.81" y="622.8" width="32.38" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="650" y="632" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">build</text>
+<rect x="838.934" y="500.8" width="42.132" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="860" y="510" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#0F7B5F">compile</text>
+<text x="50" y="1115" text-anchor="start" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" font-weight="400" fill="#1F2933">Checked here: a person who is not the author reads the role bindings, scopes and writes · the signature is stored with approver, time and notes · role groups created at publish</text>
+<rect x="604.554" y="962.8" width="90.892" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="650" y="972" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#B7791F">approve · publish</text>
+<rect x="979.926" y="840.8" width="120.148" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1040" y="850" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#B7791F">save as a draft version</text>
+<text x="50" y="1455" text-anchor="start" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" font-weight="400" fill="#1F2933">Checked here: version published · caller's groups · primitive declared · resource type and operation in scope · declared config resolved from the manifest, not the request · audit record always</text>
+<rect x="984.554" y="1180.8" width="90.892" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="1030" y="1190" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#2F6FB2">published version</text>
+<rect x="592.364" y="1302.8" width="115.27199999999999" height="14.2" fill="white" fill-opacity="0.92" rx="3"/>
+<text x="650" y="1312" text-anchor="middle" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.2" fill="#2F6FB2">one POST per primitive</text>
+<line x1="50" y1="1541" x2="84" y2="1541" stroke="#6B4FA8" stroke-width="1.6"/>
+<text x="92" y="1545" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" fill="#5B6770">model</text>
+<line x1="50" y1="1559" x2="84" y2="1559" stroke="#0F7B5F" stroke-width="1.6"/>
+<text x="92" y="1563" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" fill="#5B6770">pure functions, tested against golden outputs</text>
+<line x1="50" y1="1577" x2="84" y2="1577" stroke="#B7791F" stroke-width="1.6"/>
+<text x="92" y="1581" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" fill="#5B6770">human sign-off</text>
+<line x1="50" y1="1595" x2="84" y2="1595" stroke="#2F6FB2" stroke-width="1.6"/>
+<text x="92" y="1599" font-family="Lato, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="9.8" fill="#5B6770">runtime, enforced server-side</text>
+</svg>

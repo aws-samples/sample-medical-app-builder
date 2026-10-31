@@ -1,0 +1,301 @@
+# Seed app of hsp-musterstadt — compiled from specs/tumour-board.yaml by scripts/build-showcase.mjs (npm run showcase); do not edit by hand.
+# The lifecycle block is an example sign-off: the registry seed publishes the app with it.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_tumour_board
+  version: 1.0.0
+  name: Tumour board
+  description: Diagnoses, procedures, radiology reports, laboratory trends,
+    imaging in MPR and letters of one patient, for case discussion.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: "2026-10-01T14:00:00Z"
+lifecycle:
+  state: published
+  signoff:
+    approver_sub: example-approver-sub
+    approved_at: "2026-10-01T15:00:00Z"
+    signature: "example: KMS-signed manifest_hash goes here"
+    clinical_notes: Display of recorded diagnoses, procedures, reports, laboratory
+      values, imaging and letters; no staging or interpretation. Approved for
+      tumour-board case discussion.
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: tumour_board
+      display_name: Tumour board
+      cognito_group: app-app_tumour_board-tumour_board
+      data_scope_ref: scope_tumour_board
+      ui_capabilities:
+        - view
+        - open_viewer
+  default_role: tumour_board
+data_scopes:
+  scope_tumour_board:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Condition
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Procedure
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: DiagnosticReport
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|718-7
+          - http://loinc.org|1988-5
+          - http://loinc.org|26464-8
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+      - resource: DocumentReference
+        operations:
+          - search
+        filter: subject={context.patient_id}
+    dicom:
+      - operations:
+          - qido
+          - wado
+        modalities:
+          - CT
+          - MR
+          - DX
+        study_filter: PatientID={context.patient_mrn}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_problems
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: problems
+  - id: p_procedures
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Procedure
+      params:
+        patient: $context.patient_id
+    output_binding: procedures
+  - id: p_reports
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: DiagnosticReport
+      params:
+        patient: $context.patient_id
+        category: RAD
+    output_binding: reports
+  - id: p_haemoglobin
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|718-7
+      since: $context.window_start
+      count: 500
+    output_binding: haemoglobin
+  - id: p_crp
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|1988-5
+      since: $context.window_start
+      count: 500
+    output_binding: crp
+  - id: p_leukocytes
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|26464-8
+      since: $context.window_start
+      count: 500
+    output_binding: leukocytes
+  - id: p_imaging
+    kind: data.dicom.studies.for_patient
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      modalities:
+        - CT
+        - MR
+        - DX
+    output_binding: imaging
+  - id: p_notes
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: DocumentReference
+      params:
+        patient: $context.patient_id
+    output_binding: notes
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: ProblemList
+            props:
+              conditions: $bindings.problems
+              title: Diagnoses
+          - component: ResourceList
+            props:
+              resources: $bindings.procedures
+              title: Procedures
+              columns:
+                - label: Date
+                  path: performedDateTime
+                - label: Procedure
+                  path: code
+                - label: Body site
+                  path: bodySite[0]
+                - label: Outcome
+                  path: outcome
+                - label: Status
+                  path: status
+                  status: true
+              max_rows: 12
+              empty_text: No procedures recorded.
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: ReportList
+            props:
+              reports: $bindings.reports
+              title: Radiology reports
+              max_rows: 8
+          - component: ObservationTimeline
+            props:
+              title: Haemoglobin, last five years
+              observations: $bindings.haemoglobin
+              unit: g/dL
+              height_px: 260
+              series:
+                - label: Haemoglobin
+                  code: 718-7
+              thresholds:
+                - value: 12
+                  label: 12 g/dL
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: ObservationTimeline
+            props:
+              title: CRP
+              observations: $bindings.crp
+              unit: mg/L
+              height_px: 240
+              series:
+                - label: CRP
+                  code: 1988-5
+          - component: ObservationTimeline
+            props:
+              title: Leukocytes
+              observations: $bindings.leukocytes
+              unit: 10*3/uL
+              height_px: 240
+              series:
+                - label: Leukocytes
+                  code: 26464-8
+      - component: TwoColumn
+        props:
+          ratio:
+            - 5
+            - 7
+        children:
+          - component: ImagingStudyList
+            props:
+              studies: $bindings.imaging
+              title: Imaging studies
+              selection_key: imaging_selected
+          - component: DicomViewer
+            props:
+              study_uid: $ui.imaging_selected
+              studies: $bindings.imaging
+              height_px: 640
+              layout: mpr
+      - component: DocumentList
+        props:
+          documents: $bindings.notes
+          title: Letters and notes
+          max_rows: 6
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+  - name: window_start
+    type: iso8601
+    required: false
+    source:
+      - panel_selection
+    default: now-5y
+actions: []
+audit:
+  clinical_context: tumour_board
+  intended_users:
+    - oncologist
+    - radiologist
+    - radiation_oncologist
+    - surgeon
+  intended_purpose: Display of the recorded diagnoses, procedures, radiology
+    reports, laboratory values, imaging studies and letters of the patient in
+    context, for case discussion. Display only; no staging, no scoring, no
+    interpretation.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements
+    - imaging
+    - procedures
+    - clinical_documentation

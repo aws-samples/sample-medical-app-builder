@@ -1,0 +1,412 @@
+# Seed app of hsp-musterstadt — compiled from specs/cardio-renal-follow-up.yaml by scripts/build-showcase.mjs (npm run showcase); do not edit by hand.
+# The lifecycle block is an example sign-off: the registry seed publishes the app with it.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_cardio_renal
+  version: 1.0.0
+  name: Cardio-renal follow-up
+  description: Blood pressure, kidney function and weight over three years with
+    reference lines; the nurse records readings, the physician updates problems
+    and prescriptions.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: "2026-10-01T14:00:00Z"
+lifecycle:
+  state: published
+  signoff:
+    approver_sub: example-approver-sub
+    approved_at: "2026-10-01T15:00:00Z"
+    signature: "example: KMS-signed manifest_hash goes here"
+    clinical_notes: Display of recorded values against reference lines; readings
+      recorded and statuses changed with validation, versioning and provenance.
+      Approved for the cardio-renal clinic.
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: physician
+      display_name: Treating physician
+      cognito_group: app-app_cardio_renal-physician
+      data_scope_ref: scope_physician
+      ui_capabilities:
+        - view
+        - update_status
+    - id: ward_nurse
+      display_name: Ward nurse
+      cognito_group: app-app_cardio_renal-ward_nurse
+      data_scope_ref: scope_ward_nurse
+      ui_capabilities:
+        - view
+        - record_observation
+  default_role: physician
+data_scopes:
+  scope_physician:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|85354-9
+          - http://loinc.org|62238-1
+          - http://loinc.org|33914-3
+          - http://loinc.org|29463-7
+          - http://loinc.org|8867-4
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+      - resource: Condition
+        operations:
+          - search
+          - update
+        filter: subject={context.patient_id}
+      - resource: Provenance
+        operations:
+          - create
+      - resource: MedicationRequest
+        operations:
+          - search
+          - update
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+      - mrn
+  scope_ward_nurse:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Observation
+        operations:
+          - search
+          - create
+        codes:
+          - http://loinc.org|85354-9
+          - http://loinc.org|8480-6
+          - http://loinc.org|8462-4
+          - http://loinc.org|62238-1
+          - http://loinc.org|33914-3
+          - http://loinc.org|29463-7
+          - http://loinc.org|8867-4
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+      - resource: Provenance
+        operations:
+          - create
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_bp
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|85354-9
+      since: $context.window_start
+      count: 500
+    output_binding: bp
+  - id: p_bp_readings
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|85354-9
+      since: $context.window_start
+      count: 10
+    output_binding: bp_readings
+  - id: p_bp_entry
+    kind: write.fhir.observation.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      codes:
+        - http://loinc.org|85354-9
+      components:
+        - http://loinc.org|8480-6
+        - http://loinc.org|8462-4
+      unit: mmHg
+      category: vital-signs
+      ranges:
+        http://loinc.org|8480-6:
+          min: 50
+          max: 300
+        http://loinc.org|8462-4:
+          min: 30
+          max: 200
+      rules:
+        - component: http://loinc.org|8480-6
+          above: http://loinc.org|8462-4
+          message: Systolic must be above diastolic
+      max_backdate_days: 7
+      observation: $ui.bp_entry_entry
+    output_binding: bp_entry_recorded
+    only_for_roles:
+      - ward_nurse
+  - id: p_egfr
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|62238-1
+        - http://loinc.org|33914-3
+      since: $context.window_start
+      count: 500
+    output_binding: egfr
+  - id: p_weight
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|29463-7
+      since: $context.window_start
+      count: 500
+    output_binding: weight
+  - id: p_heart_rate
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|8867-4
+      since: $context.window_start
+      count: 10
+    output_binding: heart_rate
+  - id: p_problems
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: problems
+    only_for_roles:
+      - physician
+  - id: p_problems_resolve
+    kind: write.fhir.condition.update_status
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      allowed:
+        - resolved
+        - inactive
+      change: $ui.problems_resolve
+    output_binding: problems_resolved
+    only_for_roles:
+      - physician
+  - id: p_medication
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: MedicationRequest
+      params:
+        patient: $context.patient_id
+        status: active
+    output_binding: medication
+    only_for_roles:
+      - physician
+  - id: p_medication_stop
+    kind: write.fhir.medication_request.update_status
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      allowed:
+        - stopped
+        - completed
+        - on-hold
+      change: $ui.medication_stop
+    output_binding: medication_stopped
+    only_for_roles:
+      - physician
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: ObservationTimeline
+            props:
+              title: Blood pressure, last three years
+              observations: $bindings.bp
+              unit: mmHg
+              height_px: 300
+              series:
+                - label: Systolic
+                  component_code: 8480-6
+                - label: Diastolic
+                  component_code: 8462-4
+              thresholds:
+                - value: 140
+                  label: 140 mmHg
+                - value: 90
+                  label: 90 mmHg
+          - component: VitalsTable
+            props:
+              observations: $bindings.bp_readings
+              title: Blood pressure readings
+              max_rows: 10
+              compact: true
+      - component: ObservationEntryForm
+        props:
+          action: record_bp_entry
+          state_key: bp_entry_entry
+          title: Record a blood pressure
+          submit_label: Record reading
+          code:
+            system: http://loinc.org
+            code: 85354-9
+            display: Blood pressure panel
+          components:
+            - code:
+                system: http://loinc.org
+                code: 8480-6
+                display: Systolic blood pressure
+              label: Systolic
+              range:
+                min: 50
+                max: 300
+            - code:
+                system: http://loinc.org
+                code: 8462-4
+                display: Diastolic blood pressure
+              label: Diastolic
+              range:
+                min: 30
+                max: 200
+          unit: mmHg
+          rules:
+            - component: http://loinc.org|8480-6
+              above: http://loinc.org|8462-4
+              message: Systolic must be above diastolic
+          max_backdate_days: 7
+        show_only_if_role_in:
+          - ward_nurse
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: ObservationTimeline
+            props:
+              title: Kidney function (eGFR)
+              observations: $bindings.egfr
+              unit: mL/min/1.73m²
+              height_px: 280
+              series:
+                - label: eGFR (CKD-EPI)
+                  code: 62238-1
+                - label: eGFR
+                  code: 33914-3
+              thresholds:
+                - value: 60
+                  label: "60"
+                - value: 45
+                  label: "45"
+          - component: ObservationTimeline
+            props:
+              title: Body weight
+              observations: $bindings.weight
+              unit: kg
+              height_px: 260
+              series:
+                - label: Weight
+                  code: 29463-7
+      - component: VitalsTable
+        props:
+          observations: $bindings.heart_rate
+          title: Heart rate
+          max_rows: 10
+          compact: true
+      - component: ProblemList
+        props:
+          conditions: $bindings.problems
+          title: Active problems
+          resolve_action: resolve_problems
+          state_key: problems_resolve
+          resolve_label: Mark resolved
+        show_only_if_role_in:
+          - physician
+      - component: MedicationList
+        props:
+          medications: $bindings.medication
+          title: Active medication
+          stop_action: stop_medication
+          state_key: medication_stop
+          stop_label: Stop
+        show_only_if_role_in:
+          - physician
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+  - name: window_start
+    type: iso8601
+    required: false
+    source:
+      - panel_selection
+    default: now-3y
+actions:
+  - id: record_bp_entry
+    label: Record reading
+    primitive: p_bp_entry
+    on_success: reload
+    success_message: The reading is now part of the patient record.
+  - id: resolve_problems
+    label: Mark resolved
+    primitive: p_problems_resolve
+    on_success: reload
+    success_message: The problem is now marked as resolved.
+  - id: stop_medication
+    label: Stop
+    primitive: p_medication_stop
+    on_success: reload
+    success_message: The prescription is now marked as stopped.
+audit:
+  clinical_context: cardio_renal_follow_up
+  intended_users:
+    - cardiologist
+    - nephrologist
+    - nurse
+  intended_purpose: Display of blood pressure, kidney function and weight over
+    time against reference values; recording of blood pressure readings by the
+    ward nurse; marking problems resolved and stopping prescriptions by the
+    physician. Every change is validated, versioned and attributed; nothing is
+    computed or interpreted.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements
+    - medication

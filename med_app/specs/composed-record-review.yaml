@@ -1,0 +1,53 @@
+# AppSpec — composed page (APP-12): the rest of the record on one page — allergies first (the safety
+# list), then visits beside reports, the letters and notes, procedures beside immunizations, and a
+# generic list of laboratory observations with the columns the ward asked for.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_record_review
+  version: 0.1.0
+  name: Record review
+  description: Allergies, visits, reports, letters, procedures, immunizations and recent laboratory results for one patient.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  window: now-2y
+  sections:
+    - kind: allergies
+    - kind: encounters
+      span: 6
+      rows: 10
+    - kind: reports
+      span: 6
+      rows: 5
+    - kind: notes
+      title: Letters and notes
+    - kind: procedures
+      span: 6
+    - kind: immunizations
+      span: 6
+    - kind: list
+      id: labs
+      resource: Observation
+      params: { category: laboratory }
+      title: Laboratory results
+      columns:
+        - { label: Date, path: effectiveDateTime }
+        - { label: Test, path: code }
+        - { label: Result, path: valueQuantity }
+        - { label: Status, path: status, status: true }
+      rows: 12
+
+roles:
+  - id: ward_clinician
+    display_name: Ward clinician
+    phi_fields_visible: [name, dob, gender, mrn]
+default_role: ward_clinician
+
+governance:
+  clinical_context: ward_round
+  intended_users: [internist, ward_physician]
+  intended_purpose: Display of the recorded allergies, visits, reports, letters, procedures, immunizations and laboratory results of the patient in context, for the ward round. Display only; no interpretation.

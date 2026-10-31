@@ -1,0 +1,11 @@
+-r requirements.txt
+pytest==9.0.3
+boto3>=1.34
+pyyaml>=6
+# the drafting agent (app_creator) and its tests
+strands-agents>=1.55
+jsonschema>=4.23
+# scripts/smoke-authoring.py signs in with SRP like the browser
+pycognito>=2024.5
+moto>=5
+joserfc>=1

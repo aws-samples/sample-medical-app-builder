@@ -1,0 +1,45 @@
+# One repository for the three folders: infra/ (CDK, Lambdas, agent), med_app/ (the panel and the design system),
+# docs/ (diagrams and media). Each folder keeps its own .gitignore for its build output and secrets; this file covers
+# what is common. infra/cdk.context.json is CDK's lookup cache and carries account ids — never committed.
+
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Editors
+.idea/
+.vscode/
+*.code-workspace
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Build output and synth-time staging (regenerated)
+.build/
+cdk.out/
+# CDK's lookup cache: holds account ids
+infra/cdk.context.json
+dist/
+coverage/
+
+# Local environment and transcripts — never real endpoints, tokens, or conversations
+.env
+.env.*
+!.env.example
+.eval/
+.sessions/
+
+# Demo recordings (64 MB each) would live in history forever; keep them out, or track with Git LFS instead.
+docs/*.mov
+
+# draw.io backup files
+.$*.bkp

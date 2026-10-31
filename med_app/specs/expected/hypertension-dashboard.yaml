@@ -1,0 +1,170 @@
+# Golden output of the compiler for specs/hypertension-dashboard.yaml (lifecycle omitted: it is registry-managed).
+# Regenerate deliberately when the compiler changes: npm run appspec -- compile specs/hypertension-dashboard.yaml
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_htn_dashboard
+  version: 0.1.0
+  name: Hypertension follow-up
+  description: Blood pressure over the last year against Stage 1 thresholds, current antihypertensives and related conditions.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: gp
+      display_name: General practitioner
+      cognito_group: app-app_htn_dashboard-gp
+      data_scope_ref: scope_gp
+      ui_capabilities:
+        - view
+  default_role: gp
+data_scopes:
+  scope_gp:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|8480-6
+          - http://loinc.org|8462-4
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+      - resource: MedicationRequest
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Condition
+        operations:
+          - search
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+      - mrn
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_series
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|8480-6
+        - http://loinc.org|8462-4
+      since: $context.window_start
+      count: 500
+    output_binding: series
+  - id: p_medications
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: MedicationRequest
+      params:
+        patient: $context.patient_id
+        status: active
+        code: http://www.whocc.no/atc|C09A,http://www.whocc.no/atc|C09C,http://www.whocc.no/atc|C08CA,http://www.whocc.no/atc|C03,http://www.whocc.no/atc|C07
+    output_binding: medications
+  - id: p_conditions
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+        code: http://snomed.info/sct|38341003,http://fhir.de/CodeSystem/bfarm/icd-10-gm|I10
+    output_binding: conditions
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: ObservationTimeline
+            props:
+              title: Systolic / Diastolic, last year
+              observations: $bindings.series
+              unit: mmHg
+              height_px: 380
+              series:
+                - label: Systolic
+                  component_code: 8480-6
+                - label: Diastolic
+                  component_code: 8462-4
+              thresholds:
+                - value: 140
+                  label: Systolic ≥ 140
+                - value: 90
+                  label: Diastolic ≥ 90
+              caption: "Reference lines: ESC/ESH 2023 arterial hypertension guideline: office blood pressure ≥ 140/90 mmHg."
+          - component: VitalsTable
+            props:
+              title: Latest readings
+              observations: $bindings.series
+              max_rows: 8
+              compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: MedicationList
+            props:
+              medications: $bindings.medications
+              title: Current therapy
+          - component: ProblemList
+            props:
+              conditions: $bindings.conditions
+              title: Related conditions
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+  - name: window_start
+    type: iso8601
+    required: false
+    source:
+      - panel_selection
+    default: now-1y
+actions: []
+audit:
+  clinical_context: hypertension_follow_up
+  intended_users:
+    - general_practitioner
+  intended_purpose: Display of blood pressure readings, therapy and problems for the follow-up consultation. Threshold lines are visual only; no scoring or recommendations.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements
+    - medication

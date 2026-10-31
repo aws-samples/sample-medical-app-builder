@@ -1,0 +1,67 @@
+# Showcase — a structured assessment inside a composed page (APP-12): the follow-up form written to the record as
+# a QuestionnaireResponse with provenance, earlier submissions beside it, and the context the nurse needs while
+# filling it in — the blood pressure trend and readings, the problems and the medication.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_hypertension_follow_up
+  version: 1.0.0
+  name: Hypertension follow-up visit
+  description: Record the structured follow-up assessment with the patient's blood pressure trend, problems and medication alongside; earlier assessments stay visible.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  window: now-2y
+  sections:
+    - kind: assessment
+      id: follow_up
+      questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+      form_title: Follow-up assessment
+      action_label: Save assessment
+      success_message: The assessment is now part of the patient record.
+      submissions: true
+      submissions_title: Earlier assessments
+      ratio: [7, 5]
+    - kind: trend
+      id: bp
+      span: 8
+      title: Blood pressure, last two years
+      codes:
+        - { system: loinc, code: "85354-9", display: Blood pressure panel }
+      series:
+        - { label: Systolic, component_code: "8480-6" }
+        - { label: Diastolic, component_code: "8462-4" }
+      thresholds:
+        - { value: 140, label: "140 mmHg" }
+        - { value: 90, label: "90 mmHg" }
+      unit: mmHg
+      height_px: 280
+    - kind: readings
+      id: bp_readings
+      span: 4
+      title: Readings
+      codes:
+        - { system: loinc, code: "85354-9", display: Blood pressure panel }
+      rows: 10
+    - kind: problems
+      span: 6
+      status: active
+    - kind: medication
+      span: 6
+      status: active
+
+roles:
+  - id: hypertension_nurse
+    display_name: Hypertension nurse
+    phi_fields_visible: [name, dob, gender, mrn]
+    capabilities: [view, document_assessment]
+default_role: hypertension_nurse
+
+governance:
+  clinical_context: hypertension_clinic
+  intended_users: [hypertension_nurse]
+  intended_purpose: Structured documentation of the hypertension follow-up assessment by the clinic nurse, with the recorded blood pressure, problems and medication of the patient in context alongside. Documentation only; no scores, no recommendations.
+  mdr_classification: none

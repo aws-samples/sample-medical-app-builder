@@ -1,0 +1,153 @@
+# Seed app of hsp-musterstadt — compiled from specs/ckd-imaging-register.yaml by scripts/build-showcase.mjs (npm run showcase); do not edit by hand.
+# The lifecycle block is an example sign-off: the registry seed publishes the app with it.
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_ckd_imaging_register
+  version: 1.0.0
+  name: CKD register with renal imaging
+  description: Patients with chronic kidney disease who have had a CT or an
+    ultrasound, with their latest eGFR and a link to the imaging review.
+  intent_class: cohort_dashboard
+  hospital_id: hsp-musterstadt
+  created_at: "2026-10-01T14:00:00Z"
+lifecycle:
+  state: published
+  signoff:
+    approver_sub: example-approver-sub
+    approved_at: "2026-10-01T15:00:00Z"
+    signature: "example: KMS-signed manifest_hash goes here"
+    clinical_notes: Listing of patients by a coded diagnosis and imaging on record,
+      with their latest eGFR; studies named, not displayed; no staging or risk
+      scoring. Approved for the nephrology clinic.
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: nephrology_clinic
+      display_name: Nephrology clinic
+      cognito_group: app-app_ckd_imaging_register-nephrology_clinic
+      data_scope_ref: scope_nephrology_clinic
+      ui_capabilities:
+        - view
+        - export_csv
+  default_role: nephrology_clinic
+data_scopes:
+  scope_nephrology_clinic:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Condition
+        operations:
+          - search
+        codes:
+          - http://snomed.info/sct|709044004
+          - http://snomed.info/sct|433144002
+          - http://fhir.de/CodeSystem/bfarm/icd-10-gm|N18.3
+          - http://fhir.de/CodeSystem/bfarm/icd-10-gm|N18.4
+          - http://fhir.de/CodeSystem/bfarm/icd-10-gm|N18.5
+          - http://fhir.de/CodeSystem/bfarm/icd-10-gm|N18.9
+      - resource: ImagingStudy
+        operations:
+          - search
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|33914-3
+    dicom:
+      - operations:
+          - qido
+        modalities:
+          - CT
+          - US
+    patient_scope: cohort
+    phi_fields_visible:
+      - name
+      - dob
+      - mrn
+primitives:
+  - id: p_cohort
+    kind: data.cohort.by_condition
+    catalog_version: 1.0.0
+    config:
+      condition_codes:
+        - http://snomed.info/sct|709044004
+        - http://snomed.info/sct|433144002
+        - http://fhir.de/CodeSystem/bfarm/icd-10-gm|N18.3
+        - http://fhir.de/CodeSystem/bfarm/icd-10-gm|N18.4
+        - http://fhir.de/CodeSystem/bfarm/icd-10-gm|N18.5
+        - http://fhir.de/CodeSystem/bfarm/icd-10-gm|N18.9
+      clinical_status: active
+    output_binding: cohort
+  - id: p_imaging
+    kind: data.cohort.with_imaging
+    catalog_version: 1.0.0
+    config:
+      patients: $bindings.cohort.patients
+      modalities:
+        - CT
+        - US
+    output_binding: imaging
+  - id: p_latest
+    kind: data.cohort.latest_observation
+    catalog_version: 1.0.0
+    config:
+      patients: $bindings.imaging.patients
+      codes:
+        - http://loinc.org|33914-3
+    output_binding: latest
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: Grid
+        props:
+          columns: 3
+        children:
+          - component: StatCard
+            props:
+              label: Patients with chronic kidney disease
+              value: $bindings.cohort.count
+              hint: SNOMED CT 709044004, SNOMED CT 433144002, ICD-10-GM N18.3, ICD-10-GM
+                N18.4, ICD-10-GM N18.5, ICD-10-GM N18.9 on the problem list
+              tone: accent
+          - component: StatCard
+            props:
+              label: With renal imaging
+              value: $bindings.imaging.count
+              hint: At least one CT or US study on record
+              tone: accent
+          - component: StatCard
+            props:
+              label: Data scope
+              value: cohort
+              hint: Name, date of birth and MRN visible; no contact details
+      - component: CohortTable
+        props:
+          title: Patients with CKD and renal imaging
+          rows: $bindings.latest.rows
+          value_label: Latest eGFR
+          imaging: $bindings.imaging.rows
+          open_in: app_imaging_3d
+context_inputs: []
+actions: []
+audit:
+  clinical_context: population_health
+  intended_users:
+    - nephrologist
+    - radiologist
+  intended_purpose: Listing of patients with a coded chronic kidney disease
+    diagnosis and at least one CT or ultrasound study on record, with their
+    latest recorded eGFR. Studies are named, not displayed; no staging, no risk
+    scoring, no treatment recommendation.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements
+    - imaging

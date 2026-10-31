@@ -1,0 +1,39 @@
+# AppSpec — worklist (APP-13) derived from the record: who among the hypertension patients is due the follow-up
+# assessment — their latest answer to the clinic's questionnaire against a 90-day interval — never assessed first, then the
+# longest overdue. Nothing to tick off: doing the assessment (in the follow-up app a row opens) is what clears a row.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_htn_assessment_due
+  version: 0.1.0
+  name: Follow-up assessments due
+  description: Hypertension patients due the follow-up assessment — never assessed or more than 90 days since the last one.
+
+archetype: APP-13
+knobs:
+  source: assessment_due
+  due:
+    questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+    every_days: 90
+    label: follow-up assessment
+    cohort:
+      codes:
+        - { system: snomed, code: "38341003", display: Hypertensive disorder }
+      clinical_status: active
+      label: active hypertension
+    upcoming_days: 14
+  title: Due the follow-up assessment
+  open_in: app_hypertension_follow_up
+
+roles:
+  - id: hypertension_nurse
+    display_name: Hypertension nurse
+    phi_fields_visible: [name, dob, mrn]
+default_role: hypertension_nurse
+
+governance:
+  clinical_context: hypertension_clinic
+  intended_users: [nurse]
+  intended_purpose: Which hypertension patients are due the clinic's follow-up assessment, from the record's own answers; the nurse opens the patient's follow-up app from the row. Nothing is scheduled, reminded or interpreted.
+  mdr_classification: none

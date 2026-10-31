@@ -1,0 +1,28 @@
+# AppSpec — problem list and medication review (APP-04), side by side, active entries only.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_problems_medication
+  version: 0.1.0
+  name: Problems and medication
+  description: Active problems next to current medication for one patient.
+
+archetype: APP-04
+knobs:
+  identity: banner
+  arrangement: side_by_side
+  medication:
+    status: all
+    title: Medication history
+
+roles:
+  - id: clinician
+    display_name: Treating clinician
+    phi_fields_visible: [name, dob, gender, mrn]
+default_role: clinician
+
+governance:
+  clinical_context: outpatient_consultation
+  intended_users: [general_practitioner, internist]
+  intended_purpose: Display of the recorded problem list and medication orders. No interaction checking or recommendations.

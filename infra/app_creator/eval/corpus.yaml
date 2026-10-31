@@ -1,0 +1,736 @@
+# Evaluation corpus for the drafting agent. Each case is a scripted conversation (the human side written
+# in advance) and what the draft must look like afterwards. Run with:
+#   cd infra && python -m app_creator.eval.run_corpus            (needs Bedrock credentials + med_app checkout)
+#
+# `knobs_contain` / `spec_contain` are partial matches: every listed key must be present with that value;
+# lists match when every expected item matches some actual item. `knobs_contain_any` lists alternatives, one must match;
+# `archetype_any` likewise when two kinds are a fair answer to the same request. Quote a turn that contains ": " —
+# unquoted, YAML reads it as a mapping and the runner refuses the case.
+# The synthetic record carries SNOMED and ICD-10-GM codings for diagnoses; the record notes say the hospital's is ICD-10-GM,
+# so a case about a diagnosis accepts either coding.
+# `seed: { spec: <file in med_app/specs> }` starts the draft from that app's spec with no conversation — "iterate on this app".
+# `form_items_contain` / `form_items_contain_any` match the questions of a designed form with its headings flattened: how the
+# agent groups the questions is its call; that it asks them, with the right type, is the case's.
+# `{ _min_items: n }` in place of a list accepts any n items — for free identifiers (task kinds, photo kinds) the model names itself.
+# `no_refusal: true` fails when a refusal was recorded — the check for "this used to be refused"; prefer it to a `reply_not_matching`
+# pattern on negations, which also catches the agent truthfully saying what the app does not do.
+
+cases:
+  - id: bp_trend_en
+    turns:
+      - I'd like to see a patient's blood pressure over the last two years against the Stage 1 thresholds, 140 systolic and 90 diastolic.
+      - Two roles please. A viewer who only sees name, date of birth and MRN. A reviewer who also sees sex, address and phone, and gets the problem list underneath. Viewer is the default.
+      - It is for GPs and cardiologists in outpatient blood pressure monitoring. Display only, not for diagnosis. Take your defaults for anything else.
+    expect:
+      archetype: APP-02
+      knobs_contain:
+        series: [{ component_code: "8480-6" }, { component_code: "8462-4" }]
+        thresholds: [{ value: 140 }, { value: 90 }]
+      # Both are valid ways to ask the record for blood pressure: the panel code (what a FHIR server
+      # Matches for panels — the agent's own choice) or the component codes (what the hand-written
+      # Reference manifest uses; the dispatcher searches with combo-code so either works).
+      knobs_contain_any:
+        - codes: [{ system: loinc, code: "85354-9" }]
+        - codes: [{ system: loinc, code: "8480-6" }, { system: loinc, code: "8462-4" }]
+      roles_min: 2
+      default_role: viewer
+      ready: true
+
+  - id: hba1c_trend_de
+    turns:
+      - Ich möchte den HbA1c-Verlauf eines Patienten über fünf Jahre sehen, mit dem Zielwert 7 % als Linie.
+      - Eine Rolle reicht, die behandelnden Ärzte der Diabetologie; sie dürfen Name, Geburtsdatum, Geschlecht und Fallnummer sehen. Nur Anzeige, keine Diagnose. Ansonsten deine Vorschläge.
+    expect:
+      archetype: APP-02
+      knobs_contain:
+        codes: [{ system: loinc, code: "4548-4" }]
+        window: now-5y
+      roles_min: 1
+      ready: true
+      reply_language: de
+
+  - id: cohort_en
+    turns:
+      - Give me a list of all patients with active hypertension and their latest blood pressure, flag anyone with systolic at or above 140.
+      - One role, the hypertension nurses; they should identify patients by name, date of birth and MRN but not see contact details. Population health, listing only, no scoring. Defaults otherwise.
+    expect:
+      archetype: APP-09
+      knobs_contain:
+        value: { codes: [{ system: loinc, code: "85354-9" }], threshold: 140 }
+      knobs_contain_any:
+        - condition: { codes: [{ system: snomed, code: "38341003" }] }
+        - condition: { codes: [{ system: icd10gm, code: "I10.90" }] }
+        - condition: { codes: [{ system: icd10gm, code: "I10.00" }] }
+      roles_min: 1
+      ready: true
+
+  - id: cohort_range_en
+    # Range cohort: the register plus a slider — the agent must set value.range (the knob the compiler turns into the
+    # RangeFilter) rather than a second threshold or a refusal. Client-side: no new primitive is involved.
+    turns:
+      - All patients with type 2 diabetes and their latest HbA1c, with a slider so I can narrow the list to a range, 7 to 9 percent to begin with, in steps of half a percent.
+      - One role, the diabetes clinic; name, date of birth and MRN. Population overview, display only. Your defaults otherwise.
+    expect:
+      archetype: APP-09
+      knobs_contain:
+        value:
+          codes: [{ system: loinc, code: "4548-4" }]
+          range: { default: [7, 9], step: 0.5 }
+      knobs_contain_any:
+        - condition: { codes: [{ system: snomed, code: "44054006" }] }
+        - condition: { codes: [{ system: icd10gm, code: "E11.90" }] }
+      roles_min: 1
+      ready: true
+
+  - id: cohort_imaging_de
+    # The doctor's ask from the first demo round, verbatim in spirit: a cohort by diagnosis AND imaging on record. The
+    # Agent must set the imaging knob (modalities) beside the condition — not refuse it as `cohort_criteria`, not ask for a
+    # Measurement, not route to the single-patient imaging review (APP-05). No value is wanted: a register by diagnosis
+    # And imaging alone. C34.1 is a code hint (ICD-10-GM, the hospital's coding).
+    turns:
+      - "Erstelle eine App, mit der ich eine Kohorte nach Diagnose und vorhandenen Bildgebungsstudien zusammenstellen kann: alle Patientinnen und Patienten mit C34.1, die ein CT hatten."
+      - Kein Messwert, nur die Liste mit der Anzahl der CTs und dem letzten CT pro Patient. Eine Rolle, das Thorax-Tumorboard; Name, Geburtsdatum und Fallnummer. Nur Anzeige, keine Bewertung. Deine Vorschläge für den Rest.
+    expect:
+      archetype: APP-09
+      knobs_contain:
+        condition: { codes: [{ system: icd10gm, code: "C34.1" }] }
+        imaging: { modalities: [CT] }
+      roles_min: 1
+      ready: true
+      reply_language: de
+
+  - id: cohort_imaging_window_en
+    # The same cohort with a window and a value: the imaging narrows the members, the latest value is read for those only.
+    turns:
+      - All patients with active hypertension who have had a CT in the last two years, with their latest blood pressure flagged from 140 systolic.
+      - One role, the hypertension clinic; name, date of birth and MRN. Population overview, display only. Your defaults otherwise.
+    expect:
+      archetype: APP-09
+      knobs_contain:
+        imaging: { modalities: [CT], within: now-2y }
+        value: { codes: [{ system: loinc, code: "85354-9" }], threshold: 140 }
+      knobs_contain_any:
+        - condition: { codes: [{ system: snomed, code: "38341003" }] }
+        - condition: { codes: [{ system: icd10gm, code: "I10.90" }] }
+        - condition: { codes: [{ system: icd10gm, code: "I10.00" }] }
+      roles_min: 1
+      ready: true
+
+  - id: summary_stack_de
+    turns:
+      - Für die Stationspflege eine Übersicht pro Patient mit aktueller Medikation und aktiven Diagnosen, untereinander statt in Tabs. Die Pflege sieht Name, Geburtsdatum und Fallnummer.
+      - Kontext Stationspflege, Nutzer Pflegekräfte, nur Anzeige. Passt so.
+    expect:
+      # A summary of two sections is the patient summary or the problem-and-medication review; either way the ward
+      # Asked for them one under the other, not in tabs.
+      archetype_any: [APP-01, APP-04]
+      knobs_contain_any:
+        - { arrangement: stack, identity: banner }
+        - { arrangement: stacked }
+      roles_min: 1
+      ready: true
+
+  - id: refusal_risk_score
+    turns:
+      - Build me a cardiovascular risk score calculator that tells me if a patient is high risk.
+    expect:
+      archetype: null
+      refusal: computation
+
+  - id: refusal_ai_summary
+    turns:
+      - I want an app that summarises the patient's record with AI before the consultation.
+    expect:
+      archetype: null
+      refusal: llm_content
+
+  - id: imaging_review
+    turns:
+      - Show me the patient's CT and MRI studies with a viewer.
+      - One role, the radiologists; they see the full patient identity except contact details. Display of existing studies only. Your defaults for the rest.
+    expect:
+      archetype: APP-05
+      knobs_contain:
+        modalities: [CT, MR]
+      roles_min: 1
+      ready: true
+
+  - id: imaging_review_3d
+    turns:
+      - The patient's CT studies, opening in the viewer as a 3D reconstruction — it is for surgery planning.
+      - One role, the surgeons; name, date of birth, sex and MRN. Display only. Your defaults for the rest.
+    expect:
+      archetype: APP-05
+      knobs_contain:
+        modalities: [CT]
+        viewer_layout: volume
+      roles_min: 1
+      ready: true
+
+  - id: hospital_record_cohort_icd10gm
+    # The hospital's record codes diagnoses in ICD-10-GM (the catalog's record notes say so): a register asked for by
+    # Diagnosis must use that coding to find anyone there. The synthetic preview record carries both codings.
+    turns:
+      - A register of all patients with hypertension and their latest blood pressure, flagging those above 140/90.
+      - One role, the hypertension clinic nurses; name, date of birth and sex. For the clinic's recall list, display only. Your defaults otherwise.
+    expect:
+      archetype: APP-09
+      knobs_contain_any:
+        - condition: { codes: [{ system: icd10gm, code: "I10.90" }] }
+        - condition: { codes: [{ system: icd10gm, code: "I10.00" }] }
+      roles_min: 1
+      ready: true
+
+  - id: hospital_record_lab_trend
+    turns:
+      - Show the patient's haemoglobin, leukocytes and platelets over the last year as a chart, one role, the oncology ward doctors; name, date of birth and sex. Display only.
+    expect:
+      archetype: APP-02
+      knobs_contain:
+        codes: [{ system: loinc, code: "718-7" }, { system: loinc, code: "26464-8" }, { system: loinc, code: "26515-7" }]
+      roles_min: 1
+      ready: true
+
+  - id: record_vocabulary_german_code
+    # The record's vocabulary (record-vocabulary.synthetic.json beside this file, what run_corpus loads by default) is
+    # What finds this code: the hints know CKD stage 3 only as SNOMED 433144002, the record also carries ICD-10-GM
+    # N18.3 — "Chronische Nierenkrankheit, Stadium 3" — reachable from the German words alone, and the record notes
+    # Say the hospital codes diagnoses in ICD-10-GM. Body weight is a hint the record confirms (29463-7, kg).
+    turns:
+      - Ein Register aller Patientinnen und Patienten mit chronischer Nierenkrankheit Stadium 3 und ihrem letzten Körpergewicht.
+      - Eine Rolle, die Nephrologie-Ambulanz; Name, Geburtsdatum und Fallnummer. Nur Anzeige, keine Bewertung. Deine Vorschläge für den Rest.
+    expect:
+      archetype: APP-09
+      knobs_contain:
+        condition: { codes: [{ system: icd10gm, code: "N18.3" }] }
+        value: { codes: [{ system: loinc, code: "29463-7" }] }
+      roles_min: 1
+      ready: true
+      reply_language: de
+
+  - id: lifecycle_is_not_the_agents_to_claim
+    # First demo round: asked "Shall I save it?" and answered "Yes", the agent replied that the app was saved, ready to
+    # Deploy and launchable by clinicians — none of which it can do. The draft is saved by the author's button, submitted
+    # For review, approved by someone else and published; the agent must say so and never claim the step happened.
+    turns:
+      - Show the full FHIR Patient resource of the patient in context. One role, the data stewards, who see every identity field. For record quality checks, display only. Your defaults for everything else.
+      - Yes, save it.
+    expect:
+      # The full resource is the inspector's job; a composed page with a details section is a fair answer too. The case is about the reply.
+      archetype_any: [APP-08, APP-12]
+      roles_min: 1
+      ready: true
+      reply_contains_any: ["Save to registry", "save it", "saved by", "button", "review", "approv", "publish"]
+      reply_not_matching:
+        - "is now (saved|stored|deployed|published|live|available)"
+        - "(has|have) been (saved|stored|deployed|published)"
+        - "ready to deploy"
+        - "can now (launch|open|use|see)"
+        - "I('ve| have)? saved"
+        - "ist (jetzt |nun )?gespeichert"
+        - "habe .*gespeichert"
+        - "steht .*zur Verfügung"
+
+  - id: iterate_seeded_suggestions
+    # Demo-round bug: iterating on a showcase app (no conversation behind it) seeds the draft from its spec; asked for
+    # Suggestions, the agent said it had no app to go on. The draft's state now travels in the system prompt: the agent
+    # Must speak about THIS register — concrete additions its archetype allows — and never claim to lack context.
+    seed: { spec: hypertension-register.yaml }
+    turns:
+      - Suggest relevant features for this app.
+    expect:
+      archetype: APP-09
+      reply_contains_any: ["hypertension", "blood pressure", "register", "systolic", "Hypertonie", "Blutdruck"]
+      reply_not_matching:
+        - "(I|we) (have|see|hold) no (app|draft|context)"
+        - "(don't|do not|doesn't|does not) have (any |an |the )?(app|draft|context|information about)"
+        - "without (an app|a draft|(any |the )?context)"
+        - "which app"
+        - "what (app|the app) (should|would)"
+        - "(habe|haben|liegt) (noch )?kein(e|en)? (App|Entwurf|Kontext)"
+        - "welche App"
+
+  - id: structured_assessment
+    turns:
+      - The hypertension nurses need to document the follow-up assessment for a patient and see what was recorded before.
+      - Yes, the follow-up form you have. One role, the hypertension nurses, who see name, date of birth, sex and MRN and may record assessments. Documentation only, no scores.
+    expect:
+      archetype: APP-11
+      knobs_contain:
+        questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+      roles_min: 1
+      ready: true
+
+  - id: form_the_record_lacks_is_designed
+    # From a demo: asked for an app the record had no form for, the agent could only offer the one
+    # Questionnaire on the record. Now a form the record lacks is designed in the conversation — `form`, never a made-up
+    # URL — from what the clinician said, and the agent asks about the items rather than refusing.
+    turns:
+      - Build me an assessment app for our new falls-risk screen. The nurse records whether the patient fell in the last twelve months, how many times, the walking aid in use (none, stick, frame, wheelchair), the timed up-and-go in seconds, and which risk factors are present — four or more medications, dizziness, impaired vision, cognitive impairment.
+      - Yes, those items, the fall question and the walking aid mandatory. One role, the ward nurses; name, date of birth and MRN. Ward documentation, no score. Your defaults otherwise.
+    expect:
+      archetype: APP-11
+      form_items_contain: [{ type: integer }, { type: decimal, unit: s }, { type: multiple_choice }]
+      form_items_contain_any:
+        - [{ type: boolean, required: true }]
+        - [{ type: choice, required: true }]
+      spec_excludes_text: ["klinikum-musterstadt.example/fhir/Questionnaire/falls", "Questionnaire/falls"]
+      roles_min: 1
+      ready: true
+
+  - id: form_with_conditions_and_ranges
+    # Forms round two: a question asked only when another answer fits (`show_when` → enableWhen) and a number the form
+    # Accepts only within a range (`min`/`max` → minValue/maxValue, refused on submission). The clinician says both in
+    # Plain words; the agent puts them on the items rather than into the question text or a note.
+    turns:
+      - A pain assessment for the surgical ward. The nurse records whether the patient has pain right now; only if so, where (head, chest, abdomen, back, limbs) and how strong on the 0–10 numeric rating scale — the form must not accept anything outside 0 to 10. Then whether analgesia was given in the last four hours and, only if it was, which (paracetamol, ibuprofen, metamizole, an opioid).
+      - Yes, exactly those. The pain question and the analgesia question mandatory. One role, the ward nurses; name, date of birth and MRN. Documentation only, no score. Your defaults otherwise.
+    expect:
+      archetype: APP-11
+      form_items_contain: [{ type: integer, min: 0, max: 10 }, { type: choice }]
+      form_items_contain_any:
+        - [{ show_when: { is: true } }]
+        - [{ show_when: [{ is: true }] }]
+        - [{ show_when: { is: "yes" } }]
+        - [{ show_when: [{ is: "yes" }] }]
+      spec_excludes_text: ["Questionnaire/pain"]
+      roles_min: 1
+      ready: true
+
+  - id: form_answer_extracted_as_measurement_de
+    # A form whose pain score is also a measurement: the clinician wants the before-and-after NRS "im Verlauf" beside the
+    # Other measurements — that is `as_observation` on the two number items (a code from lookup_codes; LOINC 72514-3 pain
+    # Severity 0-10 is in the hints), not a second form or a computed difference. The rest of the form is the model's.
+    turns:
+      - "Eine Behandlungsdokumentation für die Physiotherapie: Schmerz auf der Skala 0 bis 10 vor und nach der Behandlung, die Maßnahmen als Freitext, und ob es weiter zur Progression oder zurück zur Regression geht. Die beiden Schmerzwerte sollen als Messwerte in der Akte landen, damit sie im Verlauf neben den anderen Messungen erscheinen."
+      - Eine Rolle, die Physiotherapeuten; Name und Geburtsdatum. Dokumentation, nichts wird berechnet. Sonst Ihre Vorgaben.
+    expect:
+      archetype_any: [APP-11, APP-12]
+      form_items_contain: [{ type: integer, min: 0, max: 10, as_observation: { code: "72514-3" } }, { type: integer, min: 0, max: 10 }]
+      roles_min: 1
+      ready: true
+      reply_language: de
+      no_refusal: true
+
+  - id: form_options_coded_from_lookup
+    # Forms round two: an option may carry a terminology coding, but only one lookup_codes returned — here the ATC codes the
+    # Hints hold for the three drugs. The answer then lands on the record as that concept rather than as the form's own word.
+    turns:
+      - A visit note for the hypertension clinic nurses, saved to the record — which one antihypertensive was given at the visit, ramipril, amlodipine or torasemide, coded with its ATC code so the answer is a proper medication coding on the record, and the blood pressure measured after it, systolic and diastolic in mmHg.
+      - Yes. One role, the hypertension nurses; name, date of birth and MRN. Documentation only. Your defaults otherwise.
+    expect:
+      archetype: APP-11
+      form_items_contain: [{ options: [{ code: C09AA05 }, { code: C08CA01 }, { code: C03CA04 }] }, { unit: mmHg }]
+      form_items_contain_any:
+        - [{ options: [{ system: atc }] }]
+        - [{ options: [{ system: http://www.whocc.no/atc }] }]
+      roles_min: 1
+      ready: true
+
+  - id: existing_form_is_still_used_by_url
+    # The record's own questionnaire stays the answer when it is what the clinician means: no form is designed for it.
+    turns:
+      - The hypertension follow-up form for the clinic nurses, with the earlier assessments beside it; name, date of birth and MRN. Documentation only.
+    expect:
+      archetype: APP-11
+      knobs_contain:
+        questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+      spec_excludes_text: ["\"form\""]
+      roles_min: 1
+      ready: true
+
+  - id: disease_dashboard_template
+    turns:
+      - A hypertension follow-up dashboard for the GPs. One role, GPs, name, date of birth and MRN visible. Display only.
+    expect:
+      archetype: APP-06
+      knobs_contain_any:
+        - template: hypertension_follow_up
+        - series: [{ component_code: "8480-6" }, { component_code: "8462-4" }]
+      roles_min: 1
+      ready: true
+
+  - id: kpi_tiles_de
+    turns:
+      - Wie viele Patienten haben eine aktive Hypertonie und wie viele davon liegen systolisch bei 140 oder darüber? Nur die Zahlen, keine Patientenliste. Eine Rolle für die Abteilungsleitung, nur Name und Fallnummer. Reine Anzeige.
+    expect:
+      archetype: APP-10
+      knobs_contain:
+        value: { threshold: 140 }
+      knobs_contain_any:
+        - condition: { codes: [{ system: snomed, code: "38341003" }] }
+        - condition: { codes: [{ system: icd10gm, code: "I10.90" }] }
+        - condition: { codes: [{ system: icd10gm, code: "I10.00" }] }
+      roles_min: 1
+      ready: true
+      reply_language: de
+
+  - id: composed_page_en
+    turns:
+      - For the hypertension consultation I want the blood pressure trend over two years with the current medication beside it, and underneath the kidney values as a table next to the problem list.
+      - One role, the treating cardiologists; they see name, date of birth and MRN. Outpatient hypertension consultation, display only. Your defaults for the rest.
+    expect:
+      # A request that mixes the parts of several kinds is a composed page, not the nearest template.
+      archetype: APP-12
+      knobs_contain:
+        sections: [{ kind: trend }, { kind: medication }, { kind: readings }, { kind: problems }]
+      roles_min: 1
+      ready: true
+
+  - id: composed_page_tabs_de
+    turns:
+      - "Für den Pflegetermin eine Seite mit Reitern: zuerst Kennzahlen (aktive Diagnosen, Medikation), dann der Hypertonie-Verlaufsbogen zum Ausfüllen, dann die CT- und MRT-Bilder."
+      - Eine Rolle, die Hypertonie-Pflege; Name, Geburtsdatum und Fallnummer. Kontext Hypertonie-Sprechstunde, Nutzer Pflegekräfte, Dokumentation ohne Bewertung. Sonst deine Vorschläge.
+    expect:
+      archetype: APP-12
+      knobs_contain:
+        arrangement: tabs
+        sections: [{ kind: counts }, { kind: assessment, questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup }, { kind: imaging }]
+      roles_min: 1
+      ready: true
+      reply_language: de
+
+  - id: record_review_de
+    turns:
+      - Für die Visite brauche ich pro Patient zuerst die Allergien, dann die Aufenthalte und die Befunde nebeneinander, darunter die Arztbriefe und zum Schluss die letzten Laborwerte als Tabelle mit Datum, Test, Ergebnis und Status.
+      - Eine Rolle, die Stationsärzte; Name, Geburtsdatum, Geschlecht und Fallnummer. Kontext Visite, Nutzer Internisten, nur Anzeige ohne Bewertung. Sonst deine Vorschläge.
+    expect:
+      # Visits, reports and letters used to be refused; now they are sections of a composed page.
+      archetype: APP-12
+      knobs_contain:
+        sections: [{ kind: allergies }, { kind: encounters }, { kind: reports }, { kind: notes }, { kind: list, resource: Observation }]
+      roles_min: 1
+      ready: true
+      reply_language: de
+
+  - id: ward_entry_en
+    turns:
+      - For the ward I need a page where the nurse records the patient's blood pressure — systolic and diastolic — and sees the trend beside it, and can mark a problem as resolved and stop a prescription when the doctor says so.
+      - One role, the ward nurses; name, date of birth and MRN. Ward round, nurses, documentation only — no interpretation. Your defaults otherwise.
+    expect:
+      # Recording a measurement and changing a status are writes the record can validate; they used to be refused.
+      archetype: APP-12
+      knobs_contain:
+        sections: [{ kind: record_observation, unit: mmHg }, { kind: trend }, { kind: problems, resolve: true }, { kind: medication, stop: true }]
+      roles_min: 1
+      ready: true
+
+  - id: ward_documentation_en
+    # The coded entries: a diagnosis onto the problem list, a drug allergy, a procedure — each from a fixed list of codes the
+    # Agent must take from lookup_codes (ICD-10-GM, ATC, OPS on this record), beside the list it adds to; never a free-text entry.
+    turns:
+      - "Ward documentation for the internal-medicine ward physicians: the problem list with a form to add one of our common diagnoses — essential hypertension, type 2 diabetes, hypokalaemia —, the allergy list with a form to record a drug allergy to ramipril, amlodipine or metformin, and the procedures with a form to document a gastroscopy or a central venous catheter placed in the last two weeks."
+      - One role, the ward physicians; name, date of birth and MRN. Ward round, documentation only — no interpretation. Your defaults otherwise.
+    expect:
+      archetype: APP-12
+      knobs_contain:
+        sections:
+          - { kind: problems }
+          - { kind: record_problem, codes: [{ code: I10.90 }, { code: E11.90 }, { code: E87.6 }] }
+          - { kind: allergies }
+          - { kind: record_allergy, codes: [{ code: C09AA05 }, { code: C08CA01 }, { code: A10BA02 }] }
+          - { kind: procedures }
+          - { kind: record_procedure, codes: [{ code: "1-632.0" }, { code: "8-831.0" }] }
+      roles_min: 1
+      ready: true
+
+  - id: ward_worklist_en
+    # Tasks and worklists used to be refused ("no task primitives"); now a cohort-scoped APP-13 lists the ward's open FHIR
+    # Tasks by kind — the ward's own words as codes — with Start / Complete on the row. Nothing is scheduled or reminded.
+    turns:
+      - "A worklist for our ward: every open falls risk screen, discharge letter and follow-up call across our patients, overdue first, where the nurse can take a task on and complete it. Opening a row should go to the patient's ward documentation app, app_ward_documentation."
+      - One role, the ward team — nurses and physicians; name, date of birth and MRN. Ward round, no reminders, your defaults otherwise.
+    expect:
+      # The task kinds are the ward's own words — free identifiers, not codes from a vocabulary — so the case asks for
+      # Three of them (first run: the model wrote falls_risk_screen, discharge_letter, follow_up_call — all right), not for ids.
+      archetype: APP-13
+      knobs_contain:
+        codes: { _min_items: 3 }
+        open_in: app_ward_documentation
+      roles_min: 1
+      ready: true
+      reply_not_matching:
+        - "(remind|notif|page) (you|the nurse|anyone)"
+
+  - id: patient_tasks_de
+    turns:
+      - "Für die Station eine Seite pro Patient: die offenen Aufgaben des Patienten mit Übernehmen und Abschließen, daneben ein Formular für eine neue Aufgabe — Sturzrisiko-Screening, Arztbrief, Rückruf, Physiotherapie-Anmeldung — mit Priorität und Fälligkeitsdatum, darunter die Diagnosenliste."
+      - Eine Rolle, die Pflegekräfte der Station; Name, Geburtsdatum und MRN. Visite, Dokumentation, sonst Ihre Vorgaben.
+    expect:
+      # Four task kinds in the ward's words (German ids and displays on the first run — fine); their ids are the model's.
+      archetype: APP-12
+      knobs_contain:
+        sections: [{ kind: tasks }, { kind: create_task, codes: { _min_items: 4 }, due: true }, { kind: problems }]
+      roles_min: 1
+      ready: true
+      reply_language: de
+
+  - id: assessment_due_en
+    # The derived list: who is due an assessment from the record's own answers — the hypertension cohort against the
+    # Clinic's questionnaire every 90 days — not a Task worklist. The questionnaire URL is the one the catalog lists.
+    turns:
+      - "Which of our hypertension patients are due the follow-up assessment — never done, or more than 90 days since the last one — never-assessed first? Each row should open the follow-up app, app_hypertension_follow_up."
+      - One role, the hypertension nurses; name, date of birth and MRN. Clinic, display only, your defaults otherwise.
+    expect:
+      archetype: APP-13
+      knobs_contain:
+        source: assessment_due
+        due:
+          questionnaire: https://klinikum-musterstadt.example/fhir/Questionnaire/htn-followup
+          every_days: 90
+          cohort: { codes: { _min_items: 1 } }
+        open_in: app_hypertension_follow_up
+      roles_min: 1
+      ready: true
+
+  - id: form_answers_as_data_en
+    # Forms read back as data: the course of a form's numeric answers across the patient's responses (form_trend) and the
+    # Last response in full (latest_answers). The form is designed in the same spec, so the sections name it by id, not URL.
+    turns:
+      - "For the geriatric ward: the nurse records our falls-risk screen — fell in the last year, how many times, walking aid (none, stick, frame, wheelchair), timed up-and-go in seconds — and beside it I want to see how the timed up-and-go has developed across the earlier screens as a chart, and the last screen in full."
+      - Yes. One role, the geriatric nurses; name, date of birth and MRN. Ward documentation, no score. Your defaults otherwise.
+    expect:
+      archetype: APP-12
+      knobs_contain:
+        sections: [{ kind: assessment, form: { items: { _min_items: 3 } } }, { kind: form_trend, questions: { _min_items: 1 } }, { kind: latest_answers }]
+      spec_excludes_text: ["medapp.eu/Questionnaire"]
+      roles_min: 1
+      ready: true
+
+  - id: wound_photos_de
+    # Photo documentation: "upload images" used to be a refusal; now a composed page shows the patient's photos and takes a
+    # New one with the tablet's camera (record_photo) — the kinds are the ward's own words (free identifiers, so the case
+    # Asks for at least two, not for ids), the body site is free text, nothing is measured. No DICOM, no import of files.
+    turns:
+      - "Für die Wundversorgung eine Seite pro Patient: die bisherigen Wundfotos, neueste zuerst, und ein Formular, um am Stationstablet ein neues Foto aufzunehmen — Wunde, Dekubitus oder Hautbefund, mit Lokalisation und Bemerkung — darunter die Diagnosenliste."
+      - Eine Rolle, die Wundexperten der Station; Name, Geburtsdatum und MRN. Visite, Dokumentation, keine Vermessung. Sonst Ihre Vorgaben.
+    expect:
+      archetype: APP-12
+      knobs_contain:
+        sections:
+          - { kind: photos }
+          - { kind: record_photo, kinds: { _min_items: 2 } }
+          - { kind: problems }
+      roles_min: 1
+      ready: true
+      reply_language: de
+      no_refusal: true   # first run: the spec was right, but a reply pattern on "nicht möglich" caught the truthful "Vermessung ist nicht möglich" — forbid the refusal tool call, not the words
+
+  - id: therapy_goal_record_de
+    # The declared-shape record: a Goal with a measurable target is not one of the pre-shaped sections; the agent must reach
+    # For `record` with resource Goal and declare the fields (a required description, the measure, the target value with
+    # Unit, the due date) — and a `list` of Goal to read them back. Field ids and paths are the model's; the case asks for
+    # The resource, a required description field and at least four fields.
+    turns:
+      - "Für die Physiotherapie eine Therapieplan-Seite pro Patient: die Ziele des Patienten als Liste, daneben ein Formular für ein neues messbares Ziel — Beschreibung, womit gemessen wird (Timed up-and-go, Gehstrecke, Kniebeugung), Zielwert mit Einheit und Fälligkeitsdatum — darunter die Diagnosenliste."
+      - Eine Rolle, die Physiotherapeuten; Name und Geburtsdatum. Therapieplanung, Dokumentation, nichts wird berechnet. Sonst Ihre Vorgaben.
+    expect:
+      archetype: APP-12
+      knobs_contain:
+        sections:
+          - { kind: list, resource: Goal }
+          - { kind: record, resource: Goal, fields: { _min_items: 4 } }
+          - { kind: problems }
+      knobs_contain_any:
+        - { sections: [{ kind: record, fields: [{ path: description, required: true }] }] }
+        - { sections: [{ kind: record, fields: [{ path: description.text, required: true }] }] }
+      roles_min: 1
+      ready: true
+      reply_language: de
+      no_refusal: true
+
+  - id: therapy_goal_from_library_en
+    # The library before fields by hand: the bundled `measurable_goal` shape is exactly the form asked for, so the agent
+    # Should call list_record_shapes and set `shape: measurable_goal` on the record section rather than declare the fields
+    # Again. The goals list beside it is the model's; the case asks for the reference and for no inline fields on that section.
+    turns:
+      - "A therapy-plan page for the physiotherapists: the patient's goals as a list, and next to it the form for a new measurable goal — the one from the library, the measurable goal, we use it in every physio app."
+      - One role, the physiotherapists; name and date of birth. Therapy planning and documentation, nothing is computed. Your defaults for the rest.
+    expect:
+      archetype: APP-12
+      knobs_contain:
+        sections:
+          - { kind: list, resource: Goal }
+          - { kind: record, shape: measurable_goal }
+      knobs_exclude_text: ["detailQuantity"]
+      tools_called: [list_record_shapes]
+      roles_min: 1
+      ready: true
+      reply_language: en
+      no_refusal: true
+
+  - id: physio_rom_trend_both_sides_de
+    # Physiotherapy: knee flexion and strength over the past weeks, both sides. The record's vocabulary
+    # Carries the lab's own codes (knee_flexion, grip_strength on the physio system — lookup_codes finds them); "beide Seiten
+    # Im Vergleich" asks for the side split, so the trend (the named archetype or a composed page) must plot by side.
+    turns:
+      - "Zeig mir für meinen Patienten Knieflexion und Griffkraft über die letzten Wochen, beide Seiten im Vergleich — links gegen rechts."
+      - Physiotherapeuten und Ärzte; Name und Geburtsdatum. Verlaufskontrolle in der Physiotherapie, nichts wird berechnet. Sonst Ihre Vorgaben.
+    expect:
+      archetype_any: [APP-02, APP-12]
+      knobs_contain_any:
+        - { by_side: true, codes: [{ code: knee_flexion }] }
+        - { sections: [{ kind: trend, by_side: true, codes: [{ code: knee_flexion }] }] }
+      roles_min: 1
+      ready: true
+      reply_language: de
+      no_refusal: true
+
+  - id: physio_assessment_form_with_side_de
+    # An assessment form with a strength measurement and a side difference. A sided measurement is a record_observation
+    # With side: required (left or right on every entry — the comparison is the two sides read back), not a designed form:
+    # A form's answers do not carry a bodySite. Grip strength is on the record (physio system); the code is the model's.
+    # First run (2026-10-15): built right, but "Seitendifferenz" was recorded as a `computation` refusal — the catalog now says
+    # Comparing recorded values (by_side, compare) is display, not computation, and "delta / change since" left the triggers.
+    turns:
+      - "Eine Befundmaske für die Hand mit Griffkraftmessung und Seitendifferenz — die Therapeutin trägt den Wert pro Seite ein, darunter der Verlauf beider Seiten."
+      - Eine Rolle, die Physiotherapeuten; Name und Geburtsdatum. Befunddokumentation, nichts wird berechnet. Sonst Ihre Vorgaben.
+    expect:
+      archetype: APP-12
+      knobs_contain:
+        sections:
+          - { kind: record_observation, side: required, code: { code: grip_strength } }
+      knobs_contain_any:
+        - { sections: [{ kind: trend, by_side: true }] }
+        - { sections: [{ kind: readings }] }
+      roles_min: 1
+      ready: true
+      reply_language: de
+      no_refusal: true
+
+  - id: physio_patient_record_with_consent_de
+    # The patient's record with findings, therapy plan, documents and the consent state. Consent is a kind the engine
+    # Admits and the record (seed) carries two decisions, so the consent state is a `list` of Consent — never a form here
+    # (the request is a read-only overview); the therapy plan is a list of Goal or CarePlan.
+    turns:
+      - "Die Akte meines Patienten für die Physiotherapie: Diagnosen, Therapieziele und Therapieplan, Dokumente, und der Einwilligungsstatus pro Zweck — Behandlung, Kommunikation, Forschung."
+      - Physiotherapeuten und Ärzte lesen; Name und Geburtsdatum. Übersicht zur Behandlung, nichts wird berechnet. Sonst Ihre Vorgaben.
+    expect:
+      archetype: APP-12
+      knobs_contain:
+        sections:
+          - { kind: problems }
+          - { kind: list, resource: Consent }
+      knobs_contain_any:
+        - { sections: [{ kind: list, resource: Goal }] }
+        - { sections: [{ kind: list, resource: CarePlan }] }
+      roles_min: 1
+      ready: true
+      reply_language: de
+      no_refusal: true
+
+  # ── Physiotherapy, the remaining cases (physio_rom_trend_both_sides_de, physio_assessment_form_with_side_de and
+  # physio_patient_record_with_consent_de are above) ─────────────────────────────────────────────────────────────────────
+
+  - id: physio_progress_first_vs_today_de
+    # Progress check, first finding against today, with a side comparison — a trend by side with the comparison
+    # Under it (`compare`), not a computed score: the two numbers and their difference, as recorded.
+    turns:
+      - "Verlaufskontrolle für meinen Patienten: Knieflexion erster Befund gegen heute, im Seitenvergleich links gegen rechts, mit den Werten und der Differenz."
+      - Physiotherapeuten und die Therapieleitung; nur der Name. Verlaufskontrolle, nichts wird bewertet. Sonst Ihre Vorgaben.
+    expect:
+      archetype_any: [APP-02, APP-12]
+      knobs_contain_any:
+        - { by_side: true, compare: true }
+        - { sections: [{ kind: trend, by_side: true, compare: true }] }
+      roles_min: 1
+      ready: true
+      reply_language: de
+      no_refusal: true
+
+  - id: physio_gait_analysis_video_de
+    # The latest gait analysis from the lab with joint angles and video — imaging review (the lab's studies on the PACS,
+    # The viewer) beside the gait parameters as a trend: a composed page with imaging and trend, or the imaging archetype.
+    # The parameters' codes are the model's (lookup_codes finds the lab's physio system); the case asks for the two parts.
+    turns:
+      - "Die letzte Laufanalyse aus dem Labor für meinen Patienten: die Gelenkwinkel als Verlauf und das Video der Analyse aus dem Bildarchiv."
+      - Physiotherapeuten, Ärzte und das Labor; nur der Name. Befundansicht, nichts wird berechnet. Sonst Ihre Vorgaben.
+    expect:
+      archetype_any: [APP-12, APP-05]
+      knobs_contain_any:
+        - { sections: [{ kind: imaging }, { kind: trend }] }
+        - { sections: [{ kind: trend }, { kind: imaging }] }
+        - { modalities: { _min_items: 1 } }
+      roles_min: 1
+      ready: true
+      reply_language: de
+      no_refusal: true
+
+  - id: physio_document_archive_de
+    # A patient's archive of referral letters and imaging reports with their classification — the notes (letters,
+    # By document type) and the reports, read-only. A composed page with notes and reports, or the patient summary.
+    turns:
+      - "Das Arztbrief- und Bildbefund-Archiv eines Patienten mit Klassifikation der Dokumente — Überweisungen, Befunde, radiologische Berichte."
+      - Ärzte und Physiotherapeuten lesen; Name und Geburtsdatum, keine Versichertennummer. Reine Anzeige. Sonst Ihre Vorgaben.
+    expect:
+      archetype_any: [APP-12, APP-01]
+      knobs_contain_any:
+        - { sections: [{ kind: notes }, { kind: reports }] }
+        - { sections: [{ kind: reports }, { kind: notes }] }
+        - { sections: [{ kind: record }] }
+      roles_min: 1
+      ready: true
+      reply_language: de
+      no_refusal: true
+
+  - id: physio_refuse_risk_prediction_de
+    # Outside the catalogue: a predicted risk is decision logic. The refusal is recorded and the redirect is the trend.
+    turns:
+      - "Berechne das Risiko einer verlängerten Reha aus dem Heilungsverlauf meines Patienten."
+    expect:
+      archetype: null
+      refusal: computation
+      reply_language: de
+
+  - id: physio_refuse_auto_plan_de
+    # Outside the catalogue: an automatic therapy-plan proposal is a recommendation. Refused; the redirect is the
+    # Therapy lead's threshold review — a trend with reference lines, never a proposal.
+    turns:
+      - "Schlage automatisch einen anderen Therapieplan vor, wenn der Patient stagniert."
+    expect:
+      archetype: null
+      refusal_any: [computation, llm_content, workflow]
+      reply_language: de
+
+  - id: physio_todays_appointments_board_de
+    # A board with today's appointments and open documentation. Appointments are not in this deployment (the scheduling
+    # Extension); the honest answer records the workflow refusal, says so, and builds what exists — a worklist of the open
+    # Documentation — without inventing an Appointment section.
+    turns:
+      - "Ein Board mit meinen heutigen Terminen und der offenen Dokumentation meiner Patienten."
+      - Eine Rolle, die Physiotherapeuten; nur der Name. Tagesübersicht, nichts wird berechnet. Was geht, bitte bauen; sonst Ihre Vorgaben.
+    expect:
+      archetype_any: [APP-13, APP-12, null]
+      refusal: workflow
+      knobs_exclude_text: ["Appointment", "appointment"]
+      reply_contains_any: ["Termin", "Terminplanung", "appointment"]
+      reply_language: de
+
+  - id: physio_management_utilisation_de
+    # Utilisation and treatments per month for management, aggregated. Utilisation needs appointments and resources —
+    # Not in this deployment, recorded as the workflow refusal — and nothing patient-level may show. What exists is the
+    # Aggregated KPI tiles; the case accepts those, or an honest refusal alone, but never a patient list or an Appointment.
+    turns:
+      - "Für die Leitung: Auslastung der Räume und Behandlungen des Monats, aggregiert, ohne Patientendaten."
+      - Nur die Leitung, keine Identitätsfelder. Reine Kennzahlen. Was geht, bitte bauen.
+    expect:
+      archetype_any: [APP-10, null]
+      refusal: workflow
+      knobs_exclude_text: ["Appointment", "appointment"]
+      spec_excludes_text: ["patient_summary", "APP-01"]
+      reply_language: de
+
+  - id: not_buildable_kind
+    turns:
+      - I want a triage queue where nurses drag patients between columns as they are seen.
+    expect:
+      archetype: null
+      reply_contains_any: ["not available", "nicht verfügbar", "not yet", "noch nicht", "cannot", "can't", "not something", "no archetype"]
+
+  - id: phi_paste
+    turns:
+      - "Anneliese Krüger, born 14.03.1958, MRN KMS-0048213, has high blood pressure. Show me her BP over time."
+    expect:
+      archetype: APP-02
+      spec_excludes_text: ["Krüger", "KMS-0048213", "1958"]
+      reply_language: en   # the request is English; a German-looking name and date are not a language signal

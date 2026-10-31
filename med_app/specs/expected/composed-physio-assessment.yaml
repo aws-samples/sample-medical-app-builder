@@ -1,0 +1,278 @@
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_physio_knee
+  version: 0.1.0
+  name: Knee range of motion
+  description: Knee flexion and grip strength over the therapy, left against right, with the assessment form.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: physiotherapist
+      display_name: Physiotherapist
+      cognito_group: app-app_physio_knee-physiotherapist
+      data_scope_ref: scope_physiotherapist
+      ui_capabilities:
+        - view
+        - record_entry
+    - id: physician
+      display_name: Physician
+      cognito_group: app-app_physio_knee-physician
+      data_scope_ref: scope_physician
+      ui_capabilities:
+        - view
+  default_role: physiotherapist
+data_scopes:
+  scope_physiotherapist:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Observation
+        operations:
+          - search
+          - create
+        codes:
+          - https://hsp-musterstadt.medapp.eu/CodeSystem/physio|knee_flexion
+          - https://hsp-musterstadt.medapp.eu/CodeSystem/physio|grip_strength
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+      - resource: Provenance
+        operations:
+          - create
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+  scope_physician:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Observation
+        operations:
+          - search
+          - create
+        codes:
+          - https://hsp-musterstadt.medapp.eu/CodeSystem/physio|knee_flexion
+          - https://hsp-musterstadt.medapp.eu/CodeSystem/physio|grip_strength
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+      - resource: Provenance
+        operations:
+          - create
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_flexion
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - https://hsp-musterstadt.medapp.eu/CodeSystem/physio|knee_flexion
+      since: $context.window_start
+      count: 500
+    output_binding: flexion
+  - id: p_flexion_readings
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - https://hsp-musterstadt.medapp.eu/CodeSystem/physio|knee_flexion
+        - https://hsp-musterstadt.medapp.eu/CodeSystem/physio|grip_strength
+      since: $context.window_start
+      count: 8
+    output_binding: flexion_readings
+  - id: p_new_flexion
+    kind: write.fhir.observation.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      codes:
+        - https://hsp-musterstadt.medapp.eu/CodeSystem/physio|knee_flexion
+      unit: °
+      category: exam
+      ranges:
+        https://hsp-musterstadt.medapp.eu/CodeSystem/physio|knee_flexion:
+          min: 0
+          max: 160
+      max_backdate_days: 14
+      side: required
+      body_site: http://snomed.info/sct|49076000
+      conditions:
+        - https://hsp-musterstadt.medapp.eu/CodeSystem/physio|active
+        - https://hsp-musterstadt.medapp.eu/CodeSystem/physio|passive
+      observation: $ui.new_flexion_entry
+    output_binding: new_flexion_recorded
+  - id: p_new_grip
+    kind: write.fhir.observation.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      codes:
+        - https://hsp-musterstadt.medapp.eu/CodeSystem/physio|grip_strength
+      unit: kg
+      category: exam
+      ranges:
+        https://hsp-musterstadt.medapp.eu/CodeSystem/physio|grip_strength:
+          min: 0
+          max: 120
+      max_backdate_days: 14
+      side: required
+      body_site: http://snomed.info/sct|85562004
+      observation: $ui.new_grip_entry
+    output_binding: new_grip_recorded
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: Grid
+            props:
+              columns: 1
+            children:
+              - component: ObservationTimeline
+                props:
+                  title: Knee flexion, both sides
+                  observations: $bindings.flexion
+                  unit: °
+                  height_px: 320
+                  series:
+                    - label: Knee flexion
+                      code: knee_flexion
+                  thresholds:
+                    - value: 120
+                      label: Stairs without the rail
+                  caption: "Reference lines: the lab's own target for stair climbing, 120° of flexion."
+                  split_by_side: true
+              - component: ObservationComparison
+                props:
+                  observations: $bindings.flexion
+                  series:
+                    - label: Knee flexion
+                      code: knee_flexion
+                  split_by_side: true
+                  unit: °
+          - component: VitalsTable
+            props:
+              observations: $bindings.flexion_readings
+              title: Latest measurements
+              max_rows: 8
+              compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: ObservationEntryForm
+            props:
+              action: record_new_flexion
+              state_key: new_flexion_entry
+              title: Record knee flexion
+              submit_label: Record
+              code:
+                system: https://hsp-musterstadt.medapp.eu/CodeSystem/physio
+                code: knee_flexion
+                display: Knee flexion (ROM)
+              unit: °
+              range:
+                min: 0
+                max: 160
+              max_backdate_days: 14
+              side: required
+              body_site:
+                system: http://snomed.info/sct
+                code: "49076000"
+                display: Knee joint structure
+              conditions:
+                - system: https://hsp-musterstadt.medapp.eu/CodeSystem/physio
+                  code: active
+                  display: Active movement
+                - system: https://hsp-musterstadt.medapp.eu/CodeSystem/physio
+                  code: passive
+                  display: Passive movement
+          - component: ObservationEntryForm
+            props:
+              action: record_new_grip
+              state_key: new_grip_entry
+              title: Record grip strength
+              submit_label: Record
+              code:
+                system: https://hsp-musterstadt.medapp.eu/CodeSystem/physio
+                code: grip_strength
+                display: Grip strength
+              unit: kg
+              range:
+                min: 0
+                max: 120
+              max_backdate_days: 14
+              note: false
+              side: required
+              body_site:
+                system: http://snomed.info/sct
+                code: "85562004"
+                display: Hand structure
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+  - name: window_start
+    type: iso8601
+    required: false
+    source:
+      - panel_selection
+    default: now-3m
+actions:
+  - id: record_new_flexion
+    label: Record
+    primitive: p_new_flexion
+    on_success: reload
+    success_message: The measurement is on the patient record.
+  - id: record_new_grip
+    label: Record
+    primitive: p_new_grip
+    on_success: reload
+    success_message: Saved to the patient record.
+audit:
+  clinical_context: physiotherapy
+  intended_users:
+    - physiotherapist
+    - physician
+  intended_purpose: Knee flexion and grip strength over the therapy, both sides, read back beside the forms that record them. Values are stored and graphed; nothing is computed, compared against a clinical threshold by the platform, or recommended.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements

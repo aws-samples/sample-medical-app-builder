@@ -1,0 +1,47 @@
+# AppSpec — composed page (APP-12) for a connected hospital record: the oncology picture of one
+# patient on one page — the active diagnoses (ICD-10-GM, as the record codes them), the procedures (OPS), the
+# radiology reports, and the imaging studies beside the viewer. Nothing here names a code: the sections list what
+# the record holds for the patient.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_oncology_overview
+  version: 0.1.0
+  name: Oncology overview
+  description: Active diagnoses, procedures, radiology reports and imaging studies of one patient, for case discussion.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  window: now-2y
+  sections:
+    - kind: problems
+      status: active
+      title: Active diagnoses
+      span: 6
+    - kind: procedures
+      title: Procedures
+      span: 6
+      rows: 12
+    - kind: reports
+      category: RAD
+      title: Radiology reports
+      rows: 8
+    - kind: imaging
+      modalities: [CT, MR, DX]
+      list_title: Imaging studies
+      viewer_height_px: 600
+      ratio: [4, 8]
+
+roles:
+  - id: tumour_board
+    display_name: Tumour board
+    phi_fields_visible: [name, dob, gender]
+default_role: tumour_board
+
+governance:
+  clinical_context: tumour_board
+  intended_users: [oncologist, radiologist, radiation_oncologist]
+  intended_purpose: Display of the recorded diagnoses, procedures, radiology reports and imaging studies of the patient in context, for case discussion. Display only; no staging, no scoring, no interpretation.

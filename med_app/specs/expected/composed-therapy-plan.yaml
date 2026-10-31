@@ -1,0 +1,344 @@
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_therapy_plan
+  version: 0.1.0
+  name: Therapy plan
+  description: Measurable goals and progress notes for one patient — set, written and read back on the record.
+  intent_class: workflow
+  hospital_id: hsp-musterstadt
+  created_at: 2026-09-15T09:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: physiotherapist
+      display_name: Physiotherapist
+      cognito_group: app-app_therapy_plan-physiotherapist
+      data_scope_ref: scope_physiotherapist
+      ui_capabilities:
+        - view
+        - record_entry
+  default_role: physiotherapist
+data_scopes:
+  scope_physiotherapist:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Goal
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+      - resource: Provenance
+        operations:
+          - create
+      - resource: DocumentReference
+        operations:
+          - search
+          - create
+        filter: subject={context.patient_id}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_goals
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Goal
+      params:
+        patient: $context.patient_id
+    output_binding: goals
+  - id: p_new_goal
+    kind: write.fhir.record.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      resource: Goal
+      fields:
+        - id: goal
+          label: Goal
+          type: text
+          path: description
+          as: concept_text
+          required: true
+          max_length: 200
+        - id: measure
+          label: Measured by
+          type: code
+          path: target[0].measure
+          as: codeable_concept
+          required: true
+          codes: &a1
+            - system: https://hsp-musterstadt.medapp.eu/CodeSystem/physio
+              code: tug
+              display: Timed up-and-go
+            - system: https://hsp-musterstadt.medapp.eu/CodeSystem/physio
+              code: knee_flexion
+              display: Knee flexion (ROM)
+            - system: https://hsp-musterstadt.medapp.eu/CodeSystem/physio
+              code: walking_distance
+              display: Walking distance
+        - id: target
+          label: Target value
+          type: number
+          path: target[0].detailQuantity
+          as: quantity
+          unit: s
+          range: &a2
+            min: 0
+            max: 600
+        - id: due
+          label: Due
+          type: date
+          path: target[0].dueDate
+          as: date
+          future_days: 365
+        - id: priority
+          label: Priority
+          type: choice
+          path: priority
+          as: codeable_concept
+          options: &a3
+            - code: high-priority
+              display: High
+            - code: medium-priority
+              display: Medium
+            - code: low-priority
+              display: Low
+          system: http://terminology.hl7.org/CodeSystem/goal-priority
+        - id: note
+          label: Remark
+          type: long_text
+          path: note[0].text
+          as: string
+          max_length: 2000
+      stamps:
+        - path: lifecycleStatus
+          value: active
+        - path: subject
+          value: $patient
+        - path: expressedBy
+          value: $author
+        - path: statusDate
+          value: $today
+      record: $ui.new_goal_entry
+    output_binding: new_goal_recorded
+  - id: p_notes
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: DocumentReference
+      params:
+        patient: $context.patient_id
+        type: 11506-3
+    output_binding: notes
+  - id: p_new_note
+    kind: write.fhir.record.create
+    catalog_version: 1.0.0
+    config:
+      subject: $context.patient_id
+      resource: DocumentReference
+      fields:
+        - id: type
+          label: Kind of note
+          type: code
+          path: type
+          as: codeable_concept
+          required: true
+          codes: &a4
+            - system: http://loinc.org
+              code: 11506-3
+              display: Progress note
+            - system: http://loinc.org
+              code: 34117-2
+              display: History and physical note
+        - id: title
+          label: Title
+          type: text
+          path: description
+          as: string
+          required: true
+          max_length: 120
+        - id: text
+          label: Note
+          type: long_text
+          path: content[0].attachment
+          as: attachment_text
+          required: true
+          max_length: 5000
+      stamps:
+        - path: status
+          value: current
+        - path: subject
+          value: $patient
+        - path: date
+          value: $now
+        - path: author[0]
+          value: $author
+      record: $ui.new_note_entry
+    output_binding: new_note_recorded
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: ResourceList
+            props:
+              resources: $bindings.goals
+              title: Goals
+              columns:
+                - label: Goal
+                  path: description
+                - label: Measure
+                  path: target[0].measure
+                - label: Target
+                  path: target[0].detailQuantity
+                - label: Due
+                  path: target[0].dueDate
+                - label: Status
+                  path: lifecycleStatus
+                  status: true
+              max_rows: 10
+          - component: RecordEntryForm
+            props:
+              action: record_new_goal
+              state_key: new_goal_entry
+              title: Set a goal
+              submit_label: Save goal
+              resource: Goal
+              fields:
+                - id: goal
+                  label: Goal
+                  type: text
+                  path: description
+                  as: concept_text
+                  required: true
+                  max_length: 200
+                - id: measure
+                  label: Measured by
+                  type: code
+                  path: target[0].measure
+                  as: codeable_concept
+                  required: true
+                  codes: *a1
+                - id: target
+                  label: Target value
+                  type: number
+                  path: target[0].detailQuantity
+                  as: quantity
+                  unit: s
+                  range: *a2
+                - id: due
+                  label: Due
+                  type: date
+                  path: target[0].dueDate
+                  as: date
+                  future_days: 365
+                - id: priority
+                  label: Priority
+                  type: choice
+                  path: priority
+                  as: codeable_concept
+                  options: *a3
+                  system: http://terminology.hl7.org/CodeSystem/goal-priority
+                - id: note
+                  label: Remark
+                  type: long_text
+                  path: note[0].text
+                  as: string
+                  max_length: 2000
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: DocumentList
+            props:
+              documents: $bindings.notes
+              title: Progress notes
+              max_rows: 8
+          - component: RecordEntryForm
+            props:
+              action: record_new_note
+              state_key: new_note_entry
+              title: Progress note
+              submit_label: Save note
+              resource: DocumentReference
+              fields:
+                - id: type
+                  label: Kind of note
+                  type: code
+                  path: type
+                  as: codeable_concept
+                  required: true
+                  codes: *a4
+                - id: title
+                  label: Title
+                  type: text
+                  path: description
+                  as: string
+                  required: true
+                  max_length: 120
+                - id: text
+                  label: Note
+                  type: long_text
+                  path: content[0].attachment
+                  as: attachment_text
+                  required: true
+                  max_length: 5000
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+actions:
+  - id: record_new_goal
+    label: Save goal
+    primitive: p_new_goal
+    on_success: reload
+    success_message: The goal is on the patient record.
+  - id: record_new_note
+    label: Save note
+    primitive: p_new_note
+    on_success: reload
+    success_message: The note is on the patient record.
+audit:
+  clinical_context: physiotherapy
+  intended_users:
+    - physiotherapist
+  intended_purpose: Measurable therapy goals and progress notes for the patient in context, written to the record with provenance and read back from it. Nothing is computed, scored or recommended.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_documentation
+    - care_plans

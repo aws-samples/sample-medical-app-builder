@@ -1,0 +1,87 @@
+# AppSpec — composed page (APP-12) for the physiotherapy lab: knee flexion both sides over the course of therapy, the
+# readings with their side, and the assessment form that records the next value — a side is required, the structure
+# is stamped, and the test condition (active or passive) is one of the lab's own codes. A paired measurement is one chart,
+# left against right, the first finding against today under it, and one form.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_physio_knee
+  version: 0.1.0
+  name: Knee range of motion
+  description: Knee flexion and grip strength over the therapy, left against right, with the assessment form.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  window: now-3m
+  sections:
+    - kind: trend
+      id: flexion
+      span: 8
+      title: Knee flexion, both sides
+      codes:
+        - { system: "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", code: knee_flexion, display: Knee flexion (ROM) }
+      series:
+        - { label: Knee flexion, code: knee_flexion }
+      by_side: true
+      compare: true
+      unit: "°"
+      thresholds:
+        - { value: 120, label: Stairs without the rail }
+      thresholds_source: the lab's own target for stair climbing, 120° of flexion
+    - kind: readings
+      id: flexion_readings
+      span: 4
+      title: Latest measurements
+      codes:
+        - { system: "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", code: knee_flexion, display: Knee flexion (ROM) }
+        - { system: "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", code: grip_strength, display: Grip strength }
+      rows: 8
+      compact: true
+    - kind: record_observation
+      id: new_flexion
+      span: 6
+      title: Record knee flexion
+      code: { system: "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", code: knee_flexion, display: Knee flexion (ROM) }
+      unit: "°"
+      range: { min: 0, max: 160 }
+      category: exam
+      side: required
+      body_site: { system: snomed, code: "49076000", display: Knee joint structure }
+      conditions:
+        - { system: "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", code: active, display: Active movement }
+        - { system: "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", code: passive, display: Passive movement }
+      max_backdate_days: 14
+      action_label: Record
+      success_message: The measurement is on the patient record.
+    - kind: record_observation
+      id: new_grip
+      span: 6
+      title: Record grip strength
+      code: { system: "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", code: grip_strength, display: Grip strength }
+      unit: kg
+      range: { min: 0, max: 120 }
+      category: exam
+      side: required
+      body_site: { system: snomed, code: "85562004", display: Hand structure }
+      max_backdate_days: 14
+      note: false
+
+roles:
+  - id: physiotherapist
+    display_name: Physiotherapist
+    phi_fields_visible: [name, dob]
+    capabilities: [view, record_entry]
+  - id: physician
+    display_name: Physician
+    phi_fields_visible: [name, dob]
+    capabilities: [view]
+default_role: physiotherapist
+
+governance:
+  clinical_context: physiotherapy
+  intended_users: [physiotherapist, physician]
+  intended_purpose: Knee flexion and grip strength over the therapy, both sides, read back beside the forms that record them. Values are stored and graphed; nothing is computed, compared against a clinical threshold by the platform, or recommended.
+  mdr_classification: none

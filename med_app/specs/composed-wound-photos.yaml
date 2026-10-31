@@ -1,0 +1,49 @@
+# AppSpec — composed page (APP-12) with photo documentation: the patient's photos (a wound on day 0, the same wound two
+# weeks on) beside a form that takes a new one with the device's camera, over the problem list for context. A photo is
+# a FHIR Media the record keeps — who took it, when, what it documents, the body site, a remark — with its bytes in the
+# platform's media bucket, never inline in the record.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_wound_photos
+  version: 0.1.0
+  name: Wound documentation
+  description: Photo documentation of wounds and skin findings for this patient — the course so far, and a photo taken now.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  sections:
+    - kind: photos
+      span: 8
+      title: Wound course
+      kinds:
+        - { code: wound, display: Wound }
+        - { code: pressure_ulcer, display: Pressure ulcer }
+    - kind: record_photo
+      id: new_photo
+      span: 4
+      title: Document a wound
+      kinds:
+        - { code: wound, display: Wound }
+        - { code: pressure_ulcer, display: Pressure ulcer }
+        - { code: skin_finding, display: Skin finding }
+      max_size_kb: 1500
+      max_backdate_days: 7
+    - kind: problems
+      span: 12
+
+roles:
+  - id: wound_nurse
+    display_name: Wound care nurse
+    phi_fields_visible: [name, dob, mrn]
+    capabilities: [view, record_photo]
+default_role: wound_nurse
+
+governance:
+  clinical_context: ward_round
+  intended_users: [nurse]
+  intended_purpose: Photo documentation of wounds — the photos on record, and a form to add one taken now, documenting a wound, pressure ulcer or skin finding with the body site and a remark; recorded with who took it. Nothing is measured or interpreted.
+  mdr_classification: none

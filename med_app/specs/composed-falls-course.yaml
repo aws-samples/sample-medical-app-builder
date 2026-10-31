@@ -1,0 +1,55 @@
+# AppSpec — composed page (APP-12) that reads a form back as data: the course of the ward's falls-risk screens for one
+# patient — the timed up-and-go and the falls count across screens, charted like any measurement — beside the last screen
+# question by question. The form is the showcase app's (specs/falls-risk-assessment.yaml); its answers are the record's.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_falls_course
+  version: 0.1.0
+  name: Falls risk over time
+  description: The timed up-and-go and the falls count across the ward's falls-risk screens, and the last screen in full.
+
+archetype: APP-12
+knobs:
+  identity: compact_banner
+  arrangement: stack
+  sections:
+    - kind: form_trend
+      id: tug
+      span: 8
+      questionnaire: https://hsp-musterstadt.medapp.eu/Questionnaire/app-falls-risk.falls-risk
+      questions:
+        - { link_id: timed_up_and_go, label: Timed up-and-go }
+      unit: s
+      thresholds:
+        - { value: 13.5, label: "TUG ≥ 13.5 s" }
+      thresholds_source: "Shumway-Cook 2000: a timed up-and-go of 13.5 s or more marks a raised fall risk in community-dwelling older adults"
+      title: Timed up-and-go across screens
+    - kind: latest_answers
+      id: last_screen
+      span: 4
+      questionnaire: https://hsp-musterstadt.medapp.eu/Questionnaire/app-falls-risk.falls-risk
+      title: Last falls screen
+    - kind: form_trend
+      id: falls
+      span: 6
+      questionnaire: https://hsp-musterstadt.medapp.eu/Questionnaire/app-falls-risk.falls-risk
+      questions:
+        - { link_id: falls_count, label: Falls reported }
+      title: Falls reported per screen
+      height_px: 220
+    - kind: problems
+      span: 6
+
+roles:
+  - id: geriatric_nurse
+    display_name: Geriatric nurse
+    phi_fields_visible: [name, dob, mrn]
+default_role: geriatric_nurse
+
+governance:
+  clinical_context: ward_round
+  intended_users: [nurse]
+  intended_purpose: The course of a patient's falls-risk screens — timed up-and-go and falls reported, plotted from the recorded screens — and the latest screen in full. Reference lines are visual; nothing is scored or interpreted.
+  mdr_classification: none

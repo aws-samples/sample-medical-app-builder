@@ -1,0 +1,118 @@
+# AppSpec — a structured assessment (APP-11) whose form was designed in the conversation, not taken from the record:
+# the nurse's falls-risk screen. The compiler turns `form` into a FHIR Questionnaire the app carries (manifest
+# `artifacts.questionnaires`); it is reviewed and signed with the app, rendered from the manifest, and written to the
+# hospital's FHIR server when the app is published, so the responses on the record resolve for other systems too.
+# The showcase ships the same form, with the same app id and canonical URL, on a composed page that also reads the
+# answers back as data (specs/falls-risk-assessment.yaml); this is the single-purpose form of the compiler tests.
+apiVersion: medapp.eu/v1
+kind: AppSpec
+
+app:
+  app_id: app_falls_risk
+  version: 1.0.0
+  name: Falls risk screen
+  description: The ward's falls-risk screening form for one patient, with the earlier screens beside it.
+
+archetype: APP-11
+knobs:
+  form:
+    id: falls_risk
+    title: Falls risk screen
+    description: Screening on admission and after any fall; repeated weekly on the geriatric wards.
+    items:
+      - id: intro
+        type: note
+        text: Answer from the patient's account and the record. A screen is a prompt for the care plan, not a score.
+      - id: history
+        type: heading
+        text: History
+        items:
+          - id: fell_last_year
+            type: boolean
+            text: Has the patient fallen in the last 12 months?
+            required: true
+      # The whole section hinges on the answer above: without a fall nothing of it is asked, required or answered.
+      - id: fall_details
+        type: heading
+        text: About the falls
+        show_when: { question: fell_last_year, is: true }
+        items:
+          # A count cannot be negative, and twenty in a year is already a lot.
+          - id: falls_count
+            type: integer
+            text: How many falls?
+            min: 0
+            max: 20
+          - id: injury
+            type: choice
+            text: Worst injury from a fall
+            options:
+              - display: None
+              - display: Bruising or abrasion
+                code: minor
+              - display: Fracture
+              - display: Head injury
+      - id: mobility
+        type: heading
+        text: Mobility
+        items:
+          - id: walking_aid
+            type: choice
+            text: Walking aid in use
+            required: true
+            options:
+              - display: None
+              - display: Stick
+              - display: Frame
+              - display: Wheelchair
+          - id: unsteady
+            type: boolean
+            text: Unsteady when standing or turning?
+          - id: timed_up_and_go
+            type: decimal
+            text: Timed up-and-go
+            unit: s
+            min: 0
+            max: 300
+            # The one answer that is a measurement in its own right: also written as an Observation on the lab's code
+            # system, so the falls screen's TUG and a goal's TUG target meet in one trend.
+            as_observation: { system: "https://hsp-musterstadt.medapp.eu/CodeSystem/physio", code: tug, display: Timed up-and-go }
+      - id: risk_factors
+        type: heading
+        text: Risk factors
+        items:
+          - id: factors
+            type: multiple_choice
+            text: Present
+            options:
+              - display: Four or more medications
+                code: polypharmacy
+              - display: Dizziness or postural drop
+                code: dizziness
+              - display: Impaired vision
+                code: vision
+              - display: Cognitive impairment
+                code: cognition
+              - display: Incontinence or urgency
+                code: continence
+      - id: plan
+        type: long_text
+        text: Measures agreed with the patient
+      - id: next_review
+        type: date
+        text: Next review
+  action_label: Record screen
+  success_message: The falls-risk screen is now part of the patient record.
+  submissions_title: Earlier screens
+
+roles:
+  - id: ward_nurse
+    display_name: Ward nurse
+    phi_fields_visible: [name, dob, gender, mrn]
+    capabilities: [view]
+default_role: ward_nurse
+
+governance:
+  clinical_context: inpatient_ward
+  intended_users: [nurse]
+  intended_purpose: Structured documentation of the falls-risk screen for one patient, written to the record with provenance; no score and no recommendation is computed.

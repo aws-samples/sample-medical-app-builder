@@ -1,0 +1,120 @@
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_haemoglobin_trend
+  version: 0.1.0
+  name: Haemoglobin trend
+  description: Haemoglobin over the last five years against the lower reference values, with the readings.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: 2026-10-01T12:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: haematology_ward
+      display_name: Haematology ward
+      cognito_group: app-app_haemoglobin_trend-haematology_ward
+      data_scope_ref: scope_haematology_ward
+      ui_capabilities:
+        - view
+  default_role: haematology_ward
+data_scopes:
+  scope_haematology_ward:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Observation
+        operations:
+          - search
+        codes:
+          - http://loinc.org|718-7
+        filter: subject={context.patient_id}&date=ge{context.window_start}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_series
+    kind: data.fhir.observation.by_code
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      codes:
+        - http://loinc.org|718-7
+      since: $context.window_start
+      count: 500
+    output_binding: series
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+      - component: TwoColumn
+        props:
+          ratio:
+            - 8
+            - 4
+        children:
+          - component: ObservationTimeline
+            props:
+              title: Haemoglobin, last five years
+              observations: $bindings.series
+              unit: g/dL
+              height_px: 380
+              series:
+                - label: Haemoglobin
+                  code: 718-7
+              thresholds:
+                - value: 12
+                  label: Lower reference, women (12 g/dL)
+                - value: 13
+                  label: Lower reference, men (13 g/dL)
+          - component: VitalsTable
+            props:
+              title: Latest readings
+              observations: $bindings.series
+              max_rows: 10
+              compact: true
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+  - name: window_start
+    type: iso8601
+    required: false
+    source:
+      - panel_selection
+    default: now-5y
+actions: []
+audit:
+  clinical_context: inpatient_haematology
+  intended_users:
+    - haematologist
+    - ward_physician
+  intended_purpose: Display of recorded haemoglobin values over time against laboratory reference values. Display only; not for diagnosis or transfusion decisions.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - clinical_measurements

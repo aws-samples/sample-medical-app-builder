@@ -1,0 +1,182 @@
+apiVersion: medapp.eu/v1
+kind: AppManifest
+metadata:
+  app_id: app_oncology_overview
+  version: 0.1.0
+  name: Oncology overview
+  description: Active diagnoses, procedures, radiology reports and imaging studies of one patient, for case discussion.
+  intent_class: viewer
+  hospital_id: hsp-musterstadt
+  created_at: 2026-10-01T12:00:00Z
+lifecycle:
+  state: draft
+  signoff: null
+  provenance:
+    generated_by_pipeline_version: 0.1.0
+auth:
+  roles:
+    - id: tumour_board
+      display_name: Tumour board
+      cognito_group: app-app_oncology_overview-tumour_board
+      data_scope_ref: scope_tumour_board
+      ui_capabilities:
+        - view
+  default_role: tumour_board
+data_scopes:
+  scope_tumour_board:
+    fhir:
+      - resource: Patient
+        operations:
+          - read
+      - resource: Condition
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: Procedure
+        operations:
+          - search
+        filter: subject={context.patient_id}
+      - resource: DiagnosticReport
+        operations:
+          - search
+        filter: subject={context.patient_id}
+    dicom:
+      - operations:
+          - qido
+          - wado
+        modalities:
+          - CT
+          - MR
+          - DX
+        study_filter: PatientID={context.patient_mrn}
+    patient_scope: individual
+    phi_fields_visible:
+      - name
+      - dob
+      - gender
+primitives:
+  - id: p_patient
+    kind: data.fhir.patient.read
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+    output_binding: patient
+  - id: p_problems
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Condition
+      params:
+        patient: $context.patient_id
+        clinical-status: active
+    output_binding: problems
+  - id: p_procedures
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: Procedure
+      params:
+        patient: $context.patient_id
+    output_binding: procedures
+  - id: p_reports
+    kind: data.fhir.query
+    catalog_version: 1.0.0
+    config:
+      resource: DiagnosticReport
+      params:
+        patient: $context.patient_id
+        category: RAD
+    output_binding: reports
+  - id: p_imaging
+    kind: data.dicom.studies.for_patient
+    catalog_version: 1.0.0
+    config:
+      patient: $context.patient_id
+      modalities:
+        - CT
+        - MR
+        - DX
+    output_binding: imaging
+layout:
+  design_system_version: 1.0.0
+  root:
+    component: PageShell
+    props:
+      title: $metadata.name
+      subtitle: $metadata.description
+    children:
+      - component: PatientBanner
+        props:
+          patient: $bindings.patient
+          visible_fields: $auth.effective.phi_fields_visible
+          compact: true
+      - component: TwoColumn
+        props:
+          ratio:
+            - 6
+            - 6
+        children:
+          - component: ProblemList
+            props:
+              conditions: $bindings.problems
+              title: Active diagnoses
+          - component: ResourceList
+            props:
+              resources: $bindings.procedures
+              title: Procedures
+              columns:
+                - label: Date
+                  path: performedDateTime
+                - label: Procedure
+                  path: code
+                - label: Body site
+                  path: bodySite[0]
+                - label: Outcome
+                  path: outcome
+                - label: Status
+                  path: status
+                  status: true
+              max_rows: 12
+              empty_text: No procedures recorded.
+      - component: ReportList
+        props:
+          reports: $bindings.reports
+          title: Radiology reports
+          max_rows: 8
+      - component: TwoColumn
+        props:
+          ratio:
+            - 4
+            - 8
+        children:
+          - component: ImagingStudyList
+            props:
+              studies: $bindings.imaging
+              title: Imaging studies
+              selection_key: imaging_selected
+          - component: DicomViewer
+            props:
+              study_uid: $ui.imaging_selected
+              studies: $bindings.imaging
+              height_px: 600
+context_inputs:
+  - name: patient_id
+    type: fhir.reference
+    required: true
+    source:
+      - smart_launch
+      - panel_selection
+actions: []
+audit:
+  clinical_context: tumour_board
+  intended_users:
+    - oncologist
+    - radiologist
+    - radiation_oncologist
+  intended_purpose: Display of the recorded diagnoses, procedures, radiology reports and imaging studies of the patient in context, for case discussion. Display only; no staging, no scoring, no interpretation.
+  mdr_classification: none
+  data_categories:
+    - phi
+    - imaging
+    - procedures
+    - clinical_documentation
